@@ -4,10 +4,33 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
+
+// Pages
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Category from "./pages/Category";
+import Checkout from "./pages/Checkout";
+import OrderSuccess from "./pages/OrderSuccess";
+import Auth from "./pages/Auth";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+
+// Account Pages
+import Account from "./pages/Account";
+import Profile from "./pages/account/Profile";
+import Orders from "./pages/account/Orders";
+import Favorites from "./pages/account/Favorites";
+import Addresses from "./pages/account/Addresses";
+import AccountSettings from "./pages/account/AccountSettings";
+
+// Legal Pages
+import KVKK from "./pages/legal/KVKK";
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import SalesAgreement from "./pages/legal/SalesAgreement";
+import ReturnPolicy from "./pages/legal/ReturnPolicy";
+import CookiePolicy from "./pages/legal/CookiePolicy";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +47,28 @@ const App = () => (
             <Route path="/urunler" element={<Products />} />
             <Route path="/urun/:slug" element={<ProductDetail />} />
             <Route path="/kategori/:slug" element={<Category />} />
+            <Route path="/odeme" element={<Checkout />} />
+            <Route path="/siparis-basarili" element={<OrderSuccess />} />
+            <Route path="/giris" element={<Auth />} />
+            <Route path="/hakkimizda" element={<About />} />
+            <Route path="/iletisim" element={<Contact />} />
+
+            {/* Account Routes */}
+            <Route path="/hesabim" element={<Account />}>
+              <Route index element={<Profile />} />
+              <Route path="siparisler" element={<Orders />} />
+              <Route path="favoriler" element={<Favorites />} />
+              <Route path="adresler" element={<Addresses />} />
+              <Route path="ayarlar" element={<AccountSettings />} />
+            </Route>
+
+            {/* Legal Routes */}
+            <Route path="/kvkk" element={<KVKK />} />
+            <Route path="/gizlilik-politikasi" element={<PrivacyPolicy />} />
+            <Route path="/mesafeli-satis-sozlesmesi" element={<SalesAgreement />} />
+            <Route path="/iade-ve-iptal" element={<ReturnPolicy />} />
+            <Route path="/cerez-politikasi" element={<CookiePolicy />} />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
