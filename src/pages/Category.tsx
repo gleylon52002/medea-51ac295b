@@ -1,14 +1,25 @@
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import ProductCard from "@/components/products/ProductCard";
 import { Button } from "@/components/ui/button";
-import { getCategoryBySlug, getProductsByCategory } from "@/data/products";
+import { useCategoryBySlug } from "@/hooks/useCategories";
+import { useProductsByCategory } from "@/hooks/useProducts";
 
 const Category = () => {
   const { slug } = useParams<{ slug: string }>();
-  const category = getCategoryBySlug(slug || "");
-  const products = getProductsByCategory(slug || "");
+  const { data: category, isLoading: categoryLoading } = useCategoryBySlug(slug || "");
+  const { data: products, isLoading: productsLoading } = useProductsByCategory(slug || "");
+
+  if (categoryLoading || productsLoading) {
+    return (
+      <Layout>
+        <div className="container-main py-16 flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   if (!category) {
     return (
@@ -44,13 +55,13 @@ const Category = () => {
             {category.description}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {products.length} ürün bulundu
+            {products?.length || 0} ürün bulundu
           </p>
         </div>
 
         {/* Products Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product, index) => (
+          {products?.map((product, index) => (
             <div
               key={product.id}
               className="animate-fade-in"
@@ -61,7 +72,7 @@ const Category = () => {
           ))}
         </div>
 
-        {products.length === 0 && (
+        {(!products || products.length === 0) && (
           <div className="text-center py-16">
             <p className="text-lg text-muted-foreground">
               Bu kategoride henüz ürün bulunmuyor.

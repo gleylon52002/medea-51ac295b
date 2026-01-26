@@ -1,7 +1,24 @@
 import { Link } from "react-router-dom";
-import { categories } from "@/data/products";
+import { Loader2 } from "lucide-react";
+import { useCategories } from "@/hooks/useCategories";
 
 const Categories = () => {
+  const { data: categories, isLoading } = useCategories();
+
+  if (isLoading) {
+    return (
+      <section className="py-16 lg:py-24 bg-secondary/30">
+        <div className="container-main flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
+  if (!categories || categories.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-16 lg:py-24 bg-secondary/30">
       <div className="container-main">
@@ -23,19 +40,20 @@ const Categories = () => {
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="relative aspect-square rounded-xl overflow-hidden bg-card shadow-soft group-hover:shadow-medium transition-all duration-300">
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+                {category.image ? (
+                  <img
+                    src={category.image}
+                    alt={category.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted" />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-foreground/20 to-transparent" />
                 <div className="absolute inset-0 flex flex-col items-center justify-end p-4 text-center">
                   <h3 className="font-serif text-lg font-medium text-white mb-1">
                     {category.name}
                   </h3>
-                  <p className="text-sm text-white/80">
-                    {category.productCount} Ürün
-                  </p>
                 </div>
               </div>
             </Link>

@@ -1,11 +1,25 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProductCard from "@/components/products/ProductCard";
-import { getFeaturedProducts } from "@/data/products";
+import { useFeaturedProducts } from "@/hooks/useProducts";
 
 const FeaturedProducts = () => {
-  const featuredProducts = getFeaturedProducts();
+  const { data: featuredProducts, isLoading } = useFeaturedProducts();
+
+  if (isLoading) {
+    return (
+      <section className="py-16 lg:py-24 bg-background">
+        <div className="container-main flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
+  if (!featuredProducts || featuredProducts.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-16 lg:py-24 bg-background">

@@ -1,15 +1,17 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, Mail, Lock, User, Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Auth = () => {
-  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user, isLoading: authLoading, signIn, signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,43 +28,72 @@ const Auth = () => {
     confirmPassword: "",
   });
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user && !authLoading) {
+      navigate("/");
+    }
+  }, [user, authLoading, navigate]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulated login - will be replaced with Supabase auth
-    setTimeout(() => {
-      toast({
-        title: "Giriş Başarılı",
-        description: "Hesabınıza yönlendiriliyorsunuz...",
-      });
-      setIsLoading(false);
-    }, 1000);
+    const { error } = await signIn(loginData.email, loginData.password);
+
+    if (error) {
+      toast.error(error.message === "Invalid login credentials" 
+        ? "E-posta veya şifre hatalı" 
+        : error.message);
+    } else {
+      toast.success("Giriş başarılı!");
+      navigate("/");
+    }
+    
+    setIsLoading(false);
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (registerData.password !== registerData.confirmPassword) {
-      toast({
-        title: "Hata",
-        description: "Şifreler eşleşmiyor.",
-        variant: "destructive",
-      });
+      toast.error("Şifreler eşleşmiyor");
+      return;
+    }
+
+    if (registerData.password.length < 6) {
+      toast.error("Şifre en az 6 karakter olmalıdır");
       return;
     }
 
     setIsLoading(true);
 
-    // Simulated register - will be replaced with Supabase auth
-    setTimeout(() => {
-      toast({
-        title: "Kayıt Başarılı",
-        description: "Hesabınız oluşturuldu. Giriş yapabilirsiniz.",
-      });
-      setIsLoading(false);
-    }, 1000);
+    const fullName = `${registerData.firstName} ${registerData.lastName}`.trim();
+    const { error } = await signUp(registerData.email, registerData.password, fullName);
+
+    if (error) {
+      if (error.message.includes("already registered")) {
+        toast.error("Bu e-posta adresi zaten kayıtlı");
+      } else {
+        toast.error(error.message);
+      }
+    } else {
+      toast.success("Kayıt başarılı! Giriş yapabilirsiniz.");
+      navigate("/");
+    }
+    
+    setIsLoading(false);
   };
+
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -147,7 +178,14 @@ const Auth = () => {
                   </div>
 
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Giriş yapılıyor...
+                      </>
+                    ) : (
+                      "Giriş Yap"
+                    )}
                   </Button>
                 </form>
               </TabsContent>
@@ -217,6 +255,7 @@ const Auth = () => {
                           setRegisterData({ ...registerData, password: e.target.value })
                         }
                         required
+                        minLength={6}
                       />
                       <button
                         type="button"
@@ -246,6 +285,7 @@ const Auth = () => {
                           setRegisterData({ ...registerData, confirmPassword: e.target.value })
                         }
                         required
+                        minLength={6}
                       />
                     </div>
                   </div>
@@ -267,7 +307,14 @@ const Auth = () => {
                   </div>
 
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Kayıt yapılıyor...
+                      </>
+                    ) : (
+                      "Kayıt Ol"
+                    )}
                   </Button>
                 </form>
               </TabsContent>
