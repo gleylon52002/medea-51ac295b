@@ -1,27 +1,69 @@
 import { Link } from "react-router-dom";
-import { ShoppingBag, Star } from "lucide-react";
-import { Product } from "@/types/product";
+import { ShoppingBag, Star, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToggleFavorite, useIsFavorite } from "@/hooks/useFavorites";
 import { formatPrice } from "@/lib/utils";
+import { ProductWithCategory } from "@/hooks/useProducts";
 
 interface ProductCardProps {
-  product: Product;
+  product: ProductWithCategory;
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();
-  const hasDiscount = product.salePrice && product.salePrice < product.price;
+  const { user } = useAuth();
+  const { data: isFavorite } = useIsFavorite(product.id);
+  const toggleFavorite = useToggleFavorite();
+  
+  const hasDiscount = product.sale_price && Number(product.sale_price) < Number(product.price);
   const discountPercent = hasDiscount
-    ? Math.round((1 - product.salePrice! / product.price) * 100)
+    ? Math.round((1 - Number(product.sale_price) / Number(product.price)) * 100)
     : 0;
+
+  const handleAddToCart = () => {
+    // Convert to the format expected by cart
+    const cartProduct = {
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      description: product.description || "",
+      shortDescription: product.short_description || "",
+      price: Number(product.price),
+      salePrice: product.sale_price ? Number(product.sale_price) : undefined,
+      images: product.images || [],
+      category: product.categories?.name || "",
+      categorySlug: product.categories?.slug || "",
+      stock: product.stock,
+      featured: product.is_featured,
+      ingredients: product.ingredients || undefined,
+      usage: product.usage_instructions || undefined,
+      rating: 0,
+      reviewCount: 0,
+      createdAt: product.created_at,
+    };
+    addToCart(cartProduct);
+  };
 
   return (
     <div className="group relative bg-card rounded-lg overflow-hidden shadow-soft hover:shadow-medium transition-all duration-300">
+      {/* Favorite Button */}
+      {user && (
+        <button
+          onClick={() => toggleFavorite.mutate(product.id)}
+          className="absolute top-3 right-3 z-10 p-2 bg-background/80 backdrop-blur-sm rounded-full hover:bg-background transition-colors"
+        >
+          <Heart 
+            className={`h-4 w-4 ${isFavorite ? "fill-terracotta text-terracotta" : "text-muted-foreground"}`} 
+          />
+        </button>
+      )}
+
       {/* Image */}
       <Link to={`/urun/${product.slug}`} className="block relative aspect-square overflow-hidden">
         <img
-          src={product.images[0]}
+          src={product.images?.[0] || "/placeholder.svg"}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
@@ -31,7 +73,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </span>
         )}
         {product.stock <= 5 && product.stock > 0 && (
-          <span className="absolute top-3 right-3 bg-foreground/80 text-background text-xs font-medium px-2 py-1 rounded">
+          <span className="absolute bottom-3 left-3 bg-foreground/80 text-background text-xs font-medium px-2 py-1 rounded">
             Son {product.stock} Ürün
           </span>
         )}
@@ -39,9 +81,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
       {/* Content */}
       <div className="p-4">
-        <Link to={`/kategori/${product.categorySlug}`}>
+        <Link to={`/kategori/${product.categories?.slug}`}>
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide hover:text-foreground transition-colors">
-            {product.category}
+            {product.categories?.name}
           </span>
         </Link>
         
@@ -52,32 +94,25 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </Link>
 
         <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-          {product.shortDescription}
+          {product.short_description}
         </p>
-
-        {/* Rating */}
-        <div className="mt-2 flex items-center gap-1">
-          <Star className="h-4 w-4 fill-terracotta text-terracotta" />
-          <span className="text-sm font-medium">{product.rating}</span>
-          <span className="text-sm text-muted-foreground">({product.reviewCount})</span>
-        </div>
 
         {/* Price & Add to Cart */}
         <div className="mt-3 flex items-center justify-between">
           <div className="flex items-baseline gap-2">
             <span className="text-lg font-semibold text-foreground">
-              {formatPrice(product.salePrice || product.price)}
+              {formatPrice(Number(product.sale_price || product.price))}
             </span>
             {hasDiscount && (
               <span className="text-sm text-muted-foreground line-through">
-                {formatPrice(product.price)}
+                {formatPrice(Number(product.price))}
               </span>
             )}
           </div>
           <Button
             size="sm"
             variant="outline"
-            onClick={() => addToCart(product)}
+            onClick={handleAddToCart}
             disabled={product.stock === 0}
             className="gap-1.5"
           >

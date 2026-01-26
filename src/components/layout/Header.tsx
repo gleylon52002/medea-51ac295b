@@ -1,13 +1,23 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingBag, Menu, X, Search, User } from "lucide-react";
+import { ShoppingBag, Menu, X, Search, User, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCart } from "@/contexts/CartContext";
-import { categories } from "@/data/products";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCategories } from "@/hooks/useCategories";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { cart, setIsCartOpen } = useCart();
+  const { user, isAdmin, signOut } = useAuth();
+  const { data: categories } = useCategories();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -37,7 +47,7 @@ const Header = () => {
             >
               Tüm Ürünler
             </Link>
-            {categories.slice(0, 4).map((category) => (
+            {categories?.slice(0, 4).map((category) => (
               <Link
                 key={category.id}
                 to={`/kategori/${category.slug}`}
@@ -53,11 +63,44 @@ const Header = () => {
             <Button variant="ghost" size="icon" className="hidden sm:flex">
               <Search className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/hesabim">
-                <User className="h-5 w-5" />
-              </Link>
-            </Button>
+            
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/hesabim" className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      Hesabım
+                    </Link>
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="cursor-pointer">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Admin Paneli
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Çıkış Yap
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="ghost" size="icon" asChild>
+                <Link to="/giris">
+                  <User className="h-5 w-5" />
+                </Link>
+              </Button>
+            )}
+            
             <Button
               variant="ghost"
               size="icon"
@@ -86,7 +129,7 @@ const Header = () => {
             >
               Tüm Ürünler
             </Link>
-            {categories.map((category) => (
+            {categories?.map((category) => (
               <Link
                 key={category.id}
                 to={`/kategori/${category.slug}`}
@@ -111,6 +154,15 @@ const Header = () => {
               >
                 İletişim
               </Link>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className="block py-3 text-base text-primary font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Admin Paneli
+                </Link>
+              )}
             </div>
           </nav>
         </div>

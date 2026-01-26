@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight, Minus, Plus, Star, Truck, Shield, Leaf, Heart } from "lucide-react";
+import { ChevronRight, Minus, Plus, Star, Truck, Shield, Leaf, Heart, Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCart } from "@/contexts/CartContext";
-import { getProductBySlug, getProductsByCategory } from "@/data/products";
+import { useAuth } from "@/contexts/AuthContext";
+import { useProductBySlug, useProductsByCategory, ProductWithCategory } from "@/hooks/useProducts";
+import { useProductRating } from "@/hooks/useReviews";
+import { useToggleFavorite, useIsFavorite } from "@/hooks/useFavorites";
 import { formatPrice } from "@/lib/utils";
 import ProductCard from "@/components/products/ProductCard";
 
@@ -13,8 +16,23 @@ const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
+  const { user } = useAuth();
   
-  const product = getProductBySlug(slug || "");
+  const { data: product, isLoading } = useProductBySlug(slug || "");
+  const { data: rating } = useProductRating(product?.id || "");
+  const { data: isFavorite } = useIsFavorite(product?.id || "");
+  const toggleFavorite = useToggleFavorite();
+  const { data: relatedProducts } = useProductsByCategory(product?.categories?.slug || "");
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container-main py-16 flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   if (!product) {
     return (
@@ -29,14 +47,35 @@ const ProductDetail = () => {
     );
   }
 
-  const relatedProducts = getProductsByCategory(product.categorySlug)
-    .filter((p) => p.id !== product.id)
-    .slice(0, 4);
+  const filteredRelated = relatedProducts?.filter(p => p.id !== product.id).slice(0, 4) || [];
 
-  const hasDiscount = product.salePrice && product.salePrice < product.price;
+  const hasDiscount = product.sale_price && Number(product.sale_price) < Number(product.price);
   const discountPercent = hasDiscount
-    ? Math.round((1 - product.salePrice! / product.price) * 100)
+    ? Math.round((1 - Number(product.sale_price) / Number(product.price)) * 100)
     : 0;
+
+  const handleAddToCart = () => {
+    const cartProduct = {
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      description: product.description || "",
+      shortDescription: product.short_description || "",
+      price: Number(product.price),
+      salePrice: product.sale_price ? Number(product.sale_price) : undefined,
+      images: product.images || [],
+      category: product.categories?.name || "",
+      categorySlug: product.categories?.slug || "",
+      stock: product.stock,
+      featured: product.is_featured,
+      ingredients: product.ingredients || undefined,
+      usage: product.usage_instructions || undefined,
+      rating: rating?.average || 0,
+      reviewCount: rating?.count || 0,
+      createdAt: product.created_at,
+    };
+    addToCart(cartProduct, quantity);
+  };
 
   return (
     <Layout>
@@ -47,8 +86,8 @@ const ProductDetail = () => {
           <ChevronRight className="h-4 w-4" />
           <Link to="/urunler" className="hover:text-foreground transition-colors">Ürünler</Link>
           <ChevronRight className="h-4 w-4" />
-          <Link to={`/kategori/${product.categorySlug}`} className="hover:text-foreground transition-colors">
-            {product.category}
+          <Link to={`/kategori/${product.categories?.slug}`} className="hover:text-foreground transition-colors">
+            {product.categories?.name}
           </Link>
           <ChevronRight className="h-4 w-4" />
           <span className="text-foreground">{product.name}</span>
@@ -59,12 +98,12 @@ const ProductDetail = () => {
           <div className="space-y-4">
             <div className="aspect-square rounded-xl overflow-hidden bg-secondary">
               <img
-                src={product.images[0]}
+                src={product.images?.[0] || "/placeholder.svg"}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
             </div>
-            {product.images.length > 1 && (
+            {product.images && product.images.length > 1 && (
               <div className="grid grid-cols-4 gap-4">
                 {product.images.map((image, index) => (
                   <button
@@ -82,10 +121,10 @@ const ProductDetail = () => {
           <div className="space-y-6">
             <div>
               <Link
-                to={`/kategori/${product.categorySlug}`}
+                to={`/kategori/${product.categories?.slug}`}
                 className="text-sm font-medium text-muted-foreground uppercase tracking-wide hover:text-foreground transition-colors"
               >
-                {product.category}
+                {product.categories?.name}
               </Link>
               <h1 className="font-serif text-3xl lg:text-4xl font-medium text-foreground mt-2">
                 {product.name}
@@ -99,26 +138,26 @@ const ProductDetail = () => {
                   <Star
                     key={i}
                     className={`h-5 w-5 ${
-                      i < Math.floor(product.rating)
+                      i < Math.floor(rating?.average || 0)
                         ? "fill-terracotta text-terracotta"
                         : "fill-muted text-muted"
                     }`}
                   />
                 ))}
               </div>
-              <span className="font-medium">{product.rating}</span>
-              <span className="text-muted-foreground">({product.reviewCount} değerlendirme)</span>
+              <span className="font-medium">{rating?.average || 0}</span>
+              <span className="text-muted-foreground">({rating?.count || 0} değerlendirme)</span>
             </div>
 
             {/* Price */}
             <div className="flex items-baseline gap-3">
               <span className="text-3xl font-semibold text-foreground">
-                {formatPrice(product.salePrice || product.price)}
+                {formatPrice(Number(product.sale_price || product.price))}
               </span>
               {hasDiscount && (
                 <>
                   <span className="text-xl text-muted-foreground line-through">
-                    {formatPrice(product.price)}
+                    {formatPrice(Number(product.price))}
                   </span>
                   <span className="px-2 py-1 bg-terracotta text-white text-sm font-medium rounded">
                     %{discountPercent} İndirim
@@ -170,14 +209,20 @@ const ProductDetail = () => {
               <Button
                 size="lg"
                 className="flex-1"
-                onClick={() => addToCart(product, quantity)}
+                onClick={handleAddToCart}
                 disabled={product.stock === 0}
               >
                 Sepete Ekle
               </Button>
-              <Button size="lg" variant="outline">
-                <Heart className="h-5 w-5" />
-              </Button>
+              {user && (
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  onClick={() => toggleFavorite.mutate(product.id)}
+                >
+                  <Heart className={`h-5 w-5 ${isFavorite ? "fill-terracotta text-terracotta" : ""}`} />
+                </Button>
+              )}
             </div>
 
             {/* Trust Features */}
@@ -236,19 +281,19 @@ const ProductDetail = () => {
           </TabsContent>
           <TabsContent value="usage" className="pt-6">
             <p className="text-muted-foreground leading-relaxed max-w-3xl">
-              {product.usage || "Kullanım talimatı yakında eklenecek."}
+              {product.usage_instructions || "Kullanım talimatı yakında eklenecek."}
             </p>
           </TabsContent>
         </Tabs>
 
         {/* Related Products */}
-        {relatedProducts.length > 0 && (
+        {filteredRelated.length > 0 && (
           <section className="mt-16 pt-16 border-t border-border">
             <h2 className="font-serif text-2xl lg:text-3xl font-medium text-foreground mb-8">
               Benzer Ürünler
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {relatedProducts.map((relatedProduct) => (
+              {filteredRelated.map((relatedProduct) => (
                 <ProductCard key={relatedProduct.id} product={relatedProduct} />
               ))}
             </div>

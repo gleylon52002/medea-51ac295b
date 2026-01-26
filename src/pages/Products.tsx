@@ -1,35 +1,47 @@
 import { useState } from "react";
-import { SlidersHorizontal, Grid3X3, LayoutList } from "lucide-react";
+import { SlidersHorizontal, Grid3X3, LayoutList, Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import ProductCard from "@/components/products/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { products, categories } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
+import { useCategories } from "@/hooks/useCategories";
 
 const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("featured");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const filteredProducts = products.filter((product) => {
+  const { data: products, isLoading: productsLoading } = useProducts();
+  const { data: categories, isLoading: categoriesLoading } = useCategories();
+
+  const filteredProducts = products?.filter((product) => {
     if (selectedCategory === "all") return true;
-    return product.categorySlug === selectedCategory;
-  });
+    return product.categories?.slug === selectedCategory;
+  }) || [];
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
       case "price-asc":
-        return (a.salePrice || a.price) - (b.salePrice || b.price);
+        return Number(a.sale_price || a.price) - Number(b.sale_price || b.price);
       case "price-desc":
-        return (b.salePrice || b.price) - (a.salePrice || a.price);
-      case "rating":
-        return b.rating - a.rating;
+        return Number(b.sale_price || b.price) - Number(a.sale_price || a.price);
       case "newest":
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       default:
-        return b.featured ? 1 : -1;
+        return b.is_featured ? 1 : -1;
     }
   });
+
+  if (productsLoading || categoriesLoading) {
+    return (
+      <Layout>
+        <div className="container-main py-16 flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -54,7 +66,7 @@ const Products = () => {
             >
               Tümü
             </Button>
-            {categories.map((category) => (
+            {categories?.map((category) => (
               <Button
                 key={category.id}
                 variant={selectedCategory === category.slug ? "default" : "outline"}
@@ -77,7 +89,6 @@ const Products = () => {
                 <SelectItem value="newest">En Yeniler</SelectItem>
                 <SelectItem value="price-asc">Fiyat: Düşükten Yükseğe</SelectItem>
                 <SelectItem value="price-desc">Fiyat: Yüksekten Düşüğe</SelectItem>
-                <SelectItem value="rating">En Yüksek Puan</SelectItem>
               </SelectContent>
             </Select>
 
