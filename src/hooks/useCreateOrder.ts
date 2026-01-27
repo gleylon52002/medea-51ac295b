@@ -40,6 +40,21 @@ export const useCreateOrder = () => {
     mutationFn: async (params: CreateOrderParams) => {
       const orderNumber = generateOrderNumber();
 
+      // Check stock for all items first
+      for (const item of params.items) {
+        const { data: product, error: stockError } = await supabase
+          .from("products")
+          .select("stock, name")
+          .eq("id", item.product.id)
+          .single();
+
+        if (stockError) throw new Error(`Ürün bilgisi alınamadı: ${item.product.name}`);
+        
+        if (product.stock < item.quantity) {
+          throw new Error(`Yetersiz stok: "${product.name}" için sadece ${product.stock} adet mevcut`);
+        }
+      }
+
       // Create the order
       const { data: order, error: orderError } = await supabase
         .from("orders")
@@ -77,10 +92,27 @@ export const useCreateOrder = () => {
 
       if (itemsError) throw itemsError;
 
+      // Update stock for each product
+      for (const item of params.items) {
+        const { data: currentProduct } = await supabase
+          .from("products")
+          .select("stock")
+          .eq("id", item.product.id)
+          .single();
+
+        if (currentProduct) {
+          await supabase
+            .from("products")
+            .update({ stock: Math.max(0, currentProduct.stock - item.quantity) })
+            .eq("id", item.product.id);
+        }
+      }
+
       return { order, orderNumber };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     },
   });
 };

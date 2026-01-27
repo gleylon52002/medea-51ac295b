@@ -21,6 +21,7 @@ import Contact from "./pages/Contact";
 import Account from "./pages/Account";
 import Profile from "./pages/account/Profile";
 import Orders from "./pages/account/Orders";
+import OrderDetail from "./pages/account/OrderDetail";
 import Favorites from "./pages/account/Favorites";
 import Addresses from "./pages/account/Addresses";
 import AccountSettings from "./pages/account/AccountSettings";
@@ -72,6 +73,7 @@ const App = () => (
               <Route path="/hesabim" element={<Account />}>
                 <Route index element={<Profile />} />
                 <Route path="siparisler" element={<Orders />} />
+                <Route path="siparisler/:orderNumber" element={<OrderDetail />} />
                 <Route path="favoriler" element={<Favorites />} />
                 <Route path="adresler" element={<Addresses />} />
                 <Route path="ayarlar" element={<AccountSettings />} />
