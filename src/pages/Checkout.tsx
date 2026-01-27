@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronRight, CreditCard, Truck, MapPin, Check } from "lucide-react";
+import { ChevronRight, CreditCard, Truck, MapPin, Check, Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,14 +10,28 @@ import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/contexts/CartContext";
 import { formatPrice } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useCreateOrder } from "@/hooks/useCreateOrder";
+import { Database } from "@/integrations/supabase/types";
+
+type PaymentMethodType = "credit-card" | "bank-transfer" | "cash-on-delivery";
+type DbPaymentMethod = Database["public"]["Enums"]["payment_method"];
+
+const paymentMethodMap: Record<PaymentMethodType, DbPaymentMethod> = {
+  "credit-card": "credit_card",
+  "bank-transfer": "bank_transfer",
+  "cash-on-delivery": "cash_on_delivery",
+};
 
 const Checkout = () => {
   const { cart, clearCart } = useCart();
   const { items, total } = cart;
   const navigate = useNavigate();
   const { toast } = useToast();
+  const createOrder = useCreateOrder();
   const [step, setStep] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState("credit-card");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("credit-card");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
     firstName: "",
@@ -37,13 +51,53 @@ const Checkout = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmitOrder = () => {
-    toast({
-      title: "Siparişiniz Alındı!",
-      description: "Siparişiniz başarıyla oluşturuldu. E-posta adresinize onay gönderildi.",
-    });
-    clearCart();
-    navigate("/siparis-basarili");
+  const handleSubmitOrder = async () => {
+    if (!termsAccepted) {
+      toast({
+        title: "Hata",
+        description: "Lütfen sözleşmeleri kabul edin.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const result = await createOrder.mutateAsync({
+        items,
+        shippingAddress: {
+          full_name: `${formData.firstName} ${formData.lastName}`,
+          phone: formData.phone,
+          email: formData.email,
+          address: formData.address,
+          city: formData.city,
+          district: formData.district,
+          postal_code: formData.postalCode,
+        },
+        paymentMethod: paymentMethodMap[paymentMethod],
+        subtotal: total,
+        shippingCost,
+        total: grandTotal,
+      });
+
+      toast({
+        title: "Siparişiniz Alındı!",
+        description: `Sipariş numaranız: ${result.orderNumber}`,
+      });
+      
+      clearCart();
+      navigate(`/siparis-basarili?order=${result.orderNumber}`);
+    } catch (error: any) {
+      console.error("Order creation error:", error);
+      toast({
+        title: "Hata",
+        description: error.message || "Sipariş oluşturulurken bir hata oluştu.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (items.length === 0) {
@@ -213,7 +267,7 @@ const Checkout = () => {
                   <h2 className="font-serif text-xl font-medium">Ödeme Yöntemi</h2>
                 </div>
 
-                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as PaymentMethodType)}>
                   <div className="space-y-4">
                     <label
                       className={`flex items-center gap-4 p-4 border rounded-lg cursor-pointer transition-colors ${
@@ -328,7 +382,13 @@ const Checkout = () => {
                 </div>
 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <input type="checkbox" id="terms" className="rounded" />
+                  <input 
+                    type="checkbox" 
+                    id="terms" 
+                    className="rounded" 
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                  />
                   <label htmlFor="terms">
                     <Link to="/mesafeli-satis-sozlesmesi" className="text-primary hover:underline">
                       Mesafeli Satış Sözleşmesi
@@ -342,11 +402,18 @@ const Checkout = () => {
                 </div>
 
                 <div className="flex gap-4">
-                  <Button variant="outline" onClick={() => setStep(2)}>
+                  <Button variant="outline" onClick={() => setStep(2)} disabled={isSubmitting}>
                     Geri
                   </Button>
-                  <Button onClick={handleSubmitOrder}>
-                    Siparişi Tamamla
+                  <Button onClick={handleSubmitOrder} disabled={isSubmitting || !termsAccepted}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        İşleniyor...
+                      </>
+                    ) : (
+                      "Siparişi Tamamla"
+                    )}
                   </Button>
                 </div>
               </div>

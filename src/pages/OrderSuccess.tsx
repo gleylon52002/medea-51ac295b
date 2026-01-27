@@ -1,10 +1,14 @@
-import { Link } from "react-router-dom";
-import { CheckCircle, Package, Mail, ArrowRight } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { CheckCircle, Package, Mail, ArrowRight, Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
+import { useOrderByNumber } from "@/hooks/useOrders";
+import { formatPrice } from "@/lib/utils";
 
 const OrderSuccess = () => {
-  const orderNumber = `MDA${Date.now().toString().slice(-8)}`;
+  const [searchParams] = useSearchParams();
+  const orderNumber = searchParams.get("order") || "";
+  const { data: order, isLoading } = useOrderByNumber(orderNumber);
 
   return (
     <Layout>
@@ -24,7 +28,27 @@ const OrderSuccess = () => {
 
           <div className="bg-muted/30 rounded-xl p-6 mb-8">
             <p className="text-sm text-muted-foreground mb-2">Sipariş Numaranız</p>
-            <p className="text-2xl font-semibold text-foreground">{orderNumber}</p>
+            <p className="text-2xl font-semibold text-foreground">{orderNumber || "—"}</p>
+            {isLoading ? (
+              <div className="flex justify-center mt-4">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : order && (
+              <div className="mt-4 pt-4 border-t border-border text-sm">
+                <div className="flex justify-between mb-1">
+                  <span className="text-muted-foreground">Ara Toplam:</span>
+                  <span>{formatPrice(order.subtotal)}</span>
+                </div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-muted-foreground">Kargo:</span>
+                  <span>{order.shipping_cost === 0 ? "Ücretsiz" : formatPrice(order.shipping_cost)}</span>
+                </div>
+                <div className="flex justify-between font-semibold">
+                  <span>Toplam:</span>
+                  <span>{formatPrice(order.total)}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4 mb-8">
