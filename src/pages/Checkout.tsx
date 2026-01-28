@@ -11,6 +11,9 @@ import { useCart } from "@/contexts/CartContext";
 import { formatPrice } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateOrder } from "@/hooks/useCreateOrder";
+import { useIncrementCouponUsage, Coupon } from "@/hooks/useCoupons";
+import { useAuth } from "@/contexts/AuthContext";
+import CouponInput from "@/components/checkout/CouponInput";
 import { Database } from "@/integrations/supabase/types";
 
 type PaymentMethodType = "credit-card" | "bank-transfer" | "cash-on-delivery";
@@ -27,11 +30,14 @@ const Checkout = () => {
   const { items, total } = cart;
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const createOrder = useCreateOrder();
+  const incrementCouponUsage = useIncrementCouponUsage();
   const [step, setStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("credit-card");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<{ coupon: Coupon; discount: number } | null>(null);
   
   const [formData, setFormData] = useState({
     firstName: "",
@@ -45,7 +51,8 @@ const Checkout = () => {
   });
 
   const shippingCost = total >= 300 ? 0 : 29.90;
-  const grandTotal = total + shippingCost;
+  const discountAmount = appliedCoupon?.discount || 0;
+  const grandTotal = total - discountAmount + shippingCost;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -79,7 +86,18 @@ const Checkout = () => {
         subtotal: total,
         shippingCost,
         total: grandTotal,
+        couponCode: appliedCoupon?.coupon.code,
+        discountAmount: discountAmount,
       });
+
+      // If coupon was used, record it
+      if (appliedCoupon) {
+        await incrementCouponUsage.mutateAsync({
+          couponId: appliedCoupon.coupon.id,
+          orderId: result.order.id,
+          userId: user?.id,
+        });
+      }
 
       toast({
         title: "Siparişiniz Alındı!",
@@ -87,6 +105,7 @@ const Checkout = () => {
       });
       
       clearCart();
+      setAppliedCoupon(null);
       navigate(`/siparis-basarili?order=${result.orderNumber}`);
     } catch (error: any) {
       console.error("Order creation error:", error);
@@ -451,11 +470,26 @@ const Checkout = () => {
                   <span className="text-muted-foreground">Ara Toplam</span>
                   <span>{formatPrice(total)}</span>
                 </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Kupon İndirimi</span>
+                    <span>-{formatPrice(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Kargo</span>
                   <span>{shippingCost === 0 ? "Ücretsiz" : formatPrice(shippingCost)}</span>
                 </div>
               </div>
+
+              <Separator className="my-4" />
+
+              {/* Coupon Input */}
+              <CouponInput
+                orderTotal={total}
+                appliedCoupon={appliedCoupon}
+                onApplyCoupon={setAppliedCoupon}
+              />
 
               <Separator className="my-4" />
 

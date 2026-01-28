@@ -24,6 +24,8 @@ interface CreateOrderParams {
   shippingCost: number;
   total: number;
   notes?: string;
+  couponCode?: string;
+  discountAmount?: number;
 }
 
 const generateOrderNumber = (): string => {
@@ -67,6 +69,8 @@ export const useCreateOrder = () => {
           shipping_cost: params.shippingCost,
           total: params.total,
           notes: params.notes || null,
+          coupon_code: params.couponCode || null,
+          discount_amount: params.discountAmount || 0,
           status: "pending",
           payment_status: "pending",
         })

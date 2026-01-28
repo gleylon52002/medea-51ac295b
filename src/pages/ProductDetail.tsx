@@ -11,6 +11,7 @@ import { useProductRating } from "@/hooks/useReviews";
 import { useToggleFavorite, useIsFavorite } from "@/hooks/useFavorites";
 import { formatPrice } from "@/lib/utils";
 import ProductCard from "@/components/products/ProductCard";
+import ProductReviews from "@/components/products/ProductReviews";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -268,6 +269,12 @@ const ProductDetail = () => {
             >
               Kullanım
             </TabsTrigger>
+            <TabsTrigger
+              value="reviews"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+            >
+              Değerlendirmeler ({rating?.count || 0})
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="description" className="pt-6">
             <p className="text-muted-foreground leading-relaxed max-w-3xl">
@@ -283,6 +290,9 @@ const ProductDetail = () => {
             <p className="text-muted-foreground leading-relaxed max-w-3xl">
               {product.usage_instructions || "Kullanım talimatı yakında eklenecek."}
             </p>
+          </TabsContent>
+          <TabsContent value="reviews" className="pt-6">
+            <ProductReviews productId={product.id} />
           </TabsContent>
         </Tabs>
 

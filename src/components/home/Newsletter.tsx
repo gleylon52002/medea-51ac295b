@@ -1,18 +1,25 @@
 import { useState } from "react";
-import { Send } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useSubscribeNewsletter } from "@/hooks/useNewsletter";
 
 const Newsletter = () => {
   const [email, setEmail] = useState("");
+  const subscribeNewsletter = useSubscribeNewsletter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     
-    toast.success("Bültene başarıyla kayıt oldunuz!");
-    setEmail("");
+    try {
+      await subscribeNewsletter.mutateAsync(email);
+      toast.success("Bültene başarıyla kayıt oldunuz!");
+      setEmail("");
+    } catch (error: any) {
+      toast.error(error.message || "Kayıt sırasında bir hata oluştu");
+    }
   };
 
   return (
@@ -38,8 +45,13 @@ const Newsletter = () => {
               type="submit" 
               variant="secondary"
               className="gap-2 shrink-0"
+              disabled={subscribeNewsletter.isPending}
             >
-              <Send className="h-4 w-4" />
+              {subscribeNewsletter.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
               Abone Ol
             </Button>
           </form>

@@ -10,7 +10,10 @@ import {
   Truck,
   CreditCard,
   LogOut,
-  ChevronLeft
+  ChevronLeft,
+  Tag,
+  Mail,
+  Newspaper
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -23,6 +26,9 @@ const menuItems = [
   { icon: ShoppingCart, label: "Siparişler", path: "/admin/siparisler" },
   { icon: Users, label: "Kullanıcılar", path: "/admin/kullanicilar" },
   { icon: MessageSquare, label: "Yorumlar", path: "/admin/yorumlar" },
+  { icon: Tag, label: "Kuponlar", path: "/admin/kuponlar" },
+  { icon: Mail, label: "Mesajlar", path: "/admin/mesajlar" },
+  { icon: Newspaper, label: "Bülten", path: "/admin/bulten" },
   { icon: Truck, label: "Kargo", path: "/admin/kargo" },
   { icon: CreditCard, label: "Ödeme", path: "/admin/odeme" },
   { icon: Settings, label: "Ayarlar", path: "/admin/ayarlar" },

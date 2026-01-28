@@ -45,6 +45,9 @@ import AdminReviews from "./pages/admin/AdminReviews";
 import AdminShipping from "./pages/admin/AdminShipping";
 import AdminPayment from "./pages/admin/AdminPayment";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminCoupons from "./pages/admin/AdminCoupons";
+import AdminMessages from "./pages/admin/AdminMessages";
+import AdminNewsletter from "./pages/admin/AdminNewsletter";
 
 import NotFound from "./pages/NotFound";
 
@@ -94,6 +97,9 @@ const App = () => (
                 <Route path="siparisler" element={<AdminOrders />} />
                 <Route path="kullanicilar" element={<AdminUsers />} />
                 <Route path="yorumlar" element={<AdminReviews />} />
+                <Route path="kuponlar" element={<AdminCoupons />} />
+                <Route path="mesajlar" element={<AdminMessages />} />
+                <Route path="bulten" element={<AdminNewsletter />} />
                 <Route path="kargo" element={<AdminShipping />} />
                 <Route path="odeme" element={<AdminPayment />} />
                 <Route path="ayarlar" element={<AdminSettings />} />
