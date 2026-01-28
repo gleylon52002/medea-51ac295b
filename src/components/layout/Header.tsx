@@ -13,9 +13,11 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/hooks/useCategories";
 import { toast } from "sonner";
+import SearchDialog from "@/components/search/SearchDialog";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const navigate = useNavigate();
   const { cart, setIsCartOpen } = useCart();
   const { user, isAdmin, signOut } = useAuth();
@@ -68,9 +70,10 @@ const Header = () => {
 
           {/* Right side icons */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
+            <Button variant="ghost" size="icon" className="hidden sm:flex" onClick={() => setIsSearchOpen(true)}>
               <Search className="h-5 w-5" />
             </Button>
+            <SearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} />
             
             {user ? (
               <DropdownMenu>

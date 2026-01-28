@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, Mail, Phone, MapPin, Clock, Send } from "lucide-react";
+import { ChevronRight, Mail, Phone, MapPin, Clock, Send, Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useSendContactMessage } from "@/hooks/useContactMessages";
 
 const Contact = () => {
   const { toast } = useToast();
+  const sendMessage = useSendContactMessage();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -17,13 +19,23 @@ const Contact = () => {
     message: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Mesajınız Gönderildi",
-      description: "En kısa sürede size dönüş yapacağız.",
-    });
-    setFormData({ name: "", email: "", subject: "", message: "" });
+    
+    try {
+      await sendMessage.mutateAsync(formData);
+      toast({
+        title: "Mesajınız Gönderildi",
+        description: "En kısa sürede size dönüş yapacağız.",
+      });
+      setFormData({ name: "", email: "", subject: "", message: "" });
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Mesaj gönderilirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -160,8 +172,12 @@ const Contact = () => {
                 />
               </div>
 
-              <Button type="submit" size="lg">
-                <Send className="h-4 w-4 mr-2" />
+              <Button type="submit" size="lg" disabled={sendMessage.isPending}>
+                {sendMessage.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4 mr-2" />
+                )}
                 Mesaj Gönder
               </Button>
             </form>
