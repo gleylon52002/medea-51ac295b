@@ -6,6 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToggleFavorite, useIsFavorite } from "@/hooks/useFavorites";
 import { formatPrice } from "@/lib/utils";
 import { ProductWithCategory } from "@/hooks/useProducts";
+import StockUrgencyBadge from "./StockUrgencyBadge";
+import ProductBadges from "./ProductBadges";
 
 interface ProductCardProps {
   product: ProductWithCategory;
@@ -21,6 +23,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const discountPercent = hasDiscount
     ? Math.round((1 - Number(product.sale_price) / Number(product.price)) * 100)
     : 0;
+  
+  // Check if product is new (created within last 14 days)
+  const isNew = new Date(product.created_at) > new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 
   const handleAddToCart = () => {
     // Convert to the format expected by cart
@@ -67,15 +72,20 @@ const ProductCard = ({ product }: ProductCardProps) => {
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        {hasDiscount && (
-          <span className="absolute top-3 left-3 bg-terracotta text-white text-xs font-medium px-2 py-1 rounded">
-            %{discountPercent} İndirim
-          </span>
-        )}
-        {product.stock <= 5 && product.stock > 0 && (
-          <span className="absolute bottom-3 left-3 bg-foreground/80 text-background text-xs font-medium px-2 py-1 rounded">
-            Son {product.stock} Ürün
-          </span>
+        {/* Badges */}
+        <div className="absolute top-3 left-3 z-10">
+          <ProductBadges
+            hasDiscount={hasDiscount}
+            discountPercent={discountPercent}
+            isFeatured={product.is_featured}
+            isNew={isNew}
+          />
+        </div>
+        {/* Low Stock Warning */}
+        {product.stock <= 10 && product.stock > 0 && (
+          <div className="absolute bottom-3 left-3 z-10">
+            <StockUrgencyBadge stock={product.stock} size="sm" />
+          </div>
         )}
       </Link>
 
