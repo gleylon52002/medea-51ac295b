@@ -1,12 +1,20 @@
 import { Link } from "react-router-dom";
-import { X, Minus, Plus, ShoppingBag } from "lucide-react";
+import { X, Minus, Plus, ShoppingBag, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useCart } from "@/contexts/CartContext";
 import { formatPrice } from "@/lib/utils";
+import FreeShippingProgress from "./FreeShippingProgress";
+import { useFeaturedProducts } from "@/hooks/useProducts";
 
 const CartDrawer = () => {
-  const { cart, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity } = useCart();
+  const { cart, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, addToCart } = useCart();
+  const { data: featuredProducts } = useFeaturedProducts();
+  
+  // Get suggested products (not already in cart)
+  const suggestedProducts = featuredProducts
+    ?.filter(p => !cart.items.find(item => item.product.id === p.id))
+    .slice(0, 2) || [];
 
   return (
     <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
@@ -79,7 +87,63 @@ const CartDrawer = () => {
               ))}
             </div>
 
+            {/* Suggested Products */}
+            {suggestedProducts.length > 0 && (
+              <div className="border-t border-border pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Gift className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Bunları da beğenebilirsiniz</span>
+                </div>
+                <div className="space-y-2">
+                  {suggestedProducts.map((product) => (
+                    <div key={product.id} className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg">
+                      <img
+                        src={product.images?.[0] || "/placeholder.svg"}
+                        alt={product.name}
+                        className="w-12 h-12 object-cover rounded"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{product.name}</p>
+                        <p className="text-xs text-primary font-medium">
+                          {formatPrice(Number(product.sale_price || product.price))}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const cartProduct = {
+                            id: product.id,
+                            name: product.name,
+                            slug: product.slug,
+                            description: product.description || "",
+                            shortDescription: product.short_description || "",
+                            price: Number(product.price),
+                            salePrice: product.sale_price ? Number(product.sale_price) : undefined,
+                            images: product.images || [],
+                            category: product.categories?.name || "",
+                            categorySlug: product.categories?.slug || "",
+                            stock: product.stock,
+                            featured: product.is_featured,
+                            rating: 0,
+                            reviewCount: 0,
+                            createdAt: product.created_at,
+                          };
+                          addToCart(cartProduct);
+                        }}
+                      >
+                        Ekle
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="border-t border-border pt-4 space-y-4">
+              {/* Free Shipping Progress */}
+              <FreeShippingProgress currentTotal={cart.total} />
+              
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Ara Toplam</span>
@@ -87,19 +151,15 @@ const CartDrawer = () => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Kargo</span>
-                  <span>{cart.total >= 300 ? "Ücretsiz" : formatPrice(29.90)}</span>
+                  <span className={cart.total >= 300 ? "text-green-600 font-medium" : ""}>
+                    {cart.total >= 300 ? "Ücretsiz" : formatPrice(29.90)}
+                  </span>
                 </div>
                 <div className="flex justify-between font-medium text-lg pt-2 border-t border-border">
                   <span>Toplam</span>
                   <span>{formatPrice(cart.total >= 300 ? cart.total : cart.total + 29.90)}</span>
                 </div>
               </div>
-              
-              {cart.total < 300 && (
-                <p className="text-xs text-center text-muted-foreground">
-                  Ücretsiz kargo için {formatPrice(300 - cart.total)} daha ekleyin
-                </p>
-              )}
 
               <Button className="w-full" size="lg" asChild>
                 <Link to="/odeme" onClick={() => setIsCartOpen(false)}>

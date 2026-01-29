@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ChevronRight, Minus, Plus, Star, Truck, Shield, Leaf, Heart, Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
@@ -9,13 +9,22 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProductBySlug, useProductsByCategory, ProductWithCategory } from "@/hooks/useProducts";
 import { useProductRating } from "@/hooks/useReviews";
 import { useToggleFavorite, useIsFavorite } from "@/hooks/useFavorites";
+import { addToRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { formatPrice } from "@/lib/utils";
 import ProductCard from "@/components/products/ProductCard";
 import ProductReviews from "@/components/products/ProductReviews";
+import StockUrgencyBadge from "@/components/products/StockUrgencyBadge";
+import ViewerCount from "@/components/products/ViewerCount";
+import ImageZoom from "@/components/products/ImageZoom";
+import RecentlyViewed from "@/components/products/RecentlyViewed";
+import TrustBadges from "@/components/products/TrustBadges";
+import StickyAddToCart from "@/components/cart/StickyAddToCart";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const [quantity, setQuantity] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const addToCartRef = useRef<HTMLDivElement>(null);
   const { addToCart } = useCart();
   const { user } = useAuth();
   
@@ -24,6 +33,13 @@ const ProductDetail = () => {
   const { data: isFavorite } = useIsFavorite(product?.id || "");
   const toggleFavorite = useToggleFavorite();
   const { data: relatedProducts } = useProductsByCategory(product?.categories?.slug || "");
+
+  // Track recently viewed
+  useEffect(() => {
+    if (product?.id) {
+      addToRecentlyViewed(product.id);
+    }
+  }, [product?.id]);
 
   if (isLoading) {
     return (
@@ -97,11 +113,11 @@ const ProductDetail = () => {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
           {/* Image Gallery */}
           <div className="space-y-4">
-            <div className="aspect-square rounded-xl overflow-hidden bg-secondary">
-              <img
-                src={product.images?.[0] || "/placeholder.svg"}
+            <div className="aspect-square">
+              <ImageZoom
+                src={product.images?.[selectedImage] || "/placeholder.svg"}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full"
               />
             </div>
             {product.images && product.images.length > 1 && (
@@ -109,7 +125,10 @@ const ProductDetail = () => {
                 {product.images.map((image, index) => (
                   <button
                     key={index}
-                    className="aspect-square rounded-lg overflow-hidden bg-secondary border-2 border-transparent hover:border-primary transition-colors"
+                    onClick={() => setSelectedImage(index)}
+                    className={`aspect-square rounded-lg overflow-hidden bg-secondary border-2 transition-colors ${
+                      selectedImage === index ? "border-primary" : "border-transparent hover:border-primary/50"
+                    }`}
                   >
                     <img src={image} alt="" className="w-full h-full object-cover" />
                   </button>
@@ -132,22 +151,25 @@ const ProductDetail = () => {
               </h1>
             </div>
 
-            {/* Rating */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-5 w-5 ${
-                      i < Math.floor(rating?.average || 0)
-                        ? "fill-terracotta text-terracotta"
-                        : "fill-muted text-muted"
-                    }`}
-                  />
-                ))}
+            {/* Rating & Viewer Count */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-5 w-5 ${
+                        i < Math.floor(rating?.average || 0)
+                          ? "fill-terracotta text-terracotta"
+                          : "fill-muted text-muted"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="font-medium">{rating?.average || 0}</span>
+                <span className="text-muted-foreground">({rating?.count || 0} değerlendirme)</span>
               </div>
-              <span className="font-medium">{rating?.average || 0}</span>
-              <span className="text-muted-foreground">({rating?.count || 0} değerlendirme)</span>
+              <ViewerCount productId={product.id} />
             </div>
 
             {/* Price */}
@@ -171,25 +193,21 @@ const ProductDetail = () => {
               {product.description}
             </p>
 
-            {/* Stock Status */}
-            <div className="flex items-center gap-2">
-              {product.stock > 0 ? (
-                <>
+            {/* Stock Status with Urgency */}
+            <div className="space-y-2">
+              <StockUrgencyBadge stock={product.stock} />
+              {product.stock > 10 && (
+                <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500"></span>
                   <span className="text-sm text-muted-foreground">
                     Stokta ({product.stock} adet)
                   </span>
-                </>
-              ) : (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                  <span className="text-sm text-destructive">Stokta yok</span>
-                </>
+                </div>
               )}
             </div>
 
             {/* Quantity & Add to Cart */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div ref={addToCartRef} className="flex flex-col sm:flex-row gap-4">
               <div className="flex items-center border border-border rounded-md">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -227,24 +245,7 @@ const ProductDetail = () => {
             </div>
 
             {/* Trust Features */}
-            <div className="grid grid-cols-2 gap-4 pt-6 border-t border-border">
-              <div className="flex items-center gap-3">
-                <Truck className="h-5 w-5 text-primary" />
-                <span className="text-sm">300₺ üzeri ücretsiz kargo</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Shield className="h-5 w-5 text-primary" />
-                <span className="text-sm">Güvenli ödeme</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Leaf className="h-5 w-5 text-primary" />
-                <span className="text-sm">%100 doğal içerik</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Heart className="h-5 w-5 text-primary" />
-                <span className="text-sm">Cruelty-free</span>
-              </div>
-            </div>
+            <TrustBadges variant="grid" className="pt-6 border-t border-border" />
           </div>
         </div>
 
@@ -309,7 +310,22 @@ const ProductDetail = () => {
             </div>
           </section>
         )}
+
+        {/* Recently Viewed */}
+        <RecentlyViewed currentProductId={product.id} />
       </div>
+
+      {/* Sticky Add to Cart for Mobile */}
+      <StickyAddToCart
+        productName={product.name}
+        price={Number(product.price)}
+        salePrice={product.sale_price ? Number(product.sale_price) : undefined}
+        stock={product.stock}
+        quantity={quantity}
+        onQuantityChange={setQuantity}
+        onAddToCart={handleAddToCart}
+        triggerRef={addToCartRef}
+      />
     </Layout>
   );
 };
