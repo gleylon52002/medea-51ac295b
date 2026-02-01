@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,9 +28,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/utils";
 import { Database } from "@/integrations/supabase/types";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -39,6 +41,22 @@ const AdminProducts = () => {
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productImages, setProductImages] = useState<string[]>([]);
+  const [formData, setFormData] = useState({
+    name: "",
+    short_description: "",
+    description: "",
+    price: "",
+    sale_price: "",
+    stock: "0",
+    category_id: "",
+    is_featured: false,
+    is_active: true,
+    ingredients: "",
+    usage_instructions: "",
+    meta_title: "",
+    meta_description: "",
+  });
   const queryClient = useQueryClient();
 
   const { data: products, isLoading } = useQuery({
@@ -95,10 +113,10 @@ const AdminProducts = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
       toast.success(editingProduct ? "Ürün güncellendi" : "Ürün eklendi");
-      setIsDialogOpen(false);
-      setEditingProduct(null);
+      closeDialog();
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Save error:", error);
       toast.error("İşlem başarısız");
     },
   });
@@ -107,24 +125,97 @@ const AdminProducts = () => {
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const generateSlug = (name: string) => {
+    const turkishMap: Record<string, string> = {
+      ç: "c", ğ: "g", ı: "i", ö: "o", ş: "s", ü: "u",
+      Ç: "C", Ğ: "G", İ: "I", Ö: "O", Ş: "S", Ü: "U",
+    };
+    return name
+      .toLowerCase()
+      .replace(/[çğıöşüÇĞİÖŞÜ]/g, (char) => turkishMap[char] || char)
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+  };
+
+  const openDialog = (product?: Product) => {
+    if (product) {
+      setEditingProduct(product);
+      setProductImages(product.images || []);
+      setFormData({
+        name: product.name || "",
+        short_description: product.short_description || "",
+        description: product.description || "",
+        price: product.price?.toString() || "",
+        sale_price: product.sale_price?.toString() || "",
+        stock: product.stock?.toString() || "0",
+        category_id: product.category_id || "",
+        is_featured: product.is_featured || false,
+        is_active: product.is_active ?? true,
+        ingredients: product.ingredients || "",
+        usage_instructions: product.usage_instructions || "",
+        meta_title: product.meta_title || "",
+        meta_description: product.meta_description || "",
+      });
+    } else {
+      setEditingProduct(null);
+      setProductImages([]);
+      setFormData({
+        name: "",
+        short_description: "",
+        description: "",
+        price: "",
+        sale_price: "",
+        stock: "0",
+        category_id: "",
+        is_featured: false,
+        is_active: true,
+        ingredients: "",
+        usage_instructions: "",
+        meta_title: "",
+        meta_description: "",
+      });
+    }
+    setIsDialogOpen(true);
+  };
+
+  const closeDialog = () => {
+    setIsDialogOpen(false);
+    setEditingProduct(null);
+    setProductImages([]);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
     
+    if (!formData.name.trim()) {
+      toast.error("Ürün adı zorunludur");
+      return;
+    }
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      toast.error("Geçerli bir fiyat giriniz");
+      return;
+    }
+    if (productImages.length === 0) {
+      toast.error("En az bir ürün görseli ekleyin");
+      return;
+    }
+
     const product: Partial<Product> = {
-      name: formData.get("name") as string,
-      slug: (formData.get("name") as string).toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
-      description: formData.get("description") as string,
-      short_description: formData.get("short_description") as string,
-      price: parseFloat(formData.get("price") as string),
-      sale_price: formData.get("sale_price") ? parseFloat(formData.get("sale_price") as string) : null,
-      stock: parseInt(formData.get("stock") as string),
-      category_id: formData.get("category_id") as string || null,
-      is_featured: formData.get("is_featured") === "on",
-      is_active: formData.get("is_active") === "on",
-      ingredients: formData.get("ingredients") as string,
-      usage_instructions: formData.get("usage_instructions") as string,
-      images: (formData.get("images") as string).split(",").map(s => s.trim()).filter(Boolean),
+      name: formData.name.trim(),
+      slug: generateSlug(formData.name),
+      description: formData.description.trim() || null,
+      short_description: formData.short_description.trim() || null,
+      price: parseFloat(formData.price),
+      sale_price: formData.sale_price ? parseFloat(formData.sale_price) : null,
+      stock: parseInt(formData.stock) || 0,
+      category_id: formData.category_id || null,
+      is_featured: formData.is_featured,
+      is_active: formData.is_active,
+      ingredients: formData.ingredients.trim() || null,
+      usage_instructions: formData.usage_instructions.trim() || null,
+      meta_title: formData.meta_title.trim() || null,
+      meta_description: formData.meta_description.trim() || null,
+      images: productImages,
     };
 
     saveMutation.mutate(product);
@@ -137,7 +228,7 @@ const AdminProducts = () => {
           <h1 className="font-serif text-3xl font-bold text-foreground">Ürünler</h1>
           <p className="text-muted-foreground mt-1">Ürünlerinizi yönetin</p>
         </div>
-        <Button onClick={() => { setEditingProduct(null); setIsDialogOpen(true); }}>
+        <Button onClick={() => openDialog()}>
           <Plus className="h-4 w-4 mr-2" />
           Yeni Ürün
         </Button>
@@ -179,9 +270,11 @@ const AdminProducts = () => {
                 <TableRow key={product.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded bg-muted overflow-hidden">
-                        {product.images?.[0] && (
+                      <div className="w-12 h-12 rounded bg-muted overflow-hidden flex items-center justify-center">
+                        {product.images?.[0] ? (
                           <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <Package className="h-5 w-5 text-muted-foreground" />
                         )}
                       </div>
                       <div>
@@ -213,20 +306,27 @@ const AdminProducts = () => {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      product.is_active 
-                        ? "bg-green-100 text-green-700" 
-                        : "bg-gray-100 text-gray-700"
-                    }`}>
-                      {product.is_active ? "Aktif" : "Pasif"}
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        product.is_active 
+                          ? "bg-green-100 text-green-700" 
+                          : "bg-gray-100 text-gray-700"
+                      }`}>
+                        {product.is_active ? "Aktif" : "Pasif"}
+                      </span>
+                      {product.is_featured && (
+                        <span className="px-2 py-1 rounded text-xs bg-amber-100 text-amber-700">
+                          Öne Çıkan
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => { setEditingProduct(product); setIsDialogOpen(true); }}
+                        onClick={() => openDialog(product)}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -257,126 +357,211 @@ const AdminProducts = () => {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingProduct ? "Ürün Düzenle" : "Yeni Ürün Ekle"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <Label htmlFor="name">Ürün Adı</Label>
-                <Input id="name" name="name" defaultValue={editingProduct?.name || ""} required />
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="short_description">Kısa Açıklama</Label>
-                <Input 
-                  id="short_description" 
-                  name="short_description" 
-                  defaultValue={editingProduct?.short_description || ""} 
-                />
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="description">Açıklama</Label>
-                <Textarea 
-                  id="description" 
-                  name="description" 
-                  rows={3}
-                  defaultValue={editingProduct?.description || ""} 
-                />
-              </div>
-              <div>
-                <Label htmlFor="price">Fiyat (₺)</Label>
-                <Input 
-                  id="price" 
-                  name="price" 
-                  type="number" 
-                  step="0.01"
-                  defaultValue={editingProduct?.price || ""} 
-                  required 
-                />
-              </div>
-              <div>
-                <Label htmlFor="sale_price">İndirimli Fiyat (₺)</Label>
-                <Input 
-                  id="sale_price" 
-                  name="sale_price" 
-                  type="number" 
-                  step="0.01"
-                  defaultValue={editingProduct?.sale_price || ""} 
-                />
-              </div>
-              <div>
-                <Label htmlFor="stock">Stok</Label>
-                <Input 
-                  id="stock" 
-                  name="stock" 
-                  type="number" 
-                  defaultValue={editingProduct?.stock || 0} 
-                  required 
-                />
-              </div>
-              <div>
-                <Label htmlFor="category_id">Kategori</Label>
-                <Select name="category_id" defaultValue={editingProduct?.category_id || undefined}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Kategori seçin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories?.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="images">Görsel URL'leri (virgülle ayırın)</Label>
-                <Input 
-                  id="images" 
-                  name="images" 
-                  defaultValue={editingProduct?.images?.join(", ") || ""} 
-                />
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="ingredients">İçerikler</Label>
-                <Textarea 
-                  id="ingredients" 
-                  name="ingredients" 
-                  rows={2}
-                  defaultValue={editingProduct?.ingredients || ""} 
-                />
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="usage_instructions">Kullanım Talimatı</Label>
-                <Textarea 
-                  id="usage_instructions" 
-                  name="usage_instructions" 
-                  rows={2}
-                  defaultValue={editingProduct?.usage_instructions || ""} 
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch 
-                  id="is_featured" 
-                  name="is_featured" 
-                  defaultChecked={editingProduct?.is_featured || false} 
-                />
-                <Label htmlFor="is_featured">Öne Çıkan</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch 
-                  id="is_active" 
-                  name="is_active" 
-                  defaultChecked={editingProduct?.is_active ?? true} 
-                />
-                <Label htmlFor="is_active">Aktif</Label>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+          
+          <form onSubmit={handleSubmit}>
+            <Tabs defaultValue="general" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsTrigger value="general">Genel</TabsTrigger>
+                <TabsTrigger value="details">Detaylar</TabsTrigger>
+                <TabsTrigger value="seo">SEO</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="general" className="space-y-4">
+                {/* Images */}
+                <div>
+                  <Label className="mb-2 block">Ürün Görselleri *</Label>
+                  <ImageUpload
+                    images={productImages}
+                    onImagesChange={setProductImages}
+                    bucket="product-images"
+                    maxImages={8}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2">
+                    <Label htmlFor="name">Ürün Adı *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="col-span-2">
+                    <Label htmlFor="short_description">Kısa Açıklama</Label>
+                    <Input
+                      id="short_description"
+                      value={formData.short_description}
+                      onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
+                      placeholder="Ürün listelerinde gösterilecek kısa açıklama"
+                    />
+                  </div>
+
+                  <div className="col-span-2">
+                    <Label htmlFor="description">Açıklama</Label>
+                    <Textarea
+                      id="description"
+                      rows={4}
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Ürün detay sayfasında gösterilecek açıklama"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="price">Fiyat (₺) *</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="sale_price">İndirimli Fiyat (₺)</Label>
+                    <Input
+                      id="sale_price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.sale_price}
+                      onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
+                      placeholder="Boş bırakılırsa indirim yok"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="stock">Stok Miktarı</Label>
+                    <Input
+                      id="stock"
+                      type="number"
+                      min="0"
+                      value={formData.stock}
+                      onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="category_id">Kategori</Label>
+                    <Select
+                      value={formData.category_id}
+                      onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Kategori seçin" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories?.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        id="is_active"
+                        checked={formData.is_active}
+                        onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                      />
+                      <Label htmlFor="is_active">Aktif</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        id="is_featured"
+                        checked={formData.is_featured}
+                        onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
+                      />
+                      <Label htmlFor="is_featured">Öne Çıkan</Label>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="details" className="space-y-4">
+                <div>
+                  <Label htmlFor="ingredients">İçerikler</Label>
+                  <Textarea
+                    id="ingredients"
+                    rows={4}
+                    value={formData.ingredients}
+                    onChange={(e) => setFormData({ ...formData, ingredients: e.target.value })}
+                    placeholder="Ürün içerikleri (sabun, krem vb. için)"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="usage_instructions">Kullanım Talimatı</Label>
+                  <Textarea
+                    id="usage_instructions"
+                    rows={4}
+                    value={formData.usage_instructions}
+                    onChange={(e) => setFormData({ ...formData, usage_instructions: e.target.value })}
+                    placeholder="Ürün nasıl kullanılır?"
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="seo" className="space-y-4">
+                <div>
+                  <Label htmlFor="meta_title">SEO Başlık</Label>
+                  <Input
+                    id="meta_title"
+                    value={formData.meta_title}
+                    onChange={(e) => setFormData({ ...formData, meta_title: e.target.value })}
+                    placeholder="Arama motorlarında görünecek başlık (60 karakter önerilir)"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formData.meta_title.length}/60 karakter
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="meta_description">SEO Açıklama</Label>
+                  <Textarea
+                    id="meta_description"
+                    rows={3}
+                    value={formData.meta_description}
+                    onChange={(e) => setFormData({ ...formData, meta_description: e.target.value })}
+                    placeholder="Arama motorlarında görünecek açıklama (160 karakter önerilir)"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formData.meta_description.length}/160 karakter
+                  </p>
+                </div>
+
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <p className="text-sm font-medium mb-2">Önizleme</p>
+                  <div className="text-blue-600 text-base font-medium truncate">
+                    {formData.meta_title || formData.name || "Ürün Başlığı"}
+                  </div>
+                  <div className="text-green-700 text-sm">
+                    medea.lovable.app/urun/{generateSlug(formData.name) || "urun-slug"}
+                  </div>
+                  <div className="text-sm text-muted-foreground line-clamp-2">
+                    {formData.meta_description || formData.short_description || "Ürün açıklaması..."}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
+              <Button type="button" variant="outline" onClick={closeDialog}>
                 İptal
               </Button>
               <Button type="submit" disabled={saveMutation.isPending}>
