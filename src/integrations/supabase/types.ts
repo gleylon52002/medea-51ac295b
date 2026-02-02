@@ -59,6 +59,68 @@ export type Database = {
         }
         Relationships: []
       }
+      campaigns: {
+        Row: {
+          applies_to: string
+          banner_image: string | null
+          banner_text: string | null
+          category_id: string | null
+          created_at: string
+          description: string | null
+          discount_type: string
+          discount_value: number
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          name: string
+          product_ids: string[] | null
+          starts_at: string
+          updated_at: string
+        }
+        Insert: {
+          applies_to?: string
+          banner_image?: string | null
+          banner_text?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          product_ids?: string[] | null
+          starts_at?: string
+          updated_at?: string
+        }
+        Update: {
+          applies_to?: string
+          banner_image?: string | null
+          banner_text?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          product_ids?: string[] | null
+          starts_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -229,6 +291,36 @@ export type Database = {
           starts_at?: string | null
           updated_at?: string
           used_count?: number
+        }
+        Relationships: []
+      }
+      faqs: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          is_active: boolean
+          question: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          question: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          question?: string
+          sort_order?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -626,6 +718,36 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: Json
+        }
+        Relationships: []
+      }
+      social_media_links: {
+        Row: {
+          created_at: string
+          icon_name: string | null
+          id: string
+          is_active: boolean
+          platform: string
+          sort_order: number | null
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          icon_name?: string | null
+          id?: string
+          is_active?: boolean
+          platform: string
+          sort_order?: number | null
+          url: string
+        }
+        Update: {
+          created_at?: string
+          icon_name?: string | null
+          id?: string
+          is_active?: boolean
+          platform?: string
+          sort_order?: number | null
+          url?: string
         }
         Relationships: []
       }
