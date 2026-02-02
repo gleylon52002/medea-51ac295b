@@ -32,6 +32,7 @@ import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import SalesAgreement from "./pages/legal/SalesAgreement";
 import ReturnPolicy from "./pages/legal/ReturnPolicy";
 import CookiePolicy from "./pages/legal/CookiePolicy";
+import FAQ from "./pages/FAQ";
 
 // Admin Pages
 import AdminGuard from "./components/admin/AdminGuard";
@@ -48,6 +49,12 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminNewsletter from "./pages/admin/AdminNewsletter";
+import AdminCampaigns from "./pages/admin/AdminCampaigns";
+import AdminFAQ from "./pages/admin/AdminFAQ";
+import AdminSocialMedia from "./pages/admin/AdminSocialMedia";
+import AdminTheme from "./pages/admin/AdminTheme";
+import AdminSEO from "./pages/admin/AdminSEO";
+import AdminHero from "./pages/admin/AdminHero";
 
 import NotFound from "./pages/NotFound";
 
@@ -88,6 +95,7 @@ const App = () => (
               <Route path="/mesafeli-satis-sozlesmesi" element={<SalesAgreement />} />
               <Route path="/iade-ve-iptal" element={<ReturnPolicy />} />
               <Route path="/cerez-politikasi" element={<CookiePolicy />} />
+              <Route path="/sss" element={<FAQ />} />
 
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
@@ -98,10 +106,16 @@ const App = () => (
                 <Route path="kullanicilar" element={<AdminUsers />} />
                 <Route path="yorumlar" element={<AdminReviews />} />
                 <Route path="kuponlar" element={<AdminCoupons />} />
+                <Route path="kampanyalar" element={<AdminCampaigns />} />
                 <Route path="mesajlar" element={<AdminMessages />} />
                 <Route path="bulten" element={<AdminNewsletter />} />
+                <Route path="sss" element={<AdminFAQ />} />
+                <Route path="sosyal-medya" element={<AdminSocialMedia />} />
                 <Route path="kargo" element={<AdminShipping />} />
                 <Route path="odeme" element={<AdminPayment />} />
+                <Route path="hero" element={<AdminHero />} />
+                <Route path="tema" element={<AdminTheme />} />
+                <Route path="seo" element={<AdminSEO />} />
                 <Route path="ayarlar" element={<AdminSettings />} />
               </Route>
 

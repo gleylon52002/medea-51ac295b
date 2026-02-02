@@ -1,9 +1,47 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Leaf, Heart, Sparkles } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { ArrowRight, Leaf, Heart, Sparkles, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-image.jpg";
 
+interface HeroSettings {
+  type: "image" | "video";
+  image_url: string;
+  video_url: string;
+  title: string;
+  subtitle: string;
+  cta_text: string;
+  cta_link: string;
+}
+
+const defaultHero: HeroSettings = {
+  type: "image",
+  image_url: "",
+  video_url: "",
+  title: "Doğanın Gücünü Cildinize Taşıyın",
+  subtitle: "El yapımı, vegan ve sürdürülebilir kozmetik ürünleriyle cildinize hak ettiği doğal bakımı sunun. Hiçbir zararlı kimyasal içermez.",
+  cta_text: "Ürünleri Keşfet",
+  cta_link: "/urunler",
+};
+
 const Hero = () => {
+  const { data: heroSettings } = useQuery({
+    queryKey: ["site-settings", "hero"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "hero")
+        .single();
+      if (error && error.code !== "PGRST116") throw error;
+      return data?.value as unknown as HeroSettings | undefined;
+    },
+  });
+
+  const hero = heroSettings || defaultHero;
+  const displayImage = hero.image_url || heroImage;
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-background to-secondary/30">
       <div className="container-main py-16 lg:py-24">
@@ -16,20 +54,19 @@ const Hero = () => {
             </div>
             
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-medium leading-tight text-foreground">
-              Doğanın Gücünü
+              {hero.title.split(" ").slice(0, 3).join(" ")}
               <br />
-              <span className="text-primary">Cildinize Taşıyın</span>
+              <span className="text-primary">{hero.title.split(" ").slice(3).join(" ")}</span>
             </h1>
             
             <p className="text-lg text-muted-foreground max-w-lg leading-relaxed">
-              El yapımı, vegan ve sürdürülebilir kozmetik ürünleriyle cildinize 
-              hak ettiği doğal bakımı sunun. Hiçbir zararlı kimyasal içermez.
+              {hero.subtitle}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Button size="lg" className="gap-2" asChild>
-                <Link to="/urunler">
-                  Ürünleri Keşfet
+                <Link to={hero.cta_link}>
+                  {hero.cta_text}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
@@ -55,14 +92,34 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Hero Image */}
+          {/* Hero Image/Video */}
           <div className="relative animate-fade-in">
             <div className="aspect-[4/5] rounded-2xl overflow-hidden bg-secondary shadow-product">
-              <img
-                src={heroImage}
-                alt="MEDEA Kozmetik Ürünleri"
-                className="w-full h-full object-cover"
-              />
+              {hero.type === "video" && hero.video_url ? (
+                hero.video_url.includes("youtube") || hero.video_url.includes("youtu.be") ? (
+                  <iframe
+                    src={hero.video_url}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video
+                    src={hero.video_url}
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                  />
+                )
+              ) : (
+                <img
+                  src={displayImage}
+                  alt="MEDEA Kozmetik Ürünleri"
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
             {/* Floating badge */}
             <div className="absolute -bottom-4 -left-4 sm:bottom-8 sm:-left-8 bg-card p-4 sm:p-6 rounded-xl shadow-medium">
