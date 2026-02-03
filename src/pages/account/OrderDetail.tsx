@@ -31,6 +31,9 @@ const paymentMethodMap: Record<PaymentMethod, string> = {
   credit_card: "Kredi / Banka Kartı",
   bank_transfer: "Havale / EFT",
   cash_on_delivery: "Kapıda Ödeme",
+  shopier: "Shopier",
+  shopinext: "ShopiNext",
+  payizone: "Payizone",
 };
 
 interface ShippingAddress {
