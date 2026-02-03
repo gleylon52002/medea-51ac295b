@@ -795,7 +795,13 @@ export type Database = {
         | "shipped"
         | "delivered"
         | "cancelled"
-      payment_method: "credit_card" | "bank_transfer" | "cash_on_delivery"
+      payment_method:
+        | "credit_card"
+        | "bank_transfer"
+        | "cash_on_delivery"
+        | "shopier"
+        | "shopinext"
+        | "payizone"
       payment_status: "pending" | "paid" | "failed" | "refunded"
     }
     CompositeTypes: {
@@ -933,7 +939,14 @@ export const Constants = {
         "delivered",
         "cancelled",
       ],
-      payment_method: ["credit_card", "bank_transfer", "cash_on_delivery"],
+      payment_method: [
+        "credit_card",
+        "bank_transfer",
+        "cash_on_delivery",
+        "shopier",
+        "shopinext",
+        "payizone",
+      ],
       payment_status: ["pending", "paid", "failed", "refunded"],
     },
   },
