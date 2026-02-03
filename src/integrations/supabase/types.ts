@@ -518,6 +518,50 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_transactions: {
+        Row: {
+          amount: number
+          callback_data: Json | null
+          created_at: string
+          id: string
+          order_id: string | null
+          payment_method: string
+          status: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          callback_data?: Json | null
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          payment_method: string
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          callback_data?: Json | null
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          payment_method?: string
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category_id: string | null
