@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { Database } from "@/integrations/supabase/types";
+import LogoUpload from "@/components/admin/LogoUpload";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 type SiteSetting = Database["public"]["Tables"]["site_settings"]["Row"];
 
@@ -25,20 +27,17 @@ interface ContactSettings {
   address: string;
 }
 
-interface SocialSettings {
-  instagram: string;
-  facebook: string;
-  twitter: string;
-}
-
 interface ShippingSettings {
   free_shipping_threshold: number;
   default_shipping_cost: number;
 }
 
-interface SeoSettings {
-  meta_title: string;
-  meta_description: string;
+interface LegalSettings {
+  kvkk: string;
+  privacy_policy: string;
+  sales_agreement: string;
+  return_policy: string;
+  cookie_policy: string;
 }
 
 const AdminSettings = () => {
@@ -57,20 +56,17 @@ const AdminSettings = () => {
     address: "",
   });
 
-  const [social, setSocial] = useState<SocialSettings>({
-    instagram: "",
-    facebook: "",
-    twitter: "",
-  });
-
   const [shipping, setShipping] = useState<ShippingSettings>({
     free_shipping_threshold: 300,
     default_shipping_cost: 29.90,
   });
 
-  const [seo, setSeo] = useState<SeoSettings>({
-    meta_title: "",
-    meta_description: "",
+  const [legal, setLegal] = useState<LegalSettings>({
+    kvkk: "",
+    privacy_policy: "",
+    sales_agreement: "",
+    return_policy: "",
+    cookie_policy: "",
   });
 
   const { data: settings, isLoading } = useQuery({
@@ -95,14 +91,11 @@ const AdminSettings = () => {
           case "contact":
             setContact(value as ContactSettings);
             break;
-          case "social":
-            setSocial(value as SocialSettings);
-            break;
           case "shipping":
             setShipping(value as ShippingSettings);
             break;
-          case "seo":
-            setSeo(value as SeoSettings);
+          case "legal_pages":
+            setLegal(value as LegalSettings);
             break;
         }
       });
@@ -111,14 +104,29 @@ const AdminSettings = () => {
 
   const saveMutation = useMutation({
     mutationFn: async ({ key, value }: { key: string; value: Record<string, any> }) => {
-      const { error } = await supabase
+      // Check if setting exists
+      const { data: existing } = await supabase
         .from("site_settings")
-        .update({ value })
-        .eq("key", key);
-      if (error) throw error;
+        .select("id")
+        .eq("key", key)
+        .single();
+
+      if (existing) {
+        const { error } = await supabase
+          .from("site_settings")
+          .update({ value })
+          .eq("key", key);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("site_settings")
+          .insert({ key, value });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "site-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["site-settings-public"] });
       toast.success("Ayarlar kaydedildi");
     },
     onError: () => {
@@ -128,27 +136,29 @@ const AdminSettings = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6 lg:p-8">
+      <div className="p-4 lg:p-8">
         <p>Yükleniyor...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-8">
       <div className="mb-6">
-        <h1 className="font-serif text-3xl font-bold text-foreground">Site Ayarları</h1>
-        <p className="text-muted-foreground mt-1">Genel site ayarlarını yönetin</p>
+        <h1 className="font-serif text-2xl lg:text-3xl font-bold text-foreground">Site Ayarları</h1>
+        <p className="text-muted-foreground mt-1 text-sm lg:text-base">Genel site ayarlarını yönetin</p>
       </div>
 
-      <Tabs defaultValue="general" className="max-w-3xl">
-        <TabsList className="mb-6">
-          <TabsTrigger value="general">Genel</TabsTrigger>
-          <TabsTrigger value="contact">İletişim</TabsTrigger>
-          <TabsTrigger value="social">Sosyal Medya</TabsTrigger>
-          <TabsTrigger value="shipping">Kargo</TabsTrigger>
-          <TabsTrigger value="seo">SEO</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="general" className="w-full max-w-3xl">
+        <ScrollArea className="w-full">
+          <TabsList className="mb-6 inline-flex w-auto">
+            <TabsTrigger value="general">Genel</TabsTrigger>
+            <TabsTrigger value="contact">İletişim</TabsTrigger>
+            <TabsTrigger value="shipping">Kargo</TabsTrigger>
+            <TabsTrigger value="legal">Hukuki</TabsTrigger>
+          </TabsList>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
 
         <TabsContent value="general">
           <Card>
@@ -156,35 +166,38 @@ const AdminSettings = () => {
               <CardTitle>Genel Ayarlar</CardTitle>
               <CardDescription>Site adı ve logo ayarları</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="site_name">Site Adı</Label>
+                  <Input
+                    id="site_name"
+                    value={general.site_name}
+                    onChange={(e) => setGeneral(prev => ({ ...prev, site_name: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="tagline">Slogan</Label>
+                  <Input
+                    id="tagline"
+                    value={general.tagline}
+                    onChange={(e) => setGeneral(prev => ({ ...prev, tagline: e.target.value }))}
+                  />
+                </div>
+              </div>
+              
               <div>
-                <Label htmlFor="site_name">Site Adı</Label>
-                <Input
-                  id="site_name"
-                  value={general.site_name}
-                  onChange={(e) => setGeneral(prev => ({ ...prev, site_name: e.target.value }))}
+                <Label className="mb-2 block">Logo</Label>
+                <LogoUpload
+                  currentLogo={general.logo_url || null}
+                  onLogoChange={(url) => setGeneral(prev => ({ ...prev, logo_url: url || "" }))}
                 />
               </div>
-              <div>
-                <Label htmlFor="tagline">Slogan</Label>
-                <Input
-                  id="tagline"
-                  value={general.tagline}
-                  onChange={(e) => setGeneral(prev => ({ ...prev, tagline: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="logo_url">Logo URL</Label>
-                <Input
-                  id="logo_url"
-                  value={general.logo_url}
-                  onChange={(e) => setGeneral(prev => ({ ...prev, logo_url: e.target.value }))}
-                  placeholder="https://..."
-                />
-              </div>
+              
               <Button 
                 onClick={() => saveMutation.mutate({ key: "general", value: general })}
                 disabled={saveMutation.isPending}
+                className="w-full sm:w-auto"
               >
                 Kaydet
               </Button>
@@ -196,7 +209,7 @@ const AdminSettings = () => {
           <Card>
             <CardHeader>
               <CardTitle>İletişim Bilgileri</CardTitle>
-              <CardDescription>Müşterilerinizin sizinle iletişim kurması için</CardDescription>
+              <CardDescription>Footer ve iletişim sayfasında görünecek bilgiler</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -206,6 +219,7 @@ const AdminSettings = () => {
                   type="email"
                   value={contact.email}
                   onChange={(e) => setContact(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="info@example.com"
                 />
               </div>
               <div>
@@ -214,6 +228,7 @@ const AdminSettings = () => {
                   id="phone"
                   value={contact.phone}
                   onChange={(e) => setContact(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="+90 555 123 45 67"
                 />
               </div>
               <div>
@@ -222,55 +237,13 @@ const AdminSettings = () => {
                   id="address"
                   value={contact.address}
                   onChange={(e) => setContact(prev => ({ ...prev, address: e.target.value }))}
+                  rows={3}
                 />
               </div>
               <Button 
                 onClick={() => saveMutation.mutate({ key: "contact", value: contact })}
                 disabled={saveMutation.isPending}
-              >
-                Kaydet
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="social">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sosyal Medya</CardTitle>
-              <CardDescription>Sosyal medya hesaplarınızın linkleri</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="instagram">Instagram</Label>
-                <Input
-                  id="instagram"
-                  value={social.instagram}
-                  onChange={(e) => setSocial(prev => ({ ...prev, instagram: e.target.value }))}
-                  placeholder="https://instagram.com/..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="facebook">Facebook</Label>
-                <Input
-                  id="facebook"
-                  value={social.facebook}
-                  onChange={(e) => setSocial(prev => ({ ...prev, facebook: e.target.value }))}
-                  placeholder="https://facebook.com/..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="twitter">Twitter</Label>
-                <Input
-                  id="twitter"
-                  value={social.twitter}
-                  onChange={(e) => setSocial(prev => ({ ...prev, twitter: e.target.value }))}
-                  placeholder="https://twitter.com/..."
-                />
-              </div>
-              <Button 
-                onClick={() => saveMutation.mutate({ key: "social", value: social })}
-                disabled={saveMutation.isPending}
+                className="w-full sm:w-auto"
               >
                 Kaydet
               </Button>
@@ -285,28 +258,31 @@ const AdminSettings = () => {
               <CardDescription>Ücretsiz kargo limiti ve varsayılan kargo ücreti</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="free_shipping_threshold">Ücretsiz Kargo Limiti (₺)</Label>
-                <Input
-                  id="free_shipping_threshold"
-                  type="number"
-                  value={shipping.free_shipping_threshold}
-                  onChange={(e) => setShipping(prev => ({ ...prev, free_shipping_threshold: parseFloat(e.target.value) }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="default_shipping_cost">Varsayılan Kargo Ücreti (₺)</Label>
-                <Input
-                  id="default_shipping_cost"
-                  type="number"
-                  step="0.01"
-                  value={shipping.default_shipping_cost}
-                  onChange={(e) => setShipping(prev => ({ ...prev, default_shipping_cost: parseFloat(e.target.value) }))}
-                />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="free_shipping_threshold">Ücretsiz Kargo Limiti (₺)</Label>
+                  <Input
+                    id="free_shipping_threshold"
+                    type="number"
+                    value={shipping.free_shipping_threshold}
+                    onChange={(e) => setShipping(prev => ({ ...prev, free_shipping_threshold: parseFloat(e.target.value) || 0 }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="default_shipping_cost">Varsayılan Kargo Ücreti (₺)</Label>
+                  <Input
+                    id="default_shipping_cost"
+                    type="number"
+                    step="0.01"
+                    value={shipping.default_shipping_cost}
+                    onChange={(e) => setShipping(prev => ({ ...prev, default_shipping_cost: parseFloat(e.target.value) || 0 }))}
+                  />
+                </div>
               </div>
               <Button 
                 onClick={() => saveMutation.mutate({ key: "shipping", value: shipping })}
                 disabled={saveMutation.isPending}
+                className="w-full sm:w-auto"
               >
                 Kaydet
               </Button>
@@ -314,34 +290,67 @@ const AdminSettings = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="seo">
+        <TabsContent value="legal">
           <Card>
             <CardHeader>
-              <CardTitle>SEO Ayarları</CardTitle>
-              <CardDescription>Arama motorları için varsayılan meta bilgileri</CardDescription>
+              <CardTitle>Hukuki Metinler</CardTitle>
+              <CardDescription>KVKK, gizlilik politikası ve diğer yasal metinler</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="meta_title">Meta Başlık</Label>
-                <Input
-                  id="meta_title"
-                  value={seo.meta_title}
-                  onChange={(e) => setSeo(prev => ({ ...prev, meta_title: e.target.value }))}
-                  placeholder="MEDEA - Doğal Kozmetik"
+                <Label htmlFor="kvkk">KVKK Metni</Label>
+                <Textarea
+                  id="kvkk"
+                  value={legal.kvkk}
+                  onChange={(e) => setLegal(prev => ({ ...prev, kvkk: e.target.value }))}
+                  rows={6}
+                  placeholder="KVKK aydınlatma metni..."
                 />
               </div>
               <div>
-                <Label htmlFor="meta_description">Meta Açıklama</Label>
+                <Label htmlFor="privacy_policy">Gizlilik Politikası</Label>
                 <Textarea
-                  id="meta_description"
-                  value={seo.meta_description}
-                  onChange={(e) => setSeo(prev => ({ ...prev, meta_description: e.target.value }))}
-                  placeholder="El yapımı, doğal içerikli kozmetik ürünleri..."
+                  id="privacy_policy"
+                  value={legal.privacy_policy}
+                  onChange={(e) => setLegal(prev => ({ ...prev, privacy_policy: e.target.value }))}
+                  rows={6}
+                  placeholder="Gizlilik politikası metni..."
+                />
+              </div>
+              <div>
+                <Label htmlFor="sales_agreement">Mesafeli Satış Sözleşmesi</Label>
+                <Textarea
+                  id="sales_agreement"
+                  value={legal.sales_agreement}
+                  onChange={(e) => setLegal(prev => ({ ...prev, sales_agreement: e.target.value }))}
+                  rows={6}
+                  placeholder="Mesafeli satış sözleşmesi..."
+                />
+              </div>
+              <div>
+                <Label htmlFor="return_policy">İade ve İptal Koşulları</Label>
+                <Textarea
+                  id="return_policy"
+                  value={legal.return_policy}
+                  onChange={(e) => setLegal(prev => ({ ...prev, return_policy: e.target.value }))}
+                  rows={6}
+                  placeholder="İade politikası..."
+                />
+              </div>
+              <div>
+                <Label htmlFor="cookie_policy">Çerez Politikası</Label>
+                <Textarea
+                  id="cookie_policy"
+                  value={legal.cookie_policy}
+                  onChange={(e) => setLegal(prev => ({ ...prev, cookie_policy: e.target.value }))}
+                  rows={6}
+                  placeholder="Çerez politikası..."
                 />
               </div>
               <Button 
-                onClick={() => saveMutation.mutate({ key: "seo", value: seo })}
+                onClick={() => saveMutation.mutate({ key: "legal_pages", value: legal })}
                 disabled={saveMutation.isPending}
+                className="w-full sm:w-auto"
               >
                 Kaydet
               </Button>

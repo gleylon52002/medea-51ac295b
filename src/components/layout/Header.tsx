@@ -12,6 +12,7 @@ import {
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/hooks/useCategories";
+import { useGeneralSettings } from "@/hooks/useSiteSettings";
 import { toast } from "sonner";
 import SearchDialog from "@/components/search/SearchDialog";
 
@@ -22,6 +23,7 @@ const Header = () => {
   const { cart, setIsCartOpen } = useCart();
   const { user, isAdmin, signOut } = useAuth();
   const { data: categories } = useCategories();
+  const { data: generalSettings } = useGeneralSettings();
 
   const handleSignOut = async () => {
     await signOut();
@@ -44,9 +46,17 @@ const Header = () => {
 
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <h1 className="font-serif text-2xl lg:text-3xl font-semibold tracking-wide text-primary">
-              MEDEA
-            </h1>
+            {generalSettings?.logo_url ? (
+              <img 
+                src={generalSettings.logo_url} 
+                alt={generalSettings?.site_name || "Logo"} 
+                className="h-8 lg:h-10 max-w-[150px] object-contain"
+              />
+            ) : (
+              <h1 className="font-serif text-2xl lg:text-3xl font-semibold tracking-wide text-primary">
+                {generalSettings?.site_name || "MEDEA"}
+              </h1>
+            )}
           </Link>
 
           {/* Desktop Navigation */}
@@ -69,8 +79,11 @@ const Header = () => {
           </nav>
 
           {/* Right side icons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Button variant="ghost" size="icon" className="hidden sm:flex" onClick={() => setIsSearchOpen(true)}>
+              <Search className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => setIsSearchOpen(true)}>
               <Search className="h-5 w-5" />
             </Button>
             <SearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} />
