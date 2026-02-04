@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight, Minus, Plus, Star, Truck, Shield, Leaf, Heart, Loader2 } from "lucide-react";
+import { ChevronRight, Minus, Plus, Star, Heart, Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,11 +19,18 @@ import ImageZoom from "@/components/products/ImageZoom";
 import RecentlyViewed from "@/components/products/RecentlyViewed";
 import TrustBadges from "@/components/products/TrustBadges";
 import StickyAddToCart from "@/components/cart/StickyAddToCart";
+import VariantSelector from "@/components/products/VariantSelector";
+import CompareButton from "@/components/products/CompareButton";
+import { ProductVariant } from "@/hooks/useProductVariants";
+import { useRelatedProducts } from "@/hooks/useRelatedProducts";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  const [priceAdjustment, setPriceAdjustment] = useState(0);
+  const [variantImages, setVariantImages] = useState<string[]>([]);
   const addToCartRef = useRef<HTMLDivElement>(null);
   const { addToCart } = useCart();
   const { user } = useAuth();
@@ -32,7 +39,13 @@ const ProductDetail = () => {
   const { data: rating } = useProductRating(product?.id || "");
   const { data: isFavorite } = useIsFavorite(product?.id || "");
   const toggleFavorite = useToggleFavorite();
-  const { data: relatedProducts } = useProductsByCategory(product?.categories?.slug || "");
+  const { data: categoryProducts } = useProductsByCategory(product?.categories?.slug || "");
+  const { data: relatedProductsData } = useRelatedProducts(product?.id || "");
+
+  // Get related products - first from explicit relations, then from category
+  const relatedProducts = relatedProductsData && relatedProductsData.length > 0
+    ? relatedProductsData.map(r => r.related_product).filter(Boolean)
+    : categoryProducts?.filter(p => p.id !== product?.id).slice(0, 4) || [];
 
   // Track recently viewed
   useEffect(() => {
@@ -40,6 +53,18 @@ const ProductDetail = () => {
       addToRecentlyViewed(product.id);
     }
   }, [product?.id]);
+
+  const handleVariantChange = useCallback((variant: ProductVariant | null, adjustment: number) => {
+    setSelectedVariant(variant);
+    setPriceAdjustment(adjustment);
+  }, []);
+
+  const handleVariantImagesChange = useCallback((images: string[]) => {
+    setVariantImages(images);
+    if (images.length > 0) {
+      setSelectedImage(0);
+    }
+  }, []);
 
   if (isLoading) {
     return (
@@ -64,7 +89,11 @@ const ProductDetail = () => {
     );
   }
 
-  const filteredRelated = relatedProducts?.filter(p => p.id !== product.id).slice(0, 4) || [];
+  // Display images - variant images take priority if selected
+  const displayImages = variantImages.length > 0 ? variantImages : (product.images || []);
+  
+  const basePrice = Number(product.sale_price || product.price);
+  const finalPrice = basePrice + priceAdjustment;
 
   const hasDiscount = product.sale_price && Number(product.sale_price) < Number(product.price);
   const discountPercent = hasDiscount
@@ -83,7 +112,7 @@ const ProductDetail = () => {
       images: product.images || [],
       category: product.categories?.name || "",
       categorySlug: product.categories?.slug || "",
-      stock: product.stock,
+      stock: selectedVariant?.stock ?? product.stock,
       featured: product.is_featured,
       ingredients: product.ingredients || undefined,
       usage: product.usage_instructions || undefined,
@@ -91,7 +120,7 @@ const ProductDetail = () => {
       reviewCount: rating?.count || 0,
       createdAt: product.created_at,
     };
-    addToCart(cartProduct, quantity);
+    addToCart(cartProduct, quantity, selectedVariant, priceAdjustment);
   };
 
   return (
@@ -115,14 +144,14 @@ const ProductDetail = () => {
           <div className="space-y-4">
             <div className="aspect-square">
               <ImageZoom
-                src={product.images?.[selectedImage] || "/placeholder.svg"}
+                src={displayImages[selectedImage] || "/placeholder.svg"}
                 alt={product.name}
                 className="w-full h-full"
               />
             </div>
-            {product.images && product.images.length > 1 && (
+            {displayImages.length > 1 && (
               <div className="grid grid-cols-4 gap-4">
-                {product.images.map((image, index) => (
+                {displayImages.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
@@ -175,9 +204,9 @@ const ProductDetail = () => {
             {/* Price */}
             <div className="flex items-baseline gap-3">
               <span className="text-3xl font-semibold text-foreground">
-                {formatPrice(Number(product.sale_price || product.price))}
+                {formatPrice(finalPrice)}
               </span>
-              {hasDiscount && (
+              {hasDiscount && priceAdjustment === 0 && (
                 <>
                   <span className="text-xl text-muted-foreground line-through">
                     {formatPrice(Number(product.price))}
@@ -187,20 +216,33 @@ const ProductDetail = () => {
                   </span>
                 </>
               )}
+              {priceAdjustment !== 0 && (
+                <span className="text-sm text-muted-foreground">
+                  (Varyant: {priceAdjustment > 0 ? "+" : ""}{priceAdjustment}₺)
+                </span>
+              )}
             </div>
 
             <p className="text-muted-foreground leading-relaxed">
               {product.description}
             </p>
 
+            {/* Variant Selector */}
+            <VariantSelector
+              productId={product.id}
+              basePrice={basePrice}
+              onVariantChange={handleVariantChange}
+              onImagesChange={handleVariantImagesChange}
+            />
+
             {/* Stock Status with Urgency */}
             <div className="space-y-2">
-              <StockUrgencyBadge stock={product.stock} />
-              {product.stock > 10 && (
+              <StockUrgencyBadge stock={selectedVariant?.stock ?? product.stock} />
+              {(selectedVariant?.stock ?? product.stock) > 10 && (
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500"></span>
                   <span className="text-sm text-muted-foreground">
-                    Stokta ({product.stock} adet)
+                    Stokta ({selectedVariant?.stock ?? product.stock} adet)
                   </span>
                 </div>
               )}
@@ -229,7 +271,7 @@ const ProductDetail = () => {
                 size="lg"
                 className="flex-1"
                 onClick={handleAddToCart}
-                disabled={product.stock === 0}
+                disabled={(selectedVariant?.stock ?? product.stock) === 0}
               >
                 Sepete Ekle
               </Button>
@@ -242,6 +284,7 @@ const ProductDetail = () => {
                   <Heart className={`h-5 w-5 ${isFavorite ? "fill-terracotta text-terracotta" : ""}`} />
                 </Button>
               )}
+              <CompareButton productId={product.id} variant="icon" />
             </div>
 
             {/* Trust Features */}
@@ -298,13 +341,13 @@ const ProductDetail = () => {
         </Tabs>
 
         {/* Related Products */}
-        {filteredRelated.length > 0 && (
+        {relatedProducts.length > 0 && (
           <section className="mt-16 pt-16 border-t border-border">
             <h2 className="font-serif text-2xl lg:text-3xl font-medium text-foreground mb-8">
               Benzer Ürünler
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filteredRelated.map((relatedProduct) => (
+              {relatedProducts.slice(0, 4).map((relatedProduct: any) => (
                 <ProductCard key={relatedProduct.id} product={relatedProduct} />
               ))}
             </div>

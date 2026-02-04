@@ -33,6 +33,8 @@ import { toast } from "sonner";
 import { formatPrice } from "@/lib/utils";
 import { Database } from "@/integrations/supabase/types";
 import ImageUpload from "@/components/admin/ImageUpload";
+import ProductVariantsManager from "@/components/admin/ProductVariantsManager";
+import RelatedProductsManager from "@/components/admin/RelatedProductsManager";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -366,8 +368,10 @@ const AdminProducts = () => {
           
           <form onSubmit={handleSubmit}>
             <Tabs defaultValue="general" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-4">
+              <TabsList className="grid w-full grid-cols-5 mb-4">
                 <TabsTrigger value="general">Genel</TabsTrigger>
+                <TabsTrigger value="variants" disabled={!editingProduct}>Varyantlar</TabsTrigger>
+                <TabsTrigger value="related" disabled={!editingProduct}>İlgili Ürünler</TabsTrigger>
                 <TabsTrigger value="details">Detaylar</TabsTrigger>
                 <TabsTrigger value="seo">SEO</TabsTrigger>
               </TabsList>
@@ -491,6 +495,26 @@ const AdminProducts = () => {
                     </div>
                   </div>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="variants" className="space-y-4">
+                {editingProduct ? (
+                  <ProductVariantsManager productId={editingProduct.id} />
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Varyant eklemek için önce ürünü kaydedin.
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="related" className="space-y-4">
+                {editingProduct ? (
+                  <RelatedProductsManager productId={editingProduct.id} />
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    İlgili ürün eklemek için önce ürünü kaydedin.
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="details" className="space-y-4">

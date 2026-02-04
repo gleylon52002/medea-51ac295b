@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 import CartDrawer from "@/components/cart/CartDrawer";
+import ComparisonFloat from "@/components/products/ComparisonFloat";
 import { useTheme } from "@/hooks/useTheme";
 
 interface LayoutProps {
@@ -18,6 +19,7 @@ const Layout = ({ children }: LayoutProps) => {
       <main className="flex-1">{children}</main>
       <Footer />
       <CartDrawer />
+      <ComparisonFloat />
     </div>
   );
 };

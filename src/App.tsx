@@ -33,6 +33,7 @@ import SalesAgreement from "./pages/legal/SalesAgreement";
 import ReturnPolicy from "./pages/legal/ReturnPolicy";
 import CookiePolicy from "./pages/legal/CookiePolicy";
 import FAQ from "./pages/FAQ";
+import Compare from "./pages/Compare";
 
 // Admin Pages
 import AdminGuard from "./components/admin/AdminGuard";
@@ -96,6 +97,7 @@ const App = () => (
               <Route path="/iade-ve-iptal" element={<ReturnPolicy />} />
               <Route path="/cerez-politikasi" element={<CookiePolicy />} />
               <Route path="/sss" element={<FAQ />} />
+              <Route path="/karsilastir" element={<Compare />} />
 
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>

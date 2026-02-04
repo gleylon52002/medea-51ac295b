@@ -27,9 +27,19 @@ export interface Category {
   productCount: number;
 }
 
+export interface ProductVariantInfo {
+  id: string;
+  name: string;
+  variant_type: string;
+  color_code?: string;
+  price_adjustment: number;
+}
+
 export interface CartItem {
   product: Product;
   quantity: number;
+  variant?: ProductVariantInfo | null;
+  priceAdjustment?: number;
 }
 
 export interface Cart {
