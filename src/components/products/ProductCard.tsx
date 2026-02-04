@@ -1,13 +1,15 @@
 import { Link } from "react-router-dom";
-import { ShoppingBag, Star, Heart } from "lucide-react";
+import { ShoppingBag, Heart, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToggleFavorite, useIsFavorite } from "@/hooks/useFavorites";
+import { useComparisonProducts, useAddToComparison, useRemoveFromComparison } from "@/hooks/useProductComparison";
 import { formatPrice } from "@/lib/utils";
 import { ProductWithCategory } from "@/hooks/useProducts";
 import StockUrgencyBadge from "./StockUrgencyBadge";
 import ProductBadges from "./ProductBadges";
+import { toast } from "sonner";
 
 interface ProductCardProps {
   product: ProductWithCategory;
@@ -18,6 +20,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const { user } = useAuth();
   const { data: isFavorite } = useIsFavorite(product.id);
   const toggleFavorite = useToggleFavorite();
+  const { data: comparisons } = useComparisonProducts();
+  const addToComparison = useAddToComparison();
+  const removeFromComparison = useRemoveFromComparison();
+  
+  const existingComparison = comparisons?.find((c) => c.product_id === product.id);
+  const isInComparison = !!existingComparison;
+  const comparisonCount = comparisons?.length || 0;
   
   const hasDiscount = product.sale_price && Number(product.sale_price) < Number(product.price);
   const discountPercent = hasDiscount
@@ -51,19 +60,42 @@ const ProductCard = ({ product }: ProductCardProps) => {
     addToCart(cartProduct);
   };
 
+  const handleCompareClick = () => {
+    if (isInComparison && existingComparison) {
+      removeFromComparison.mutate(existingComparison.id);
+    } else {
+      if (comparisonCount >= 4) {
+        toast.error("En fazla 4 ürün karşılaştırabilirsiniz");
+        return;
+      }
+      addToComparison.mutate(product.id);
+    }
+  };
+
   return (
     <div className="group relative bg-card rounded-lg overflow-hidden shadow-soft hover:shadow-medium transition-all duration-300">
-      {/* Favorite Button */}
-      {user && (
+      {/* Action Buttons */}
+      <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
+        {user && (
+          <button
+            onClick={() => toggleFavorite.mutate(product.id)}
+            className="p-2 bg-background/80 backdrop-blur-sm rounded-full hover:bg-background transition-colors"
+          >
+            <Heart 
+              className={`h-4 w-4 ${isFavorite ? "fill-terracotta text-terracotta" : "text-muted-foreground"}`} 
+            />
+          </button>
+        )}
         <button
-          onClick={() => toggleFavorite.mutate(product.id)}
-          className="absolute top-3 right-3 z-10 p-2 bg-background/80 backdrop-blur-sm rounded-full hover:bg-background transition-colors"
+          onClick={handleCompareClick}
+          className={`p-2 backdrop-blur-sm rounded-full hover:bg-background transition-colors ${
+            isInComparison ? "bg-primary text-primary-foreground" : "bg-background/80"
+          }`}
+          title={isInComparison ? "Karşılaştırmadan çıkar" : "Karşılaştırmaya ekle"}
         >
-          <Heart 
-            className={`h-4 w-4 ${isFavorite ? "fill-terracotta text-terracotta" : "text-muted-foreground"}`} 
-          />
+          <Scale className={`h-4 w-4 ${isInComparison ? "" : "text-muted-foreground"}`} />
         </button>
-      )}
+      </div>
 
       {/* Image */}
       <Link to={`/urun/${product.slug}`} className="block relative aspect-square overflow-hidden">

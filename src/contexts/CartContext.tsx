@@ -1,12 +1,22 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Product, CartItem, Cart } from "@/types/product";
+import { ProductVariant } from "@/hooks/useProductVariants";
 import { toast } from "sonner";
 
+interface CartItemWithVariant extends CartItem {
+  variant?: ProductVariant | null;
+  priceAdjustment?: number;
+}
+
+interface CartWithVariants extends Omit<Cart, 'items'> {
+  items: CartItemWithVariant[];
+}
+
 interface CartContextType {
-  cart: Cart;
-  addToCart: (product: Product, quantity?: number) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  cart: CartWithVariants;
+  addToCart: (product: Product, quantity?: number, variant?: ProductVariant | null, priceAdjustment?: number) => void;
+  removeFromCart: (productId: string, variantId?: string) => void;
+  updateQuantity: (productId: string, quantity: number, variantId?: string) => void;
   clearCart: () => void;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
@@ -14,10 +24,11 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const calculateCart = (items: CartItem[]): Cart => {
+const calculateCart = (items: CartItemWithVariant[]): CartWithVariants => {
   const total = items.reduce((sum, item) => {
-    const price = item.product.salePrice || item.product.price;
-    return sum + price * item.quantity;
+    const basePrice = item.product.salePrice || item.product.price;
+    const priceAdjustment = item.priceAdjustment || 0;
+    return sum + (basePrice + priceAdjustment) * item.quantity;
   }, 0);
   
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -25,8 +36,12 @@ const calculateCart = (items: CartItem[]): Cart => {
   return { items, total, itemCount };
 };
 
+const getCartItemKey = (productId: string, variantId?: string) => {
+  return variantId ? `${productId}-${variantId}` : productId;
+};
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<CartItem[]>(() => {
+  const [items, setItems] = useState<CartItemWithVariant[]>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("medea-cart");
       return saved ? JSON.parse(saved) : [];
@@ -39,35 +54,52 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("medea-cart", JSON.stringify(items));
   }, [items]);
 
-  const addToCart = (product: Product, quantity = 1) => {
+  const addToCart = (
+    product: Product,
+    quantity = 1,
+    variant?: ProductVariant | null,
+    priceAdjustment = 0
+  ) => {
     setItems((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
+      const itemKey = getCartItemKey(product.id, variant?.id);
+      const existing = prev.find(
+        (item) => getCartItemKey(item.product.id, item.variant?.id) === itemKey
+      );
+      
       if (existing) {
         return prev.map((item) =>
-          item.product.id === product.id
+          getCartItemKey(item.product.id, item.variant?.id) === itemKey
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      return [...prev, { product, quantity }];
+      return [...prev, { product, quantity, variant, priceAdjustment }];
     });
-    toast.success(`${product.name} sepete eklendi`);
+    
+    const variantName = variant ? ` (${variant.name})` : "";
+    toast.success(`${product.name}${variantName} sepete eklendi`);
     setIsCartOpen(true);
   };
 
-  const removeFromCart = (productId: string) => {
-    setItems((prev) => prev.filter((item) => item.product.id !== productId));
+  const removeFromCart = (productId: string, variantId?: string) => {
+    const itemKey = getCartItemKey(productId, variantId);
+    setItems((prev) =>
+      prev.filter((item) => getCartItemKey(item.product.id, item.variant?.id) !== itemKey)
+    );
     toast.info("Ürün sepetten çıkarıldı");
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (productId: string, quantity: number, variantId?: string) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(productId, variantId);
       return;
     }
+    const itemKey = getCartItemKey(productId, variantId);
     setItems((prev) =>
       prev.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
+        getCartItemKey(item.product.id, item.variant?.id) === itemKey
+          ? { ...item, quantity }
+          : item
       )
     );
   };
