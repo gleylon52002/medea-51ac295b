@@ -528,22 +528,29 @@ const Checkout = () => {
               <h3 className="font-serif text-lg font-medium mb-4">Sepet Özeti</h3>
               
               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
-                {items.map((item) => (
-                  <div key={item.product.id} className="flex gap-3">
+                {items.map((item) => {
+                  const itemKey = item.variant ? `${item.product.id}-${item.variant.id}` : item.product.id;
+                  const itemPrice = (item.product.salePrice || item.product.price) + (item.priceAdjustment || 0);
+                  return (
+                  <div key={itemKey} className="flex gap-3">
                     <img
-                      src={item.product.images?.[0] || "/placeholder.svg"}
+                      src={item.variant?.images?.[0] || item.product.images?.[0] || "/placeholder.svg"}
                       alt={item.product.name}
                       className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg object-cover shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{item.product.name}</p>
+                      <p className="font-medium text-sm truncate">
+                        {item.product.name}
+                        {item.variant && <span className="text-muted-foreground font-normal"> - {item.variant.name}</span>}
+                      </p>
                       <p className="text-xs text-muted-foreground">Adet: {item.quantity}</p>
                       <p className="text-sm font-semibold">
-                        {formatPrice((item.product.salePrice || item.product.price) * item.quantity)}
+                        {formatPrice(itemPrice * item.quantity)}
                       </p>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               <Separator className="my-4" />
@@ -562,14 +569,14 @@ const Checkout = () => {
                   <span>{formatPrice(total)}</span>
                 </div>
                 {discountAmount > 0 && (
-                  <div className="flex justify-between text-green-600">
+                  <div className="flex justify-between text-success">
                     <span>İndirim</span>
                     <span>-{formatPrice(discountAmount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Kargo</span>
-                  <span>{shippingCost === 0 ? <span className="text-green-600">Ücretsiz</span> : formatPrice(shippingCost)}</span>
+                  <span>{shippingCost === 0 ? <span className="text-success">Ücretsiz</span> : formatPrice(shippingCost)}</span>
                 </div>
                 <Separator className="my-2" />
                 <div className="flex justify-between text-base sm:text-lg font-semibold">

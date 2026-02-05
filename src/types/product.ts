@@ -33,6 +33,8 @@ export interface ProductVariantInfo {
   variant_type: string;
   color_code?: string;
   price_adjustment: number;
+  images?: string[];
+  stock?: number;
 }
 
 export interface CartItem {

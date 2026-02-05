@@ -24,7 +24,7 @@ const StockUrgencyBadge = ({ stock, className, size = "md" }: StockUrgencyBadgeP
   if (stock <= 3) {
     return (
       <div className={cn(
-        "flex items-center gap-1.5 bg-red-500 text-white font-medium rounded px-2 py-1 animate-pulse",
+        "flex items-center gap-1.5 bg-error text-error-foreground font-medium rounded px-2 py-1 animate-pulse",
         size === "sm" ? "text-xs" : "text-sm",
         className
       )}>
@@ -37,7 +37,7 @@ const StockUrgencyBadge = ({ stock, className, size = "md" }: StockUrgencyBadgeP
   if (stock <= 10) {
     return (
       <div className={cn(
-        "flex items-center gap-1.5 bg-orange-500 text-white font-medium rounded px-2 py-1",
+        "flex items-center gap-1.5 bg-warning text-warning-foreground font-medium rounded px-2 py-1",
         size === "sm" ? "text-xs" : "text-sm",
         className
       )}>

@@ -22,6 +22,7 @@ import StickyAddToCart from "@/components/cart/StickyAddToCart";
 import VariantSelector from "@/components/products/VariantSelector";
 import CompareButton from "@/components/products/CompareButton";
 import { ProductVariant } from "@/hooks/useProductVariants";
+import { ProductVariantInfo } from "@/types/product";
 import { useRelatedProducts } from "@/hooks/useRelatedProducts";
 
 const ProductDetail = () => {
@@ -120,7 +121,19 @@ const ProductDetail = () => {
       reviewCount: rating?.count || 0,
       createdAt: product.created_at,
     };
-    addToCart(cartProduct, quantity, selectedVariant, priceAdjustment);
+    
+    // Convert ProductVariant to ProductVariantInfo for cart
+    const variantInfo: ProductVariantInfo | null = selectedVariant ? {
+      id: selectedVariant.id,
+      name: selectedVariant.name,
+      variant_type: selectedVariant.variant_type,
+      color_code: selectedVariant.color_code || undefined,
+      price_adjustment: selectedVariant.price_adjustment || 0,
+      images: selectedVariant.images || [],
+      stock: selectedVariant.stock,
+    } : null;
+    
+    addToCart(cartProduct, quantity, variantInfo, priceAdjustment);
   };
 
   return (
@@ -240,7 +253,7 @@ const ProductDetail = () => {
               <StockUrgencyBadge stock={selectedVariant?.stock ?? product.stock} />
               {(selectedVariant?.stock ?? product.stock) > 10 && (
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                  <span className="w-2 h-2 rounded-full bg-success"></span>
                   <span className="text-sm text-muted-foreground">
                     Stokta ({selectedVariant?.stock ?? product.stock} adet)
                   </span>
