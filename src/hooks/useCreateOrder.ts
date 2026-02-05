@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { CartItem } from "@/types/product";
 import { Database } from "@/integrations/supabase/types";
+import { Json } from "@/integrations/supabase/types";
 
 type PaymentMethod = Database["public"]["Enums"]["payment_method"];
 
@@ -44,16 +45,32 @@ export const useCreateOrder = () => {
 
       // Check stock for all items first
       for (const item of params.items) {
-        const { data: product, error: stockError } = await supabase
-          .from("products")
-          .select("stock, name")
-          .eq("id", item.product.id)
-          .single();
+        if (item.variant?.id) {
+          // Check variant stock
+          const { data: variant, error: variantError } = await supabase
+            .from("product_variants")
+            .select("stock, name")
+            .eq("id", item.variant.id)
+            .single();
 
-        if (stockError) throw new Error(`Ürün bilgisi alınamadı: ${item.product.name}`);
-        
-        if (product.stock < item.quantity) {
-          throw new Error(`Yetersiz stok: "${product.name}" için sadece ${product.stock} adet mevcut`);
+          if (variantError) throw new Error(`Varyant bilgisi alınamadı: ${item.product.name}`);
+          
+          if (variant.stock < item.quantity) {
+            throw new Error(`Yetersiz stok: "${item.product.name} - ${variant.name}" için sadece ${variant.stock} adet mevcut`);
+          }
+        } else {
+          // Check product stock
+          const { data: product, error: stockError } = await supabase
+            .from("products")
+            .select("stock, name")
+            .eq("id", item.product.id)
+            .single();
+
+          if (stockError) throw new Error(`Ürün bilgisi alınamadı: ${item.product.name}`);
+          
+          if (product.stock < item.quantity) {
+            throw new Error(`Yetersiz stok: "${product.name}" için sadece ${product.stock} adet mevcut`);
+          }
         }
       }
 
@@ -80,15 +97,30 @@ export const useCreateOrder = () => {
       if (orderError) throw orderError;
 
       // Create order items
-      const orderItems = params.items.map((item) => ({
+      const orderItems = params.items.map((item) => {
+        const basePrice = item.product.salePrice || item.product.price;
+        const priceAdjustment = item.priceAdjustment || 0;
+        const unitPrice = basePrice + priceAdjustment;
+        
+        return {
         order_id: order.id,
         product_id: item.product.id,
-        product_name: item.product.name,
-        product_image: item.product.images?.[0] || null,
+        product_name: item.variant 
+          ? `${item.product.name} - ${item.variant.name}` 
+          : item.product.name,
+        product_image: item.variant?.images?.[0] || item.product.images?.[0] || null,
         quantity: item.quantity,
-        unit_price: item.product.salePrice || item.product.price,
-        total_price: (item.product.salePrice || item.product.price) * item.quantity,
-      }));
+        unit_price: unitPrice,
+        total_price: unitPrice * item.quantity,
+        variant_id: item.variant?.id || null,
+        variant_info: item.variant ? {
+          id: item.variant.id,
+          name: item.variant.name,
+          variant_type: item.variant.variant_type,
+          price_adjustment: item.priceAdjustment || 0,
+        } as unknown as Json : null,
+        };
+      });
 
       const { error: itemsError } = await supabase
         .from("order_items")
@@ -98,17 +130,34 @@ export const useCreateOrder = () => {
 
       // Update stock for each product
       for (const item of params.items) {
-        const { data: currentProduct } = await supabase
-          .from("products")
-          .select("stock")
-          .eq("id", item.product.id)
-          .single();
+        if (item.variant?.id) {
+          // Update variant stock
+          const { data: currentVariant } = await supabase
+            .from("product_variants")
+            .select("stock")
+            .eq("id", item.variant.id)
+            .single();
 
-        if (currentProduct) {
-          await supabase
+          if (currentVariant) {
+            await supabase
+              .from("product_variants")
+              .update({ stock: Math.max(0, currentVariant.stock - item.quantity) })
+              .eq("id", item.variant.id);
+          }
+        } else {
+          // Update product stock
+          const { data: currentProduct } = await supabase
             .from("products")
-            .update({ stock: Math.max(0, currentProduct.stock - item.quantity) })
-            .eq("id", item.product.id);
+            .select("stock")
+            .eq("id", item.product.id)
+            .single();
+
+          if (currentProduct) {
+            await supabase
+              .from("products")
+              .update({ stock: Math.max(0, currentProduct.stock - item.quantity) })
+              .eq("id", item.product.id);
+          }
         }
       }
 
@@ -117,6 +166,7 @@ export const useCreateOrder = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product-variants"] });
     },
   });
 };

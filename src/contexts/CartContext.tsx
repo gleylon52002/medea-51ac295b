@@ -1,20 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Product, CartItem, Cart } from "@/types/product";
-import { ProductVariant } from "@/hooks/useProductVariants";
+import { Product, CartItem, Cart, ProductVariantInfo } from "@/types/product";
 import { toast } from "sonner";
 
-interface CartItemWithVariant extends CartItem {
-  variant?: ProductVariant | null;
-  priceAdjustment?: number;
-}
-
-interface CartWithVariants extends Omit<Cart, 'items'> {
-  items: CartItemWithVariant[];
-}
-
 interface CartContextType {
-  cart: CartWithVariants;
-  addToCart: (product: Product, quantity?: number, variant?: ProductVariant | null, priceAdjustment?: number) => void;
+  cart: Cart;
+  addToCart: (product: Product, quantity?: number, variant?: ProductVariantInfo | null, priceAdjustment?: number) => void;
   removeFromCart: (productId: string, variantId?: string) => void;
   updateQuantity: (productId: string, quantity: number, variantId?: string) => void;
   clearCart: () => void;
@@ -24,7 +14,7 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const calculateCart = (items: CartItemWithVariant[]): CartWithVariants => {
+const calculateCart = (items: CartItem[]): Cart => {
   const total = items.reduce((sum, item) => {
     const basePrice = item.product.salePrice || item.product.price;
     const priceAdjustment = item.priceAdjustment || 0;
@@ -41,7 +31,7 @@ const getCartItemKey = (productId: string, variantId?: string) => {
 };
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<CartItemWithVariant[]>(() => {
+  const [items, setItems] = useState<CartItem[]>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("medea-cart");
       return saved ? JSON.parse(saved) : [];
@@ -57,7 +47,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const addToCart = (
     product: Product,
     quantity = 1,
-    variant?: ProductVariant | null,
+    variant?: ProductVariantInfo | null,
     priceAdjustment = 0
   ) => {
     setItems((prev) => {

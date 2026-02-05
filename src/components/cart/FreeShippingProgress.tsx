@@ -24,10 +24,10 @@ const FreeShippingProgress = ({
         <div className="flex items-center gap-2">
           <Truck className={cn(
             "h-4 w-4",
-            hasReachedThreshold ? "text-green-600" : "text-muted-foreground"
+            hasReachedThreshold ? "text-success" : "text-muted-foreground"
           )} />
           {hasReachedThreshold ? (
-            <span className="text-green-600 font-medium flex items-center gap-1">
+            <span className="text-success font-medium flex items-center gap-1">
               <Check className="h-4 w-4" />
               Ücretsiz kargo kazandınız!
             </span>
@@ -47,7 +47,7 @@ const FreeShippingProgress = ({
         value={progress}
         className={cn(
           "h-2",
-          hasReachedThreshold ? "[&>div]:bg-green-600" : "[&>div]:bg-primary"
+          hasReachedThreshold ? "[&>div]:bg-success" : "[&>div]:bg-primary"
         )}
       />
     </div>

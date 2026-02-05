@@ -68,6 +68,18 @@ export default {
         terracotta: "hsl(var(--terracotta))",
         charcoal: "hsl(var(--charcoal))",
         "warm-white": "hsl(var(--warm-white))",
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        error: {
+          DEFAULT: "hsl(var(--error))",
+          foreground: "hsl(var(--error-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
