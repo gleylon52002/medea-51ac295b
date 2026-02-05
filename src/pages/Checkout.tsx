@@ -77,9 +77,8 @@ const Checkout = () => {
     queryKey: ["payment-settings-active"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("payment_settings")
-        .select("*")
-        .eq("is_active", true);
+        .from("payment_settings_public")
+        .select("*");
       if (error) throw error;
       return data;
     },
@@ -98,7 +97,9 @@ const Checkout = () => {
   }, [availablePaymentMethods, paymentMethod]);
 
   // Get bank transfer config
-  const bankTransferConfig = paymentSettings?.find(ps => ps.method === "bank_transfer")?.config as { iban?: string; bank_name?: string; account_holder?: string } | null;
+  // Bank transfer config is fetched separately only for admin display
+  // For checkout, we just show a generic message
+  const hasBankTransfer = paymentSettings?.some(ps => ps.method === "bank_transfer");
 
   const shippingCost = total >= 300 ? 0 : 29.90;
   const discountAmount = appliedCoupon?.discount || 0;
@@ -424,13 +425,12 @@ const Checkout = () => {
                   </div>
                 )}
 
-                {paymentMethod === "bank-transfer" && bankTransferConfig && (
+                {paymentMethod === "bank-transfer" && hasBankTransfer && (
                   <div className="p-4 bg-muted/50 rounded-lg space-y-2">
                     <p className="font-medium">Banka Hesap Bilgileri</p>
                     <p className="text-sm text-muted-foreground">
-                      {bankTransferConfig.bank_name && <>Banka: {bankTransferConfig.bank_name}<br /></>}
-                      {bankTransferConfig.iban && <>IBAN: {bankTransferConfig.iban}<br /></>}
-                      {bankTransferConfig.account_holder && <>Hesap Sahibi: {bankTransferConfig.account_holder}</>}
+                      Siparişinizi tamamladıktan sonra banka hesap bilgileri e-posta ile gönderilecektir.
+                      Ödemenizi yaptıktan sonra dekontunuzu iletişim formundan bize ulaştırabilirsiniz.
                     </p>
                     <p className="text-sm text-muted-foreground mt-2">
                       * Açıklama kısmına sipariş numaranızı yazmayı unutmayın.

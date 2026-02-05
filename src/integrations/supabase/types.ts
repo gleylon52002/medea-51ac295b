@@ -1070,7 +1070,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      payment_settings_public: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          is_active: boolean | null
+          method: Database["public"]["Enums"]["payment_method"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          method?: Database["public"]["Enums"]["payment_method"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          method?: Database["public"]["Enums"]["payment_method"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
