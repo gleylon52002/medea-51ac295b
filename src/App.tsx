@@ -24,6 +24,7 @@ import Orders from "./pages/account/Orders";
 import OrderDetail from "./pages/account/OrderDetail";
 import Favorites from "./pages/account/Favorites";
 import Addresses from "./pages/account/Addresses";
+import Affiliate from "./pages/account/Affiliate";
 import AccountSettings from "./pages/account/AccountSettings";
 
 // Legal Pages
@@ -71,6 +72,7 @@ import SellerEarnings from "./pages/seller/SellerEarnings";
 import SellerPoints from "./pages/seller/SellerPoints";
 import SellerFeature from "./pages/seller/SellerFeature";
 import SellerNotifications from "./pages/seller/SellerNotifications";
+import SellerMessages from "./pages/seller/SellerMessages";
 import SellerCargo from "./pages/seller/SellerCargo";
 import SellerSettings from "./pages/seller/SellerSettings";
 import SellerInvoices from "./pages/seller/SellerInvoices";
@@ -106,6 +108,7 @@ const App = () => (
                 <Route path="siparisler/:orderNumber" element={<OrderDetail />} />
                 <Route path="favoriler" element={<Favorites />} />
                 <Route path="adresler" element={<Addresses />} />
+                <Route path="referans" element={<Affiliate />} />
                 <Route path="ayarlar" element={<AccountSettings />} />
               </Route>
 
@@ -155,6 +158,8 @@ const App = () => (
                 <Route path="puanlar" element={<SellerPoints />} />
                 <Route path="one-cikar" element={<SellerFeature />} />
                 <Route path="bildirimler" element={<SellerNotifications />} />
+                <Route path="mesajlar" element={<SellerMessages />} />
+                <Route path="sorular" element={<SellerQuestions />} />
                 <Route path="kargo" element={<SellerCargo />} />
                 <Route path="ayarlar" element={<SellerSettings />} />
               </Route>

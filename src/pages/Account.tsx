@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { User, Package, Heart, MapPin, Settings, LogOut } from "lucide-react";
+import { User, Package, Heart, MapPin, Settings, LogOut, Users } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +11,7 @@ const Account = () => {
     { path: "/hesabim/siparisler", label: "Siparişlerim", icon: Package },
     { path: "/hesabim/favoriler", label: "Favorilerim", icon: Heart },
     { path: "/hesabim/adresler", label: "Adreslerim", icon: MapPin },
+    { path: "/hesabim/referans", label: "Referans Programı", icon: Users },
     { path: "/hesabim/ayarlar", label: "Ayarlar", icon: Settings },
   ];
 
@@ -32,11 +33,10 @@ const Account = () => {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                      isActive
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
                         ? "bg-primary text-primary-foreground"
                         : "hover:bg-muted"
-                    }`}
+                      }`}
                   >
                     <Icon className="h-5 w-5" />
                     <span>{item.label}</span>

@@ -21,6 +21,7 @@ import TrustBadges from "@/components/products/TrustBadges";
 import StickyAddToCart from "@/components/cart/StickyAddToCart";
 import VariantSelector from "@/components/products/VariantSelector";
 import CompareButton from "@/components/products/CompareButton";
+import ProductQuestions from "@/components/products/ProductQuestions";
 import { ProductVariant } from "@/hooks/useProductVariants";
 import { ProductVariantInfo } from "@/types/product";
 import { useRelatedProducts } from "@/hooks/useRelatedProducts";
@@ -35,7 +36,7 @@ const ProductDetail = () => {
   const addToCartRef = useRef<HTMLDivElement>(null);
   const { addToCart } = useCart();
   const { user } = useAuth();
-  
+
   const { data: product, isLoading } = useProductBySlug(slug || "");
   const { data: rating } = useProductRating(product?.id || "");
   const { data: isFavorite } = useIsFavorite(product?.id || "");
@@ -92,7 +93,7 @@ const ProductDetail = () => {
 
   // Display images - variant images take priority if selected
   const displayImages = variantImages.length > 0 ? variantImages : (product.images || []);
-  
+
   const basePrice = Number(product.sale_price || product.price);
   const finalPrice = basePrice + priceAdjustment;
 
@@ -121,7 +122,7 @@ const ProductDetail = () => {
       reviewCount: rating?.count || 0,
       createdAt: product.created_at,
     };
-    
+
     // Convert ProductVariant to ProductVariantInfo for cart
     const variantInfo: ProductVariantInfo | null = selectedVariant ? {
       id: selectedVariant.id,
@@ -132,7 +133,7 @@ const ProductDetail = () => {
       images: selectedVariant.images || [],
       stock: selectedVariant.stock,
     } : null;
-    
+
     addToCart(cartProduct, quantity, variantInfo, priceAdjustment);
   };
 
@@ -168,9 +169,8 @@ const ProductDetail = () => {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`aspect-square rounded-lg overflow-hidden bg-secondary border-2 transition-colors ${
-                      selectedImage === index ? "border-primary" : "border-transparent hover:border-primary/50"
-                    }`}
+                    className={`aspect-square rounded-lg overflow-hidden bg-secondary border-2 transition-colors ${selectedImage === index ? "border-primary" : "border-transparent hover:border-primary/50"
+                      }`}
                   >
                     <img src={image} alt="" className="w-full h-full object-cover" />
                   </button>
@@ -200,11 +200,10 @@ const ProductDetail = () => {
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`h-5 w-5 ${
-                        i < Math.floor(rating?.average || 0)
-                          ? "fill-terracotta text-terracotta"
-                          : "fill-muted text-muted"
-                      }`}
+                      className={`h-5 w-5 ${i < Math.floor(rating?.average || 0)
+                        ? "fill-terracotta text-terracotta"
+                        : "fill-muted text-muted"
+                        }`}
                     />
                   ))}
                 </div>
@@ -289,8 +288,8 @@ const ProductDetail = () => {
                 Sepete Ekle
               </Button>
               {user && (
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   variant="outline"
                   onClick={() => toggleFavorite.mutate(product.id)}
                 >
@@ -332,6 +331,12 @@ const ProductDetail = () => {
             >
               Değerlendirmeler ({rating?.count || 0})
             </TabsTrigger>
+            <TabsTrigger
+              value="questions"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+            >
+              Sorular
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="description" className="pt-6">
             <p className="text-muted-foreground leading-relaxed max-w-3xl">
@@ -350,6 +355,9 @@ const ProductDetail = () => {
           </TabsContent>
           <TabsContent value="reviews" className="pt-6">
             <ProductReviews productId={product.id} />
+          </TabsContent>
+          <TabsContent value="questions" className="pt-6">
+            <ProductQuestions productId={product.id} />
           </TabsContent>
         </Tabs>
 

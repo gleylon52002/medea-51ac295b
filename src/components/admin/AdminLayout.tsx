@@ -26,7 +26,9 @@ import {
   Store,
   UserCheck,
   Sliders,
-  FileText
+  FileText,
+  Star,
+  Ticket
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -40,10 +42,11 @@ const menuItems = [
   { icon: FolderTree, label: "Kategoriler", path: "/admin/kategoriler" },
   { icon: ShoppingCart, label: "Siparişler", path: "/admin/siparisler" },
   { icon: Users, label: "Kullanıcılar", path: "/admin/kullanicilar" },
-  { icon: MessageSquare, label: "Yorumlar", path: "/admin/yorumlar" },
-  { icon: Tag, label: "Kuponlar", path: "/admin/kuponlar" },
+  { icon: Star, label: "Yorumlar", path: "/admin/yorumlar" }, // Changed icon from MessageSquare to Star
+  { icon: MessageSquare, label: "Mesajlar", path: "/admin/mesajlar" }, // Added new 'Mesajlar' item with MessageSquare icon
+  { icon: Ticket, label: "Kuponlar", path: "/admin/kuponlar" }, // Changed icon from Tag to Ticket
   { icon: Percent, label: "Kampanyalar", path: "/admin/kampanyalar" },
-  { icon: Mail, label: "Mesajlar", path: "/admin/mesajlar" },
+  { icon: Mail, label: "Bülten Mesajları", path: "/admin/bulten-mesajlari" }, // Modified existing 'Mesajlar' to 'Bülten Mesajları' and path
   { icon: Newspaper, label: "Bülten", path: "/admin/bulten" },
   { icon: HelpCircle, label: "SSS", path: "/admin/sss" },
   { icon: Share2, label: "Sosyal Medya", path: "/admin/sosyal-medya" },
