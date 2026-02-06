@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock, User, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Loader2, Store } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import SellerApplicationForm from "@/components/seller/SellerApplicationForm";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -110,9 +111,13 @@ const Auth = () => {
 
           <div className="bg-card border border-border rounded-2xl p-6 lg:p-8">
             <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="login">Giriş Yap</TabsTrigger>
                 <TabsTrigger value="register">Kayıt Ol</TabsTrigger>
+                <TabsTrigger value="seller" className="flex items-center gap-1">
+                  <Store className="h-3 w-3" />
+                  Satıcı Ol
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
@@ -317,6 +322,10 @@ const Auth = () => {
                     )}
                   </Button>
                 </form>
+              </TabsContent>
+
+              <TabsContent value="seller">
+                <SellerApplicationForm />
               </TabsContent>
             </Tabs>
           </div>
