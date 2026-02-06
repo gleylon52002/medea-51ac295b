@@ -56,6 +56,21 @@ import AdminSocialMedia from "./pages/admin/AdminSocialMedia";
 import AdminTheme from "./pages/admin/AdminTheme";
 import AdminSEO from "./pages/admin/AdminSEO";
 import AdminHero from "./pages/admin/AdminHero";
+import AdminSellerApplications from "./pages/admin/AdminSellerApplications";
+import AdminSellers from "./pages/admin/AdminSellers";
+import AdminSellerSettings from "./pages/admin/AdminSellerSettings";
+
+// Seller Pages
+import SellerGuard from "./components/seller/SellerGuard";
+import SellerLayout from "./components/seller/SellerLayout";
+import SellerDashboard from "./pages/seller/SellerDashboard";
+import SellerProducts from "./pages/seller/SellerProducts";
+import SellerOrders from "./pages/seller/SellerOrders";
+import SellerEarnings from "./pages/seller/SellerEarnings";
+import SellerPoints from "./pages/seller/SellerPoints";
+import SellerFeature from "./pages/seller/SellerFeature";
+import SellerNotifications from "./pages/seller/SellerNotifications";
+import SellerSettings from "./pages/seller/SellerSettings";
 
 import NotFound from "./pages/NotFound";
 
@@ -118,7 +133,22 @@ const App = () => (
                 <Route path="hero" element={<AdminHero />} />
                 <Route path="tema" element={<AdminTheme />} />
                 <Route path="seo" element={<AdminSEO />} />
+                <Route path="satici-basvurulari" element={<AdminSellerApplications />} />
+                <Route path="saticilar" element={<AdminSellers />} />
+                <Route path="satici-ayarlari" element={<AdminSellerSettings />} />
                 <Route path="ayarlar" element={<AdminSettings />} />
+              </Route>
+
+              {/* Seller Routes */}
+              <Route path="/satici" element={<SellerGuard><SellerLayout /></SellerGuard>}>
+                <Route index element={<SellerDashboard />} />
+                <Route path="urunler" element={<SellerProducts />} />
+                <Route path="siparisler" element={<SellerOrders />} />
+                <Route path="kazanclar" element={<SellerEarnings />} />
+                <Route path="puanlar" element={<SellerPoints />} />
+                <Route path="one-cikar" element={<SellerFeature />} />
+                <Route path="bildirimler" element={<SellerNotifications />} />
+                <Route path="ayarlar" element={<SellerSettings />} />
               </Route>
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

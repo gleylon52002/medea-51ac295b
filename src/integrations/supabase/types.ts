@@ -787,6 +787,7 @@ export type Database = {
           name: string
           price: number
           sale_price: number | null
+          seller_id: string | null
           short_description: string | null
           slug: string
           stock: number
@@ -807,6 +808,7 @@ export type Database = {
           name: string
           price: number
           sale_price?: number | null
+          seller_id?: string | null
           short_description?: string | null
           slug: string
           stock?: number
@@ -827,6 +829,7 @@ export type Database = {
           name?: string
           price?: number
           sale_price?: number | null
+          seller_id?: string | null
           short_description?: string | null
           slug?: string
           stock?: number
@@ -839,6 +842,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
             referencedColumns: ["id"]
           },
         ]
@@ -965,6 +975,358 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_applications: {
+        Row: {
+          account_holder: string
+          address: string
+          bank_name: string
+          category_focus: string | null
+          city: string
+          company_name: string
+          created_at: string
+          description: string | null
+          district: string
+          iban: string
+          id: string
+          identity_number: string
+          phone: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tax_number: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_holder: string
+          address: string
+          bank_name: string
+          category_focus?: string | null
+          city: string
+          company_name: string
+          created_at?: string
+          description?: string | null
+          district: string
+          iban: string
+          id?: string
+          identity_number: string
+          phone: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tax_number: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_holder?: string
+          address?: string
+          bank_name?: string
+          category_focus?: string | null
+          city?: string
+          company_name?: string
+          created_at?: string
+          description?: string | null
+          district?: string
+          iban?: string
+          id?: string
+          identity_number?: string
+          phone?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tax_number?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      seller_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          metadata: Json | null
+          notification_type: string
+          seller_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          metadata?: Json | null
+          notification_type: string
+          seller_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          metadata?: Json | null
+          notification_type?: string
+          seller_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_notifications_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_points_history: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string | null
+          point_type: string
+          points: number
+          reason: string
+          review_id: string | null
+          seller_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          point_type: string
+          points: number
+          reason: string
+          review_id?: string | null
+          seller_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          point_type?: string
+          points?: number
+          reason?: string
+          review_id?: string | null
+          seller_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_points_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_points_history_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_points_history_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      seller_transactions: {
+        Row: {
+          commission_amount: number
+          commission_rate: number
+          created_at: string
+          id: string
+          net_amount: number
+          order_id: string | null
+          order_item_id: string | null
+          paid_at: string | null
+          product_id: string | null
+          sale_amount: number
+          seller_id: string
+          status: string
+        }
+        Insert: {
+          commission_amount: number
+          commission_rate: number
+          created_at?: string
+          id?: string
+          net_amount: number
+          order_id?: string | null
+          order_item_id?: string | null
+          paid_at?: string | null
+          product_id?: string | null
+          sale_amount: number
+          seller_id: string
+          status?: string
+        }
+        Update: {
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          net_amount?: number
+          order_id?: string | null
+          order_item_id?: string | null
+          paid_at?: string | null
+          product_id?: string | null
+          sale_amount?: number
+          seller_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_transactions_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_transactions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_transactions_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sellers: {
+        Row: {
+          account_holder: string
+          address: string
+          application_id: string | null
+          bank_name: string
+          city: string
+          commission_rate: number
+          company_name: string
+          created_at: string
+          district: string
+          iban: string
+          id: string
+          is_featured: boolean
+          penalty_points: number
+          phone: string
+          reputation_points: number
+          status: string
+          suspended_reason: string | null
+          suspended_until: string | null
+          tax_number: string
+          total_orders: number
+          total_sales: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_holder: string
+          address: string
+          application_id?: string | null
+          bank_name: string
+          city: string
+          commission_rate?: number
+          company_name: string
+          created_at?: string
+          district: string
+          iban: string
+          id?: string
+          is_featured?: boolean
+          penalty_points?: number
+          phone: string
+          reputation_points?: number
+          status?: string
+          suspended_reason?: string | null
+          suspended_until?: string | null
+          tax_number: string
+          total_orders?: number
+          total_sales?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_holder?: string
+          address?: string
+          application_id?: string | null
+          bank_name?: string
+          city?: string
+          commission_rate?: number
+          company_name?: string
+          created_at?: string
+          district?: string
+          iban?: string
+          id?: string
+          is_featured?: boolean
+          penalty_points?: number
+          phone?: string
+          reputation_points?: number
+          status?: string
+          suspended_reason?: string | null
+          suspended_until?: string | null
+          tax_number?: string
+          total_orders?: number
+          total_sales?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sellers_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "seller_applications"
             referencedColumns: ["id"]
           },
         ]
@@ -1096,6 +1458,7 @@ export type Database = {
       }
     }
     Functions: {
+      get_seller_id: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1104,6 +1467,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_seller: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user" | "seller"
