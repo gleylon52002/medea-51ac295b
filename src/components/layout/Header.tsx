@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingBag, Menu, X, Search, User, LogOut, Settings } from "lucide-react";
+import { ShoppingBag, Menu, X, Search, User, LogOut, Settings, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/hooks/useCategories";
 import { useGeneralSettings } from "@/hooks/useSiteSettings";
+import { useSellerStatus } from "@/hooks/useSeller";
 import { toast } from "sonner";
 import SearchDialog from "@/components/search/SearchDialog";
 
@@ -24,6 +25,7 @@ const Header = () => {
   const { user, isAdmin, signOut } = useAuth();
   const { data: categories } = useCategories();
   const { data: generalSettings } = useGeneralSettings();
+  const { data: sellerStatus } = useSellerStatus();
 
   const handleSignOut = async () => {
     await signOut();
@@ -47,9 +49,9 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center">
             {generalSettings?.logo_url ? (
-              <img 
-                src={generalSettings.logo_url} 
-                alt={generalSettings?.site_name || "Logo"} 
+              <img
+                src={generalSettings.logo_url}
+                alt={generalSettings?.site_name || "Logo"}
                 className="h-8 lg:h-10 max-w-[150px] object-contain"
               />
             ) : (
@@ -87,7 +89,7 @@ const Header = () => {
               <Search className="h-5 w-5" />
             </Button>
             <SearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} />
-            
+
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -110,6 +112,21 @@ const Header = () => {
                       </Link>
                     </DropdownMenuItem>
                   )}
+                  {sellerStatus?.type === "seller" ? (
+                    <DropdownMenuItem asChild>
+                      <Link to="/satici" className="cursor-pointer">
+                        <Store className="mr-2 h-4 w-4" />
+                        Satıcı Paneli
+                      </Link>
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem asChild>
+                      <Link to="/giris?tab=seller" className="cursor-pointer">
+                        <Store className="mr-2 h-4 w-4" />
+                        Satıcı Ol
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
@@ -124,7 +141,7 @@ const Header = () => {
                 </Link>
               </Button>
             )}
-            
+
             <Button
               variant="ghost"
               size="icon"

@@ -13,7 +13,10 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const applicationSchema = z.object({
   company_name: z.string().min(2, "Firma adı en az 2 karakter olmalıdır"),
-  tax_number: z.string().min(10, "Vergi numarası 10 haneli olmalıdır").max(11, "Vergi numarası 11 haneden fazla olamaz"),
+  tax_number: z.string()
+    .max(11, "Vergi numarası 11 haneden fazla olamaz")
+    .optional()
+    .or(z.literal("")),
   identity_number: z.string().length(11, "TC Kimlik No 11 haneli olmalıdır"),
   phone: z.string().min(10, "Geçerli bir telefon numarası giriniz"),
   address: z.string().min(10, "Adres en az 10 karakter olmalıdır"),
@@ -106,7 +109,7 @@ export const SellerApplicationForm = () => {
   // Has pending application
   if (sellerStatus?.type === "application") {
     const application = sellerStatus.data;
-    
+
     if (application.status === "pending") {
       return (
         <div className="text-center py-8">
@@ -177,7 +180,7 @@ export const SellerApplicationForm = () => {
                 name="tax_number"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Vergi No *</FormLabel>
+                    <FormLabel>Vergi No</FormLabel>
                     <FormControl>
                       <Input placeholder="10 haneli" maxLength={11} {...field} />
                     </FormControl>
@@ -338,10 +341,10 @@ export const SellerApplicationForm = () => {
                 <FormItem>
                   <FormLabel>Firma Hakkında</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Kendinizi ve ürünlerinizi kısaca tanıtın..." 
+                    <Textarea
+                      placeholder="Kendinizi ve ürünlerinizi kısaca tanıtın..."
                       className="min-h-[100px]"
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -350,8 +353,8 @@ export const SellerApplicationForm = () => {
             />
           </div>
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full"
             disabled={submitApplication.isPending}
           >

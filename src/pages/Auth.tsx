@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User, Loader2, Store } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import SellerApplicationForm from "@/components/seller/SellerApplicationForm";
+import { cn } from "@/lib/utils";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -29,12 +30,18 @@ const Auth = () => {
     confirmPassword: "",
   });
 
-  // Redirect if already logged in
+  // Get query params to check for tab selection
+  const [searchParams, setSearchParams] = useSearchParams();
+  const defaultTab = searchParams.get("tab") || "login";
+
+  // Redirect if already logged in, UNLESS on seller tab
   useEffect(() => {
     if (user && !authLoading) {
-      navigate("/");
+      if (defaultTab !== "seller") {
+        navigate("/");
+      }
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, defaultTab]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,14 +50,14 @@ const Auth = () => {
     const { error } = await signIn(loginData.email, loginData.password);
 
     if (error) {
-      toast.error(error.message === "Invalid login credentials" 
-        ? "E-posta veya şifre hatalı" 
+      toast.error(error.message === "Invalid login credentials"
+        ? "E-posta veya şifre hatalı"
         : error.message);
     } else {
       toast.success("Giriş başarılı!");
       navigate("/");
     }
-    
+
     setIsLoading(false);
   };
 
@@ -82,7 +89,7 @@ const Auth = () => {
       toast.success("Kayıt başarılı! Giriş yapabilirsiniz.");
       navigate("/");
     }
-    
+
     setIsLoading(false);
   };
 
@@ -110,10 +117,14 @@ const Auth = () => {
           </div>
 
           <div className="bg-card border border-border rounded-2xl p-6 lg:p-8">
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
-                <TabsTrigger value="login">Giriş Yap</TabsTrigger>
-                <TabsTrigger value="register">Kayıt Ol</TabsTrigger>
+            <Tabs
+              value={searchParams.get("tab") || "login"}
+              onValueChange={(val) => setSearchParams({ tab: val })}
+              className="w-full"
+            >
+              <TabsList className={cn("grid w-full mb-6", user ? "grid-cols-1" : "grid-cols-3")}>
+                {!user && <TabsTrigger value="login">Giriş Yap</TabsTrigger>}
+                {!user && <TabsTrigger value="register">Kayıt Ol</TabsTrigger>}
                 <TabsTrigger value="seller" className="flex items-center gap-1">
                   <Store className="h-3 w-3" />
                   Satıcı Ol

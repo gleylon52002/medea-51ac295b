@@ -70,6 +70,7 @@ import SellerEarnings from "./pages/seller/SellerEarnings";
 import SellerPoints from "./pages/seller/SellerPoints";
 import SellerFeature from "./pages/seller/SellerFeature";
 import SellerNotifications from "./pages/seller/SellerNotifications";
+import SellerCargo from "./pages/seller/SellerCargo";
 import SellerSettings from "./pages/seller/SellerSettings";
 
 import NotFound from "./pages/NotFound";
@@ -148,6 +149,7 @@ const App = () => (
                 <Route path="puanlar" element={<SellerPoints />} />
                 <Route path="one-cikar" element={<SellerFeature />} />
                 <Route path="bildirimler" element={<SellerNotifications />} />
+                <Route path="kargo" element={<SellerCargo />} />
                 <Route path="ayarlar" element={<SellerSettings />} />
               </Route>
 

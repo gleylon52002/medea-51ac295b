@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
   Star,
   Bell,
-  Settings, 
+  Settings,
   LogOut,
   ChevronLeft,
   TrendingUp,
   Wallet,
-  Menu
+  Menu,
+  Truck
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSellerProfile, useSellerNotifications } from "@/hooks/useSeller";
@@ -25,6 +26,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/satici" },
   { icon: Package, label: "Ürünlerim", path: "/satici/urunler" },
   { icon: ShoppingCart, label: "Siparişlerim", path: "/satici/siparisler" },
+  { icon: Truck, label: "Kargo İşlemleri", path: "/satici/kargo" },
   { icon: Wallet, label: "Kazançlarım", path: "/satici/kazanclar" },
   { icon: Star, label: "Puanlarım", path: "/satici/puanlar" },
   { icon: TrendingUp, label: "Öne Çıkar", path: "/satici/one-cikar" },
@@ -63,10 +65,10 @@ const SidebarContent = ({ onItemClick, unreadCount }: { onItemClick?: () => void
       <ScrollArea className="flex-1">
         <nav className="p-2 lg:p-4 space-y-1">
           {menuItems.map((item) => {
-            const isActive = location.pathname === item.path || 
+            const isActive = location.pathname === item.path ||
               (item.path !== "/satici" && location.pathname.startsWith(item.path));
             const showBadge = item.path === "/satici/bildirimler" && unreadCount > 0;
-            
+
             return (
               <Link
                 key={item.path}

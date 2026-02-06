@@ -87,6 +87,23 @@ export interface SellerTransaction {
   status: "pending" | "completed" | "refunded" | "cancelled";
   paid_at: string | null;
   created_at: string;
+  order?: {
+    order_number: string;
+    shipping_address: any;
+    status: string;
+    tracking_number: string | null;
+    shipping_company: string | null;
+    created_at: string;
+    shipping_cost: number;
+  } | null;
+  product?: {
+    name: string;
+    images: string[] | null;
+  } | null;
+  order_item?: {
+    quantity: number;
+    variant_info: any;
+  } | null;
 }
 
 // Hook for checking seller status
@@ -227,12 +244,33 @@ export const useSellerTransactions = () => {
 
       const { data, error } = await supabase
         .from("seller_transactions")
-        .select("*")
+        .select(`
+          *,
+          order:orders (
+            order_number,
+            shipping_address,
+            status,
+            tracking_number,
+            shipping_company,
+            created_at,
+            shipping_cost
+          ),
+          product:products (
+            name,
+            images
+          ),
+          order_item:order_items (
+            quantity,
+            variant_info
+          )
+        `)
         .eq("seller_id", seller.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as SellerTransaction[];
+
+      // Transform data to match the expected interface but with extra fields available
+      return data as unknown as SellerTransaction[];
     },
     enabled: !!user,
   });
@@ -311,6 +349,50 @@ export const useSellerSettings = () => {
       });
 
       return settings;
+    },
+  });
+};
+
+// Hook for updating order shipping info
+export const useUpdateOrderShipping = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      trackingNumber,
+      shippingCompany
+    }: {
+      orderId: string;
+      trackingNumber: string;
+      shippingCompany: string;
+    }) => {
+      // 1. Update Order
+      const { error: orderError } = await supabase
+        .from("orders")
+        .update({
+          status: "shipped",
+          tracking_number: trackingNumber,
+          shipping_company: shippingCompany,
+        })
+        .eq("id", orderId);
+
+      if (orderError) throw orderError;
+
+      // 2. Update Seller Transactions for this order
+      const { error: transactionError } = await supabase
+        .from("seller_transactions")
+        .update({ status: "shipped" })
+        .eq("order_id", orderId);
+
+      if (transactionError) throw transactionError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["seller-transactions"] });
+      toast.success("Sipariş kargoya verildi olarak işaretlendi");
+    },
+    onError: (error) => {
+      toast.error("Kargo bilgileri güncellenemedi: " + error.message);
     },
   });
 };
