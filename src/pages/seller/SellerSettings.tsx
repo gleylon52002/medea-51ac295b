@@ -1,21 +1,18 @@
-import { useState } from "react";
-import { Save, Loader2, User, Building2, CreditCard } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useSellerProfile } from "@/hooks/useSeller";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useQueryClient } from "@tanstack/react-query";
+import { Textarea } from "@/components/ui/textarea";
+import { useSellerProfile, useUpdateSellerProfile } from "@/hooks/useSeller";
+import { Building2, MapPin, Phone, CreditCard, User, Loader2 } from "lucide-react";
 
 const SellerSettings = () => {
-  const { data: seller, isLoading } = useSellerProfile();
-  const queryClient = useQueryClient();
-  const [saving, setSaving] = useState(false);
-  
+  const { data: profile, isLoading } = useSellerProfile();
+  const updateProfile = useUpdateSellerProfile();
+
   const [formData, setFormData] = useState({
+    company_name: "",
     phone: "",
     address: "",
     city: "",
@@ -25,197 +22,185 @@ const SellerSettings = () => {
     account_holder: "",
   });
 
-  // Initialize form when seller data loads
-  useState(() => {
-    if (seller) {
+  useEffect(() => {
+    if (profile) {
       setFormData({
-        phone: seller.phone || "",
-        address: seller.address || "",
-        city: seller.city || "",
-        district: seller.district || "",
-        bank_name: seller.bank_name || "",
-        iban: seller.iban || "",
-        account_holder: seller.account_holder || "",
+        company_name: profile.company_name || "",
+        phone: profile.phone || "",
+        address: profile.address || "",
+        city: profile.city || "",
+        district: profile.district || "",
+        bank_name: profile.bank_name || "",
+        iban: profile.iban || "",
+        account_holder: profile.account_holder || "",
       });
     }
-  });
+  }, [profile]);
 
-  const handleSave = async () => {
-    if (!seller) return;
-    
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from("sellers")
-        .update({
-          phone: formData.phone,
-          address: formData.address,
-          city: formData.city,
-          district: formData.district,
-          bank_name: formData.bank_name,
-          iban: formData.iban,
-          account_holder: formData.account_holder,
-        })
-        .eq("id", seller.id);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-      if (error) throw error;
-      
-      queryClient.invalidateQueries({ queryKey: ["seller-profile"] });
-      toast.success("Bilgileriniz güncellendi");
-    } catch (error) {
-      toast.error("Güncelleme sırasında hata oluştu");
-    } finally {
-      setSaving(false);
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateProfile.mutateAsync(formData);
   };
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64" />
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  if (!seller) return null;
-
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Ayarlar</h1>
-          <p className="text-muted-foreground">Satıcı bilgilerinizi güncelleyin</p>
-        </div>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : (
-            <Save className="h-4 w-4 mr-2" />
-          )}
-          Kaydet
-        </Button>
+    <div className="p-6 max-w-4xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Mağaza Ayarları</h1>
+        <p className="text-muted-foreground">Profil ve ödeme bilgilerinizi güncelleyin</p>
       </div>
 
-      {/* Company Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            Firma Bilgileri
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>Firma Adı</Label>
-              <Input value={seller.company_name} disabled />
-              <p className="text-xs text-muted-foreground mt-1">
-                Firma adı değiştirilemez
-              </p>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Company Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary" />
+              Şirket Bilgileri
+            </CardTitle>
+            <CardDescription>Müşterilere görünecek mağaza bilgileriniz</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="company_name">Mağaza / Şirket Adı</Label>
+                <Input
+                  id="company_name"
+                  name="company_name"
+                  value={formData.company_name}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">İletişim Telefonu</Label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
-            <div>
-              <Label>Vergi No</Label>
-              <Input value={seller.tax_number} disabled />
+          </CardContent>
+        </Card>
+
+        {/* Address Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              Adres Bilgileri
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">Şehir</Label>
+                <Input
+                  id="city"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="district">İlçe</Label>
+                <Input
+                  id="district"
+                  name="district"
+                  value={formData.district}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
-          </div>
-          <div>
-            <Label>Telefon</Label>
-            <Input
-              value={formData.phone || seller.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label>Adres</Label>
-            <Input
-              value={formData.address || seller.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Şehir</Label>
-              <Input
-                value={formData.city || seller.city}
-                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+            <div className="space-y-2">
+              <Label htmlFor="address">Tam Adres</Label>
+              <Textarea
+                id="address"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                required
               />
             </div>
-            <div>
-              <Label>İlçe</Label>
+          </CardContent>
+        </Card>
+
+        {/* Bank Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              Banka ve Ödeme Bilgileri
+            </CardTitle>
+            <CardDescription>Ödemelerinizin aktarılacağı banka bilgileri</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="bank_name">Banka Adı</Label>
               <Input
-                value={formData.district || seller.district}
-                onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                id="bank_name"
+                name="bank_name"
+                value={formData.bank_name}
+                onChange={handleChange}
+                required
               />
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="account_holder">Hesap Sahibi</Label>
+                <Input
+                  id="account_holder"
+                  name="account_holder"
+                  value={formData.account_holder}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="iban">IBAN</Label>
+                <Input
+                  id="iban"
+                  name="iban"
+                  value={formData.iban}
+                  onChange={handleChange}
+                  placeholder="TR..."
+                  required
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Bank Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Banka Bilgileri
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label>Banka Adı</Label>
-            <Input
-              value={formData.bank_name || seller.bank_name}
-              onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label>IBAN</Label>
-            <Input
-              value={formData.iban || seller.iban}
-              onChange={(e) => setFormData({ ...formData, iban: e.target.value })}
-              maxLength={26}
-            />
-          </div>
-          <div>
-            <Label>Hesap Sahibi</Label>
-            <Input
-              value={formData.account_holder || seller.account_holder}
-              onChange={(e) => setFormData({ ...formData, account_holder: e.target.value })}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Account Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Hesap Durumu
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Komisyon Oranı</p>
-              <p className="text-xl font-bold">%{seller.commission_rate}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Hesap Durumu</p>
-              <p className="text-xl font-bold capitalize">
-                {seller.status === "active" ? "Aktif" : 
-                 seller.status === "suspended" ? "Askıda" : "Yasaklı"}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Üyelik Tarihi</p>
-              <p className="text-xl font-bold">
-                {new Date(seller.created_at).toLocaleDateString("tr-TR")}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        <div className="flex justify-end gap-4">
+          <Button type="submit" disabled={updateProfile.isPending}>
+            {updateProfile.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Güncelleniyor...
+              </>
+            ) : (
+              "Değişiklikleri Kaydet"
+            )}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

@@ -152,6 +152,7 @@ export const useUpdateSellerProduct = () => {
           stock: data.stock,
           ingredients: data.ingredients,
           usage_instructions: data.usage_instructions,
+          is_active: false, // Reset to false for re-approval after update
         })
         .eq("id", id);
 
@@ -159,7 +160,7 @@ export const useUpdateSellerProduct = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["seller-products"] });
-      toast.success("Ürün güncellendi!");
+      toast.success("Ürün güncellendi! Değişiklikler admin onayından sonra yayınlanacaktır.");
     },
     onError: (error: Error) => {
       toast.error(error.message);

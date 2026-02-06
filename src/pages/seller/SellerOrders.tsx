@@ -209,6 +209,16 @@ const SellerOrders = () => {
                         <p className="text-sm text-muted-foreground">Adres bilgisi bulunamadı</p>
                       )}
 
+                      {order.notes && (
+                        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-100 rounded text-sm group">
+                          <p className="font-medium text-yellow-800 flex items-center gap-2 mb-1">
+                            <Clock className="h-3 w-3" />
+                            Müşteri Notu:
+                          </p>
+                          <p className="text-yellow-700 italic">"{order.notes}"</p>
+                        </div>
+                      )}
+
                       {order.tracking_number && (
                         <div className="mt-4 pt-4 border-t">
                           <p className="text-xs font-medium text-muted-foreground mb-1">Kargo Takip</p>

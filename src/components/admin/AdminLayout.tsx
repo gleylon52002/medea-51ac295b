@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Package, 
-  FolderTree, 
-  ShoppingCart, 
-  Users, 
-  MessageSquare, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Package,
+  FolderTree,
+  ShoppingCart,
+  Users,
+  MessageSquare,
+  Settings,
   Truck,
   CreditCard,
   LogOut,
@@ -25,7 +25,8 @@ import {
   X,
   Store,
   UserCheck,
-  Sliders
+  Sliders,
+  FileText
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ const menuItems = [
   { icon: UserCheck, label: "Satıcılar", path: "/admin/saticilar" },
   { icon: Sliders, label: "Satıcı Ayarları", path: "/admin/satici-ayarlari" },
   { icon: Truck, label: "Kargo", path: "/admin/kargo" },
+  { icon: FileText, label: "Faturalar", path: "/admin/faturalar" },
   { icon: CreditCard, label: "Ödeme", path: "/admin/odeme" },
   { icon: Image, label: "Hero", path: "/admin/hero" },
   { icon: Palette, label: "Tema", path: "/admin/tema" },
@@ -73,7 +75,7 @@ const SidebarContent = ({ onItemClick }: { onItemClick?: () => void }) => {
       <ScrollArea className="flex-1">
         <nav className="p-2 lg:p-4 space-y-1">
           {menuItems.map((item) => {
-            const isActive = location.pathname === item.path || 
+            const isActive = location.pathname === item.path ||
               (item.path !== "/admin" && location.pathname.startsWith(item.path));
             return (
               <Link

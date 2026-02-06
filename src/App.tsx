@@ -59,6 +59,7 @@ import AdminHero from "./pages/admin/AdminHero";
 import AdminSellerApplications from "./pages/admin/AdminSellerApplications";
 import AdminSellers from "./pages/admin/AdminSellers";
 import AdminSellerSettings from "./pages/admin/AdminSellerSettings";
+import AdminInvoices from "./pages/admin/AdminInvoices";
 
 // Seller Pages
 import SellerGuard from "./components/seller/SellerGuard";
@@ -72,6 +73,8 @@ import SellerFeature from "./pages/seller/SellerFeature";
 import SellerNotifications from "./pages/seller/SellerNotifications";
 import SellerCargo from "./pages/seller/SellerCargo";
 import SellerSettings from "./pages/seller/SellerSettings";
+import SellerInvoices from "./pages/seller/SellerInvoices";
+import SellerAnalytics from "./pages/seller/SellerAnalytics";
 
 import NotFound from "./pages/NotFound";
 
@@ -130,6 +133,7 @@ const App = () => (
                 <Route path="sss" element={<AdminFAQ />} />
                 <Route path="sosyal-medya" element={<AdminSocialMedia />} />
                 <Route path="kargo" element={<AdminShipping />} />
+                <Route path="faturalar" element={<AdminInvoices />} />
                 <Route path="odeme" element={<AdminPayment />} />
                 <Route path="hero" element={<AdminHero />} />
                 <Route path="tema" element={<AdminTheme />} />
@@ -146,6 +150,8 @@ const App = () => (
                 <Route path="urunler" element={<SellerProducts />} />
                 <Route path="siparisler" element={<SellerOrders />} />
                 <Route path="kazanclar" element={<SellerEarnings />} />
+                <Route path="analiz" element={<SellerAnalytics />} />
+                <Route path="faturalar" element={<SellerInvoices />} />
                 <Route path="puanlar" element={<SellerPoints />} />
                 <Route path="one-cikar" element={<SellerFeature />} />
                 <Route path="bildirimler" element={<SellerNotifications />} />

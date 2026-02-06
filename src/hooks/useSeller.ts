@@ -253,7 +253,8 @@ export const useSellerTransactions = () => {
             tracking_number,
             shipping_company,
             created_at,
-            shipping_cost
+            shipping_cost,
+            notes
           ),
           product:products (
             name,
@@ -393,6 +394,50 @@ export const useUpdateOrderShipping = () => {
     },
     onError: (error) => {
       toast.error("Kargo bilgileri güncellenemedi: " + error.message);
+    },
+  });
+};
+
+// Hook for updating seller profile
+export const useUpdateSellerProfile = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (data: Partial<Seller>) => {
+      if (!user) throw new Error("Giriş yapmanız gerekiyor");
+
+      const { data: seller } = await supabase
+        .from("sellers")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!seller) throw new Error("Satıcı profili bulunamadı");
+
+      const { error } = await supabase
+        .from("sellers")
+        .update({
+          company_name: data.company_name,
+          phone: data.phone,
+          address: data.address,
+          city: data.city,
+          district: data.district,
+          bank_name: data.bank_name,
+          iban: data.iban,
+          account_holder: data.account_holder,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", seller.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["seller-profile"] });
+      toast.success("Profil bilgileriniz güncellendi");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
     },
   });
 };

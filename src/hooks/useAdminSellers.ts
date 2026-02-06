@@ -35,6 +35,42 @@ export const useAllSellers = () => {
   });
 };
 
+// Hook for fetching all transactions (admin)
+export const useAllTransactions = () => {
+  return useQuery({
+    queryKey: ["admin-all-transactions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("seller_transactions")
+        .select(`
+          *,
+          seller:sellers (
+            company_name,
+            id
+          ),
+          order:orders (
+            order_number,
+            shipping_address,
+            status,
+            tracking_number,
+            shipping_company,
+            created_at,
+            shipping_cost
+          ),
+          product:products (
+            name,
+            images
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      // @ts-ignore
+      return data;
+    },
+  });
+};
+
 // Hook for approving seller application
 export const useApproveSellerApplication = () => {
   const queryClient = useQueryClient();
@@ -150,12 +186,12 @@ export const useUpdateSeller = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      sellerId, 
-      data 
-    }: { 
-      sellerId: string; 
-      data: Partial<Seller> 
+    mutationFn: async ({
+      sellerId,
+      data
+    }: {
+      sellerId: string;
+      data: Partial<Seller>
     }) => {
       const { error } = await supabase
         .from("sellers")
@@ -179,14 +215,14 @@ export const useAddSellerPoints = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      sellerId, 
-      points, 
-      pointType, 
-      reason 
-    }: { 
-      sellerId: string; 
-      points: number; 
+    mutationFn: async ({
+      sellerId,
+      points,
+      pointType,
+      reason
+    }: {
+      sellerId: string;
+      points: number;
       pointType: "reputation" | "penalty" | "purchased";
       reason: string;
     }) => {
@@ -228,8 +264,8 @@ export const useAddSellerPoints = () => {
 
       // Create notification
       const notificationType = pointType === "penalty" ? "warning" : "points";
-      const title = pointType === "penalty" 
-        ? `⚠️ ${Math.abs(points)} Ceza Puanı` 
+      const title = pointType === "penalty"
+        ? `⚠️ ${Math.abs(points)} Ceza Puanı`
         : `🎉 +${Math.abs(points)} Takdir Puanı`;
 
       await supabase.from("seller_notifications").insert({
@@ -252,11 +288,11 @@ export const useAddSellerPoints = () => {
       }, {} as Record<string, number>) || {};
 
       const newPenaltyPoints = updateData.penalty_points || seller.penalty_points || 0;
-      
+
       if (newPenaltyPoints >= (settingsMap.ban_threshold || 100)) {
         await supabase
           .from("sellers")
-          .update({ 
+          .update({
             status: "banned",
             suspended_reason: "Ceza puanı limitini aştınız"
           })
@@ -271,7 +307,7 @@ export const useAddSellerPoints = () => {
       } else if (newPenaltyPoints >= (settingsMap.suspension_threshold || 50)) {
         await supabase
           .from("sellers")
-          .update({ 
+          .update({
             status: "suspended",
             suspended_reason: "Yüksek ceza puanı",
             suspended_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 1 week

@@ -12,7 +12,8 @@ import {
   TrendingUp,
   Wallet,
   Menu,
-  Truck
+  Truck,
+  FileText
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSellerProfile, useSellerNotifications } from "@/hooks/useSeller";
@@ -28,6 +29,8 @@ const menuItems = [
   { icon: ShoppingCart, label: "Siparişlerim", path: "/satici/siparisler" },
   { icon: Truck, label: "Kargo İşlemleri", path: "/satici/kargo" },
   { icon: Wallet, label: "Kazançlarım", path: "/satici/kazanclar" },
+  { icon: TrendingUp, label: "Analizler", path: "/satici/analiz" },
+  { icon: FileText, label: "Faturalar", path: "/satici/faturalar" },
   { icon: Star, label: "Puanlarım", path: "/satici/puanlar" },
   { icon: TrendingUp, label: "Öne Çıkar", path: "/satici/one-cikar" },
   { icon: Bell, label: "Bildirimler", path: "/satici/bildirimler" },
