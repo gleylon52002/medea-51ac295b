@@ -106,17 +106,17 @@ const AdminOrders = () => {
   });
 
   const updateShippingMutation = useMutation({
-    mutationFn: async ({ id, tracking_number, shipping_company }: { 
-      id: string; 
-      tracking_number: string; 
-      shipping_company: string; 
+    mutationFn: async ({ id, tracking_number, shipping_company }: {
+      id: string;
+      tracking_number: string;
+      shipping_company: string;
     }) => {
       const { error } = await supabase
         .from("orders")
-        .update({ 
-          tracking_number, 
-          shipping_company, 
-          status: "shipped" as Order["status"] 
+        .update({
+          tracking_number,
+          shipping_company,
+          status: "shipped" as Order["status"]
         })
         .eq("id", id);
       if (error) throw error;
@@ -140,7 +140,7 @@ const AdminOrders = () => {
   const handleShippingSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedOrder) return;
-    
+
     const formData = new FormData(e.currentTarget);
     updateShippingMutation.mutate({
       id: selectedOrder.id,
@@ -289,13 +289,18 @@ const AdminOrders = () => {
               <div>
                 <p className="text-sm text-muted-foreground mb-2">Teslimat Adresi</p>
                 <div className="bg-muted p-3 rounded-lg text-sm">
-                  {typeof selectedOrder.shipping_address === 'object' && (
+                  {selectedOrder.shipping_address && typeof selectedOrder.shipping_address === 'object' ? (
                     <>
-                      <p className="font-medium">{(selectedOrder.shipping_address as any).full_name}</p>
-                      <p>{(selectedOrder.shipping_address as any).address}</p>
-                      <p>{(selectedOrder.shipping_address as any).district}, {(selectedOrder.shipping_address as any).city}</p>
-                      <p>{(selectedOrder.shipping_address as any).phone}</p>
+                      <p className="font-medium">{(selectedOrder.shipping_address as any).full_name || 'İsimsiz'}</p>
+                      <p>{(selectedOrder.shipping_address as any).address || 'Adres bilgisi yok'}</p>
+                      <p>
+                        {(selectedOrder.shipping_address as any).district || ''}
+                        {(selectedOrder.shipping_address as any).city ? `, ${(selectedOrder.shipping_address as any).city}` : ''}
+                      </p>
+                      <p>{(selectedOrder.shipping_address as any).phone || ''}</p>
                     </>
+                  ) : (
+                    <p className="text-muted-foreground italic">Adres bilgisi mevcut değil</p>
                   )}
                 </div>
               </div>
@@ -358,11 +363,11 @@ const AdminOrders = () => {
             </div>
             <div>
               <Label htmlFor="tracking_number">Takip Numarası</Label>
-              <Input 
-                id="tracking_number" 
-                name="tracking_number" 
-                defaultValue={selectedOrder?.tracking_number || ""} 
-                required 
+              <Input
+                id="tracking_number"
+                name="tracking_number"
+                defaultValue={selectedOrder?.tracking_number || ""}
+                required
               />
             </div>
             <div className="flex justify-end gap-2">

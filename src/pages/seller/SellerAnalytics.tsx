@@ -54,8 +54,8 @@ const SellerAnalytics = () => {
 
     // Calculations
     const stats = useMemo(() => {
-        const totalEarnings = filteredTransactions.reduce((acc, t) => acc + t.net_amount, 0);
-        const totalSales = filteredTransactions.reduce((acc, t) => acc + t.sale_amount, 0);
+        const totalEarnings = filteredTransactions.reduce((acc, t) => acc + (Number(t.net_amount) || 0), 0);
+        const totalSales = filteredTransactions.reduce((acc, t) => acc + (Number(t.sale_amount) || 0), 0);
         const totalOrders = new Set(filteredTransactions.map(t => t.order_id)).size;
 
         // Average Order Value
@@ -69,7 +69,7 @@ const SellerAnalytics = () => {
         const grouped = filteredTransactions.reduce((acc: any, t) => {
             const dateStr = format(new Date(t.created_at), 'dd MMM', { locale: tr });
             if (!acc[dateStr]) acc[dateStr] = { date: dateStr, amount: 0 };
-            acc[dateStr].amount += t.net_amount;
+            acc[dateStr].amount += (Number(t.net_amount) || 0);
             return acc;
         }, {});
         return Object.values(grouped);
@@ -80,7 +80,7 @@ const SellerAnalytics = () => {
         const grouped = filteredTransactions.reduce((acc: any, t) => {
             const name = t.product?.name || "Bilinmeyen Ürün";
             if (!acc[name]) acc[name] = { name, value: 0 };
-            acc[name].value += t.sale_amount;
+            acc[name].value += (Number(t.sale_amount) || 0);
             return acc;
         }, {});
 

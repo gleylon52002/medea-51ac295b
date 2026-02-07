@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  Package, 
-  ShoppingCart, 
-  Users, 
+import {
+  Package,
+  ShoppingCart,
+  Users,
   TrendingUp,
   AlertCircle
 } from "lucide-react";
@@ -24,7 +24,7 @@ const AdminDashboard = () => {
       const lowStockProducts = productsRes.data?.filter(p => p.stock <= 5).length || 0;
       const totalOrders = ordersRes.count || 0;
       const pendingOrders = ordersRes.data?.filter(o => o.status === "pending").length || 0;
-      const totalRevenue = ordersRes.data?.reduce((sum, o) => sum + Number(o.total), 0) || 0;
+      const totalRevenue = ordersRes.data?.reduce((sum, o) => sum + (Number(o.total) || 0), 0) || 0;
       const totalUsers = usersRes.count || 0;
 
       return {
@@ -166,12 +166,11 @@ const AdminDashboard = () => {
                     </div>
                     <div className="text-right">
                       <p className="font-medium">{formatPrice(Number(order.total))}</p>
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        order.status === "delivered" ? "bg-green-100 text-green-700" :
-                        order.status === "cancelled" ? "bg-red-100 text-red-700" :
-                        order.status === "pending" ? "bg-amber-100 text-amber-700" :
-                        "bg-blue-100 text-blue-700"
-                      }`}>
+                      <span className={`text-xs px-2 py-1 rounded ${order.status === "delivered" ? "bg-green-100 text-green-700" :
+                          order.status === "cancelled" ? "bg-red-100 text-red-700" :
+                            order.status === "pending" ? "bg-amber-100 text-amber-700" :
+                              "bg-blue-100 text-blue-700"
+                        }`}>
                         {statusLabels[order.status] || order.status}
                       </span>
                     </div>
@@ -205,9 +204,8 @@ const AdminDashboard = () => {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{product.name}</p>
                     </div>
-                    <span className={`text-sm font-medium ${
-                      product.stock === 0 ? "text-destructive" : "text-amber-600"
-                    }`}>
+                    <span className={`text-sm font-medium ${product.stock === 0 ? "text-destructive" : "text-amber-600"
+                      }`}>
                       {product.stock === 0 ? "Tükendi" : `${product.stock} adet`}
                     </span>
                   </div>

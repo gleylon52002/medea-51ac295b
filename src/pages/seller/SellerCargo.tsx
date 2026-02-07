@@ -6,6 +6,8 @@ import { Truck, Package, Search, ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSellerTransactions } from "@/hooks/useSeller";
 import { Skeleton } from "@/components/ui/skeleton";
+import { safeJsonParse } from "@/lib/utils";
+import CargoCompaniesModal from "@/components/seller/CargoCompaniesModal";
 
 const SellerCargo = () => {
     const { data: transactions, isLoading } = useSellerTransactions();
@@ -46,10 +48,7 @@ const SellerCargo = () => {
                     <h1 className="text-2xl font-bold">Kargo İşlemleri</h1>
                     <p className="text-muted-foreground">Kargo gönderimlerini ve takibini buradan yönetin</p>
                 </div>
-                <Button>
-                    <Truck className="h-4 w-4 mr-2" />
-                    Kargo Firmaları
-                </Button>
+                <CargoCompaniesModal />
             </div>
 
             <div className="relative">
@@ -73,7 +72,7 @@ const SellerCargo = () => {
                 ) : (
                     filteredOrders.map((order: any) => {
                         const isShipped = order.status === "shipped" || order.status === "delivered";
-                        const address = typeof order.shipping_address === 'string' ? JSON.parse(order.shipping_address) : order.shipping_address;
+                        const address = safeJsonParse(order.shipping_address, null as any);
 
                         return (
                             <Card key={order.id} className="overflow-hidden">

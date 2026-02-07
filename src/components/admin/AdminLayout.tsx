@@ -55,7 +55,7 @@ const menuItems = [
   { icon: Sliders, label: "Satıcı Ayarları", path: "/admin/satici-ayarlari" },
   { icon: Truck, label: "Kargo", path: "/admin/kargo" },
   { icon: FileText, label: "Faturalar", path: "/admin/faturalar" },
-  { icon: CreditCard, label: "Ödeme", path: "/admin/odeme" },
+  { icon: CreditCard, label: "Ödemeler", path: "/admin/odemeler" },
   { icon: Image, label: "Hero", path: "/admin/hero" },
   { icon: Palette, label: "Tema", path: "/admin/tema" },
   { icon: Search, label: "SEO", path: "/admin/seo" },

@@ -29,7 +29,7 @@ export const useProductQuestions = (productId?: string) => {
                 .order("created_at", { ascending: false });
 
             if (error) throw error;
-            return data as ProductQuestion[];
+            return data as unknown as ProductQuestion[];
         },
         enabled: !!productId,
     });
@@ -87,13 +87,13 @@ export const useSellerQuestions = () => {
                 .from("product_questions" as any)
                 .select(`
           *,
-          products:products(name, slug)
+          products!inner(name, slug, seller_id)
         `)
                 .eq("products.seller_id", seller.id)
                 .order("created_at", { ascending: false });
 
             if (error) throw error;
-            return data;
+            return data as unknown as any[];
         },
         enabled: !!user,
     });

@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { ShoppingCart, Package, Clock, CheckCircle, Truck, XCircle, MapPin, Phone } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, safeJsonParse } from "@/lib/utils";
 import { useSellerTransactions, useUpdateOrderShipping } from "@/hooks/useSeller";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -125,9 +125,7 @@ const SellerOrders = () => {
             const StatusIcon = status.icon;
 
             // Parse shipping address
-            const address = typeof order.shipping_address === 'string'
-              ? JSON.parse(order.shipping_address)
-              : order.shipping_address;
+            const address = safeJsonParse(order.shipping_address, null as any);
 
             return (
               <Card key={order.order_id} className="overflow-hidden">
@@ -195,14 +193,17 @@ const SellerOrders = () => {
                         <MapPin className="h-4 w-4" />
                         Teslimat Bilgileri
                       </h4>
-                      {address ? (
+                      {address && typeof address === 'object' ? (
                         <div className="text-sm space-y-1 text-muted-foreground">
-                          <p className="font-medium text-foreground">{address.full_name}</p>
-                          <p>{address.address}</p>
-                          <p>{address.district} / {address.city}</p>
+                          <p className="font-medium text-foreground">{address.full_name || 'İsimsiz'}</p>
+                          <p>{address.address || 'Adres bilgisi yok'}</p>
+                          <p>
+                            {address.district || ''}
+                            {address.city ? `, ${address.city}` : ''}
+                          </p>
                           <div className="flex items-center gap-2 mt-2 pt-2 border-t">
                             <Phone className="h-3 w-3" />
-                            {address.phone}
+                            {address.phone || 'Telefon yok'}
                           </div>
                         </div>
                       ) : (

@@ -358,3 +358,93 @@ export const useUpdateSellerSettings = () => {
     },
   });
 };
+// Hook for fetching all payout requests (admin)
+export const useAdminPayoutRequests = () => {
+  return useQuery({
+    queryKey: ["admin-payout-requests"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("seller_payout_requests")
+        .select(`
+          *,
+          seller:sellers (
+            company_name,
+            id,
+            iban,
+            bank_name,
+            account_holder
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+
+// Hook for updating payout request status (admin)
+export const useUpdatePayoutRequest = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ requestId, status, adminNotes }: { requestId: string; status: string; adminNotes?: string }) => {
+      const { data: request, error: fetchError } = await supabase
+        .from("seller_payout_requests")
+        .select("*")
+        .eq("id", requestId)
+        .single();
+
+      if (fetchError || !request) throw new Error("Talep bulunamadı");
+
+      const { error: updateError } = await supabase
+        .from("seller_payout_requests")
+        .update({
+          status,
+          admin_notes: adminNotes,
+          processed_at: new Date().toISOString(),
+          processed_by: (await supabase.auth.getUser()).data.user?.id
+        })
+        .eq("id", requestId);
+
+      if (updateError) throw updateError;
+
+      // Handle balance based on status
+      if (status === 'paid') {
+        // Deduct from pending balance (already locked when request was created)
+        const { error: balanceError } = await supabase.rpc('deduct_seller_balance', {
+          p_seller_id: request.seller_id,
+          p_amount: request.amount
+        });
+        if (balanceError) throw balanceError;
+      } else if (status === 'rejected') {
+        // Unlock balance back to available
+        const { error: unlockError } = await supabase.rpc('reject_payout_and_unlock', {
+          p_seller_id: request.seller_id,
+          p_amount: request.amount
+        });
+        if (unlockError) throw unlockError;
+      }
+
+      // Create notification for seller
+      await supabase.from("seller_notifications").insert({
+        seller_id: request.seller_id,
+        title: status === 'paid' ? "💰 Ödemeniz Yapıldı" :
+          status === 'approved' ? "✅ Ödeme Talebiniz Onaylandı" : "❌ Ödeme Talebiniz Reddedildi",
+        message: status === 'paid' ? `${request.amount} TL tutarındaki ödemeniz banka hesabınıza aktarılmıştır.` :
+          status === 'rejected' ? `Ödeme talebiniz reddedildi. Bakiyeniz serbest bırakıldı. Sebep: ${adminNotes || 'Belirtilmedi'}` :
+            "Ödeme talebiniz işleme alınmıştır.",
+        notification_type: status === 'rejected' ? "warning" : "system",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-payout-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["payout-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["escrow-balance"] });
+      toast.success("Ödeme talebi güncellendi");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+};

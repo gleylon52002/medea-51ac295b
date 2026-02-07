@@ -1,23 +1,49 @@
 import { useState } from "react";
-import { useConversations } from "@/hooks/useMessages";
+import { useConversations, useGetOrCreateConversation } from "@/hooks/useMessages";
 import ChatWindow from "@/components/chat/ChatWindow";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Loader2, Search } from "lucide-react";
+import { MessageSquare, Loader2, Search, Plus, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { useAllSellers } from "@/hooks/useAdminSellers";
+import { useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const MessagingPage = ({ role }: { role: 'admin' | 'seller' }) => {
+    const [searchParams] = useSearchParams();
+    const initialId = searchParams.get('id');
     const { user } = useAuth();
     const { data: conversations, isLoading } = useConversations();
-    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const { data: sellers } = useAllSellers();
+    const getOrCreateConversation = useGetOrCreateConversation();
+
+    const [selectedId, setSelectedId] = useState<string | null>(initialId);
     const [searchTerm, setSearchTerm] = useState("");
+    const [sellerSearch, setSellerSearch] = useState("");
+    const [isNewMsgOpen, setIsNewMsgOpen] = useState(false);
+
+    useEffect(() => {
+        if (initialId) {
+            setSelectedId(initialId);
+        }
+    }, [initialId]);
 
     const filteredConversations = conversations?.filter(c =>
-        c.context_type.includes(searchTerm) ||
-        c.last_message?.toLowerCase().includes(searchTerm.toLowerCase())
+        c.context_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.last_message?.toLowerCase()?.includes(searchTerm.toLowerCase()) ?? false)
     );
 
     const selectedConversation = conversations?.find(c => c.id === selectedId);
@@ -40,6 +66,103 @@ const MessagingPage = ({ role }: { role: 'admin' | 'seller' }) => {
                 <p className="text-muted-foreground">
                     {role === 'admin' ? 'Satıcılarla olan görüşmelerinizi yönetin' : 'Admin ve müşterilerle iletişim kurun'}
                 </p>
+            </div>
+
+            <div className="flex gap-4 mb-4">
+                <Dialog open={isNewMsgOpen} onOpenChange={setIsNewMsgOpen}>
+                    <DialogTrigger asChild>
+                        <Button className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Yeni Mesaj
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                            <DialogTitle>Yeni Görüşme Başlat</DialogTitle>
+                        </DialogHeader>
+                        <div className="py-4 space-y-4">
+                            {role === 'admin' ? (
+                                <div className="space-y-4">
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            placeholder="Satıcı ara..."
+                                            className="pl-9"
+                                            value={sellerSearch}
+                                            onChange={(e) => setSellerSearch(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="max-h-[300px] overflow-y-auto space-y-1 pt-2">
+                                        {sellers?.filter(s => s.company_name.toLowerCase().includes(sellerSearch.toLowerCase())).map(seller => (
+                                            <button
+                                                key={seller.id}
+                                                onClick={async () => {
+                                                    try {
+                                                        const convId = await getOrCreateConversation.mutateAsync({
+                                                            participantId: seller.user_id,
+                                                            contextType: 'direct'
+                                                        });
+                                                        setSelectedId(convId);
+                                                        setIsNewMsgOpen(false);
+                                                        toast.success("Görüşme başlatıldı");
+                                                    } catch (error: any) {
+                                                        console.error("Conversation error:", error);
+                                                        toast.error("Görüşme başlatılamadı: " + (error.message || "Bilinmeyen hata"));
+                                                    }
+                                                }}
+                                                className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted rounded-lg transition-colors"
+                                            >
+                                                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                                    <User className="h-4 w-4" />
+                                                </div>
+                                                <span className="font-medium">{seller.company_name}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-4 text-center">
+                                    <p className="text-sm text-muted-foreground">Destek ekibimizle iletişime geçmek için butona tıklayın.</p>
+                                    <Button
+                                        className="w-full"
+                                        disabled={getOrCreateConversation.isPending}
+                                        onClick={async () => {
+                                            try {
+                                                const { data: adminRoles, error: adminError } = await supabase
+                                                    .from('user_roles')
+                                                    .select('user_id')
+                                                    .eq('role', 'admin')
+                                                    .limit(1);
+
+                                                if (adminError) throw adminError;
+
+                                                if (adminRoles && adminRoles.length > 0) {
+                                                    const convId = await getOrCreateConversation.mutateAsync({
+                                                        participantId: adminRoles[0].user_id,
+                                                        contextType: 'direct'
+                                                    });
+                                                    setSelectedId(convId);
+                                                    setIsNewMsgOpen(false);
+                                                    toast.success("Destek ekibiyle görüşme başlatıldı");
+                                                } else {
+                                                    toast.error("Şu an ulaşılabilecek bir yetkili bulunamadı.");
+                                                }
+                                            } catch (error: any) {
+                                                console.error("Support chat error:", error);
+                                                toast.error("Destek görüşmesi başlatılamadı: " + (error.message || "Bilinmeyen hata"));
+                                            }
+                                        }}
+                                    >
+                                        {getOrCreateConversation.isPending ? (
+                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                        ) : null}
+                                        Admin'e Mesaj Gönder
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">

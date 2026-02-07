@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export interface EscrowBalance {
     seller_id: string;
@@ -84,5 +85,97 @@ export const useEscrowTransactions = () => {
             return data;
         },
         enabled: !!user,
+    });
+};
+
+export const usePayoutRequests = () => {
+    const { user } = useAuth();
+
+    return useQuery({
+        queryKey: ["payout-requests", user?.id],
+        queryFn: async () => {
+            if (!user) return [];
+
+            const { data: seller } = await supabase
+                .from("sellers")
+                .select("id")
+                .eq("user_id", user.id)
+                .single();
+
+            if (!seller) return [];
+
+            const { data, error } = await supabase
+                .from("seller_payout_requests")
+                .select("*")
+                .eq("seller_id", seller.id)
+                .order("created_at", { ascending: false });
+
+            if (error) throw error;
+            return data;
+        },
+        enabled: !!user,
+    });
+};
+
+export const useCreatePayoutRequest = () => {
+    const { user } = useAuth();
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ amount, bankInfo }: { amount: number, bankInfo: any }) => {
+            if (!user) throw new Error("Giriş yapmanız gerekiyor");
+
+            const { data: seller } = await supabase
+                .from("sellers")
+                .select("id")
+                .eq("user_id", user.id)
+                .single();
+
+            if (!seller) throw new Error("Satıcı profili bulunamadı");
+
+            // CRITICAL FIX: Check AND lock balance atomically using RPC
+            const { data: lockResult, error: lockError } = await supabase.rpc('lock_seller_balance_for_payout', {
+                p_seller_id: seller.id,
+                p_amount: amount
+            });
+
+            if (lockError) {
+                if (lockError.message.includes('Yetersiz')) {
+                    throw new Error('Yetersiz kullanılabilir bakiye');
+                }
+                throw lockError;
+            }
+
+            // Now create the payout request with the locked balance
+            const { data, error } = await supabase
+                .from("seller_payout_requests")
+                .insert({
+                    seller_id: seller.id,
+                    amount,
+                    bank_info: bankInfo,
+                    status: 'pending'
+                })
+                .select()
+                .single();
+
+            if (error) {
+                // Rollback balance lock if insertion fails
+                await supabase.rpc('unlock_seller_balance', {
+                    p_seller_id: seller.id,
+                    p_amount: amount
+                });
+                throw error;
+            }
+
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["payout-requests"] });
+            queryClient.invalidateQueries({ queryKey: ["escrow-balance"] });
+            toast.success("Ödeme talebiniz başarıyla alındı. Bakiyeniz kilitlendi.");
+        },
+        onError: (error: Error) => {
+            toast.error("Talep oluşturulamadı: " + error.message);
+        }
     });
 };

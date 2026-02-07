@@ -13,7 +13,10 @@ type PaymentMethod = Database["public"]["Enums"]["payment_method"];
 
 const statusMap: Record<OrderStatus, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
   pending: { label: "Beklemede", variant: "secondary" },
-  confirmed: { label: "Onaylandı", variant: "default" },
+  confirmed: {
+    label: "Onaylandı",
+    variant: "default"
+  },
   preparing: { label: "Hazırlanıyor", variant: "default" },
   shipped: { label: "Kargoda", variant: "default" },
   delivered: { label: "Teslim Edildi", variant: "outline" },

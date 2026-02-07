@@ -13,10 +13,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useCreateOrder } from "@/hooks/useCreateOrder";
 import { useIncrementCouponUsage, Coupon } from "@/hooks/useCoupons";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAddresses } from "@/hooks/useAddresses";
+import { useProfile } from "@/hooks/useProfile";
 import CouponInput from "@/components/checkout/CouponInput";
 import { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useWallet } from "@/hooks/useAffiliate";
 
 type PaymentMethodType = "credit-card" | "bank-transfer" | "cash-on-delivery" | "shopier" | "shopinext" | "payizone";
 type DbPaymentMethod = Database["public"]["Enums"]["payment_method"];
@@ -60,7 +63,22 @@ const Checkout = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<{ coupon: Coupon; discount: number } | null>(null);
-  
+  const { data: userAddresses } = useAddresses();
+  const { data: profile } = useProfile();
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [useWalletBalance, setUseWalletBalance] = useState(false);
+  const { data: wallet } = useWallet();
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+
+  // Load referral code from session
+  useEffect(() => {
+    const code = sessionStorage.getItem("referral_code");
+    if (code) setReferralCode(code);
+  }, []);
+
+  const walletAmount = useWalletBalance && wallet ? Math.min(wallet.balance, total - (appliedCoupon?.discount || 0)) : 0;
+  const finalTotal = Math.max(0, total - (appliedCoupon?.discount || 0) - walletAmount);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -71,6 +89,40 @@ const Checkout = () => {
     district: "",
     postalCode: "",
   });
+
+  // Pre-fill form from profile
+  useEffect(() => {
+    if (profile && !formData.firstName && !formData.lastName) {
+      const names = (profile.full_name || "").split(" ");
+      setFormData(prev => ({
+        ...prev,
+        firstName: names[0] || "",
+        lastName: names.slice(1).join(" ") || "",
+        email: profile.email || prev.email,
+        phone: profile.phone || prev.phone,
+      }));
+    }
+  }, [profile]);
+
+  // Handle address selection
+  useEffect(() => {
+    if (selectedAddressId && userAddresses) {
+      const addr = userAddresses.find(a => a.id === selectedAddressId);
+      if (addr) {
+        const names = (addr.full_name || "").split(" ");
+        setFormData({
+          firstName: names[0] || "",
+          lastName: names.slice(1).join(" ") || "",
+          email: formData.email, // Keep email from profile/initial
+          phone: addr.phone || "",
+          address: addr.address || "",
+          city: addr.city || "",
+          district: addr.district || "",
+          postalCode: addr.postal_code || "",
+        });
+      }
+    }
+  }, [selectedAddressId, userAddresses]);
 
   // Fetch active payment methods
   const { data: paymentSettings } = useQuery({
@@ -85,7 +137,7 @@ const Checkout = () => {
   });
 
   // Filter available payment methods
-  const availablePaymentMethods = allPaymentMethods.filter(method => 
+  const availablePaymentMethods = allPaymentMethods.filter(method =>
     paymentSettings?.some(ps => ps.method === method.dbKey && ps.is_active)
   );
 
@@ -120,14 +172,14 @@ const Checkout = () => {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       const result = await createOrder.mutateAsync({
         items,
         shippingAddress: {
           full_name: `${formData.firstName} ${formData.lastName}`,
-          phone: formData.phone,
           email: formData.email,
+          phone: formData.phone,
           address: formData.address,
           city: formData.city,
           district: formData.district,
@@ -135,10 +187,13 @@ const Checkout = () => {
         },
         paymentMethod: paymentMethodMap[paymentMethod],
         subtotal: total,
-        shippingCost,
-        total: grandTotal,
+        shippingCost: 0,
+        total: finalTotal,
+        notes: "",
         couponCode: appliedCoupon?.coupon.code,
-        discountAmount: discountAmount,
+        discountAmount: (appliedCoupon?.discount || 0) + walletAmount,
+        referralCode,
+        walletAmount
       });
 
       // If coupon was used, record it
@@ -197,7 +252,7 @@ const Checkout = () => {
         title: "Siparişiniz Alındı!",
         description: `Sipariş numaranız: ${result.orderNumber}`,
       });
-      
+
       clearCart();
       setAppliedCoupon(null);
       navigate(`/siparis-basarili?order=${result.orderNumber}`);
@@ -249,11 +304,10 @@ const Checkout = () => {
             <div key={s.num} className="flex items-center gap-2 sm:gap-4">
               <div className="flex items-center gap-1 sm:gap-2">
                 <div
-                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${
-                    step >= s.num
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  }`}
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${step >= s.num
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
+                    }`}
                 >
                   {step > s.num ? <Check className="h-3 w-3 sm:h-4 sm:w-4" /> : s.num}
                 </div>
@@ -275,6 +329,39 @@ const Checkout = () => {
                   <MapPin className="h-5 w-5 text-primary" />
                   <h2 className="font-serif text-lg sm:text-xl font-medium">Teslimat Bilgileri</h2>
                 </div>
+
+                {user && userAddresses && userAddresses.length > 0 && (
+                  <div className="mb-8">
+                    <Label className="text-sm font-medium mb-3 block">Kayıtlı Adresleriniz</Label>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {userAddresses.map((addr) => (
+                        <div
+                          key={addr.id}
+                          onClick={() => setSelectedAddressId(addr.id)}
+                          className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedAddressId === addr.id
+                            ? "border-primary bg-primary/5 ring-1 ring-primary"
+                            : "border-border hover:border-primary/50"
+                            }`}
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <p className="font-medium text-sm">{addr.title}</p>
+                            {addr.is_default && <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">Varsayılan</span>}
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-1">{addr.full_name}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{addr.address}</p>
+                        </div>
+                      ))}
+                      <div
+                        onClick={() => setSelectedAddressId(null)}
+                        className={`p-3 border border-dashed rounded-lg cursor-pointer flex items-center justify-center gap-2 hover:bg-muted/50 transition-all ${selectedAddressId === null ? "border-primary bg-primary/5" : "border-border"
+                          }`}
+                      >
+                        <Plus className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">Yeni Adres Kullan</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -390,9 +477,8 @@ const Checkout = () => {
                       {availablePaymentMethods.map((method) => (
                         <label
                           key={method.key}
-                          className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg cursor-pointer transition-colors ${
-                            paymentMethod === method.key ? "border-primary bg-primary/5" : "border-border"
-                          }`}
+                          className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg cursor-pointer transition-colors ${paymentMethod === method.key ? "border-primary bg-primary/5" : "border-border"
+                            }`}
                         >
                           <RadioGroupItem value={method.key} />
                           <div className="flex-1 min-w-0">
@@ -484,10 +570,10 @@ const Checkout = () => {
                 </div>
 
                 <div className="flex items-start gap-2 text-sm">
-                  <input 
-                    type="checkbox" 
-                    id="terms" 
-                    className="rounded mt-1" 
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    className="rounded mt-1"
                     checked={termsAccepted}
                     onChange={(e) => setTermsAccepted(e.target.checked)}
                   />
@@ -526,62 +612,91 @@ const Checkout = () => {
           <div className="lg:col-span-1">
             <div className="sticky top-24 bg-muted/30 rounded-xl p-4 sm:p-6 border border-border">
               <h3 className="font-serif text-lg font-medium mb-4">Sepet Özeti</h3>
-              
+
               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
                 {items.map((item) => {
                   const itemKey = item.variant ? `${item.product.id}-${item.variant.id}` : item.product.id;
                   const itemPrice = (item.product.salePrice || item.product.price) + (item.priceAdjustment || 0);
                   return (
-                  <div key={itemKey} className="flex gap-3">
-                    <img
-                      src={item.variant?.images?.[0] || item.product.images?.[0] || "/placeholder.svg"}
-                      alt={item.product.name}
-                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg object-cover shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">
-                        {item.product.name}
-                        {item.variant && <span className="text-muted-foreground font-normal"> - {item.variant.name}</span>}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Adet: {item.quantity}</p>
-                      <p className="text-sm font-semibold">
-                        {formatPrice(itemPrice * item.quantity)}
-                      </p>
+                    <div key={itemKey} className="flex gap-3">
+                      <img
+                        src={item.variant?.images?.[0] || item.product.images?.[0] || "/placeholder.svg"}
+                        alt={item.product.name}
+                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg object-cover shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {item.product.name}
+                          {item.variant && <span className="text-muted-foreground font-normal"> - {item.variant.name}</span>}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Adet: {item.quantity}</p>
+                        <p className="text-sm font-semibold">
+                          {formatPrice(itemPrice * item.quantity)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
                   );
                 })}
               </div>
 
               <Separator className="my-4" />
 
-              <CouponInput 
-                orderTotal={total} 
+              <CouponInput
+                orderTotal={total}
                 onApplyCoupon={setAppliedCoupon}
                 appliedCoupon={appliedCoupon}
               />
 
               <Separator className="my-4" />
 
-              <div className="space-y-2 text-sm">
+              {/* Wallet Usage */}
+              {user && wallet && wallet.balance > 0 && (
+                <div className="bg-primary/5 p-4 rounded-lg border border-primary/10 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Wallet className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium">Cüzdan Bakiyesi</span>
+                    </div>
+                    <span className="text-sm font-bold text-primary">{formatPrice(wallet.balance)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="use-wallet" className="text-xs cursor-pointer">Bakiyeyi bu siparişte kullan</Label>
+                    <input
+                      type="checkbox"
+                      id="use-wallet"
+                      className="accent-primary"
+                      checked={useWalletBalance}
+                      onChange={(e) => setUseWalletBalance(e.target.checked)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2 pt-2 border-t text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Ara Toplam</span>
                   <span>{formatPrice(total)}</span>
                 </div>
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-success">
-                    <span>İndirim</span>
-                    <span>-{formatPrice(discountAmount)}</span>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-green-600 font-medium">
+                    <span>Kupon İndirimi ({appliedCoupon.coupon.code})</span>
+                    <span>-{formatPrice(appliedCoupon.discount)}</span>
+                  </div>
+                )}
+                {useWalletBalance && walletAmount > 0 && (
+                  <div className="flex justify-between text-primary font-medium">
+                    <span>Cüzdan Kullanımı</span>
+                    <span>-{formatPrice(walletAmount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Kargo</span>
-                  <span>{shippingCost === 0 ? <span className="text-success">Ücretsiz</span> : formatPrice(shippingCost)}</span>
+                  <span className="text-green-600 font-medium">Ücretsiz</span>
                 </div>
                 <Separator className="my-2" />
-                <div className="flex justify-between text-base sm:text-lg font-semibold">
+                <div className="flex justify-between text-lg font-bold">
                   <span>Toplam</span>
-                  <span>{formatPrice(grandTotal)}</span>
+                  <span>{formatPrice(finalTotal)}</span>
                 </div>
               </div>
 

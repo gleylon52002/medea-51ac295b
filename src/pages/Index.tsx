@@ -7,11 +7,13 @@ import Newsletter from "@/components/home/Newsletter";
 import TrustBadges from "@/components/products/TrustBadges";
 import RecentPurchaseToast from "@/components/products/RecentPurchaseToast";
 import RecentlyViewed from "@/components/products/RecentlyViewed";
+import Campaigns from "@/components/home/Campaigns";
 
 const Index = () => {
   return (
     <Layout>
       <Hero />
+      <Campaigns />
       <Features />
       <FeaturedProducts />
       <div className="container-main py-12">

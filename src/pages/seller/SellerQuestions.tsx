@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { useSellerQuestions } from "@/hooks/useInteraction";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,13 +15,20 @@ const SellerQuestions = () => {
     const [answerText, setAnswerText] = useState("");
 
     const handleAnswer = async (id: string) => {
-        if (!answerText.trim()) return;
+        if (!answerText.trim()) {
+            toast.error("Lütfen bir cevap yazın");
+            return;
+        }
+
         try {
             await answerQuestion.mutateAsync({ questionId: id, answer: answerText });
             setAnsweringId(null);
             setAnswerText("");
+            // Success toast is handled by the hook
         } catch (error) {
             console.error("Answer error:", error);
+            // Error toast is handled by the hook if it's set up there, 
+            // but let's be safe if hook doesn't have it
         }
     };
 
@@ -83,7 +91,10 @@ const SellerQuestions = () => {
                                                 {answerQuestion.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                                                 Cevabı Gönder
                                             </Button>
-                                            <Button size="sm" variant="ghost" onClick={() => setAnsweringId(null)}>İptal</Button>
+                                            <Button size="sm" variant="ghost" onClick={() => {
+                                                setAnsweringId(null);
+                                                setAnswerText("");
+                                            }}>İptal</Button>
                                         </div>
                                     </div>
                                 ) : q.answer ? (

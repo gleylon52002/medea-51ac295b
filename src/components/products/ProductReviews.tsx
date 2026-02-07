@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Star, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProductReviews, useCreateReview } from "@/hooks/useReviews";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 
@@ -18,10 +20,38 @@ const ProductReviews = ({ productId }: ProductReviewsProps) => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [hoveredStar, setHoveredStar] = useState(0);
+  const [hasPurchased, setHasPurchased] = useState<boolean | null>(null);
+
+  // Check if user has purchased this product
+  useEffect(() => {
+    const checkPurchase = async () => {
+      if (!user || !productId) {
+        setHasPurchased(null);
+        return;
+      }
+
+      const { data, error } = await supabase.rpc('has_purchased_product', {
+        p_user_id: user.id,
+        p_product_id: productId
+      });
+
+      if (!error) {
+        setHasPurchased(data || false);
+      }
+    };
+
+    checkPurchase();
+  }, [user, productId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    // Validate purchase before allowing review
+    if (hasPurchased === false) {
+      toast.error("Bu ürünü satın almadan değerlendirme yapamazsınız");
+      return;
+    }
 
     try {
       await createReview.mutateAsync({
@@ -31,8 +61,10 @@ const ProductReviews = ({ productId }: ProductReviewsProps) => {
       });
       setRating(5);
       setComment("");
+      toast.success("Değerlendirmeniz gönderildi!");
     } catch (error) {
       console.error("Error creating review:", error);
+      toast.error("Değerlendirme gönderilemedi");
     }
   };
 
@@ -50,7 +82,7 @@ const ProductReviews = ({ productId }: ProductReviewsProps) => {
       {user ? (
         <form onSubmit={handleSubmit} className="space-y-4 p-6 bg-muted/30 rounded-xl">
           <h3 className="font-medium">Değerlendirme Yazın</h3>
-          
+
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Puanınız:</span>
             <div className="flex gap-1">
@@ -64,11 +96,10 @@ const ProductReviews = ({ productId }: ProductReviewsProps) => {
                   className="p-1"
                 >
                   <Star
-                    className={`h-6 w-6 transition-colors ${
-                      star <= (hoveredStar || rating)
-                        ? "fill-terracotta text-terracotta"
-                        : "fill-muted text-muted"
-                    }`}
+                    className={`h-6 w-6 transition-colors ${star <= (hoveredStar || rating)
+                      ? "fill-terracotta text-terracotta"
+                      : "fill-muted text-muted"
+                      }`}
                   />
                 </button>
               ))}
@@ -124,11 +155,10 @@ const ProductReviews = ({ productId }: ProductReviewsProps) => {
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`h-4 w-4 ${
-                            i < review.rating
-                              ? "fill-terracotta text-terracotta"
-                              : "fill-muted text-muted"
-                          }`}
+                          className={`h-4 w-4 ${i < review.rating
+                            ? "fill-terracotta text-terracotta"
+                            : "fill-muted text-muted"
+                            }`}
                         />
                       ))}
                     </div>

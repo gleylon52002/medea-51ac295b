@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { FileText, Download, TrendingDown } from "lucide-react";
-import { generateInvoicePDF } from "@/lib/invoiceGenerator";
+import { generateProfessionalInvoice } from "@/lib/professionalInvoiceGenerator";
 import {
     Table,
     TableBody,
@@ -47,7 +47,7 @@ const SellerInvoices = () => {
     }, []) || [];
 
     const handleDownloadInvoice = (order: any) => {
-        generateInvoicePDF(order, seller);
+        generateProfessionalInvoice(order, seller);
     };
 
     return (

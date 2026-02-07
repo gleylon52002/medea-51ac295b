@@ -20,13 +20,15 @@ interface ShippingAddress {
 interface CreateOrderParams {
   items: CartItem[];
   shippingAddress: ShippingAddress;
-  paymentMethod: PaymentMethod;
+  paymentMethod: Database["public"]["Enums"]["payment_method"];
   subtotal: number;
   shippingCost: number;
   total: number;
   notes?: string;
   couponCode?: string;
   discountAmount?: number;
+  referralCode?: string | null;
+  walletAmount?: number;
 }
 
 const generateOrderNumber = (): string => {
@@ -49,7 +51,9 @@ export const useCreateOrder = () => {
         p_payment_method: params.paymentMethod,
         p_shipping_cost: params.shippingCost,
         p_notes: params.notes || null,
-        p_coupon_code: params.couponCode || null
+        p_coupon_code: params.couponCode || null,
+        p_referral_code: params.referralCode || null,
+        p_wallet_amount: params.walletAmount || 0
       });
 
       if (rpcError) throw rpcError;
@@ -67,6 +71,7 @@ export const useCreateOrder = () => {
       queryClient.invalidateQueries({ queryKey: ["product-variants"] });
       queryClient.invalidateQueries({ queryKey: ["seller-transactions"] });
       queryClient.invalidateQueries({ queryKey: ["seller-notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["wallet-balance"] }); // FIX: Refresh wallet after use
     },
   });
 };

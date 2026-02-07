@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Plus, Pencil, Trash2 } from "lucide-react";
+import { MapPin, Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,71 +9,86 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-
-interface Address {
-  id: string;
-  title: string;
-  fullName: string;
-  phone: string;
-  address: string;
-  city: string;
-  district: string;
-  postalCode: string;
-  isDefault: boolean;
-}
-
-const mockAddresses: Address[] = [
-  {
-    id: "1",
-    title: "Ev",
-    fullName: "Ayşe Yılmaz",
-    phone: "0532 123 45 67",
-    address: "Caferağa Mah. Moda Cad. No: 123 D: 5",
-    city: "İstanbul",
-    district: "Kadıköy",
-    postalCode: "34710",
-    isDefault: true,
-  },
-  {
-    id: "2",
-    title: "İş",
-    fullName: "Ayşe Yılmaz",
-    phone: "0532 123 45 67",
-    address: "Levent Mah. Büyükdere Cad. No: 456 K: 12",
-    city: "İstanbul",
-    district: "Beşiktaş",
-    postalCode: "34394",
-    isDefault: false,
-  },
-];
+import { useAddresses, useCreateAddress, useUpdateAddress, useDeleteAddress } from "@/hooks/useAddresses";
 
 const Addresses = () => {
-  const { toast } = useToast();
-  const [addresses, setAddresses] = useState<Address[]>(mockAddresses);
+  const { data: addresses, isLoading } = useAddresses();
+  const createAddress = useCreateAddress();
+  const updateAddress = useUpdateAddress();
+  const deleteAddress = useDeleteAddress();
+
   const [isOpen, setIsOpen] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    title: "",
+    full_name: "",
+    phone: "",
+    address: "",
+    city: "",
+    district: "",
+    postal_code: "",
+    is_default: false,
+  });
 
-  const handleDelete = (id: string) => {
-    setAddresses(addresses.filter((a) => a.id !== id));
-    toast({
-      title: "Adres Silindi",
-      description: "Adres başarıyla silindi.",
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      full_name: "",
+      phone: "",
+      address: "",
+      city: "",
+      district: "",
+      postal_code: "",
+      is_default: false,
     });
+    setEditingAddress(null);
   };
 
-  const handleSetDefault = (id: string) => {
-    setAddresses(
-      addresses.map((a) => ({
-        ...a,
-        isDefault: a.id === id,
-      }))
+  const handleOpenDialog = (address?: any) => {
+    if (address) {
+      setEditingAddress(address);
+      setFormData({
+        title: address.title,
+        full_name: address.full_name,
+        phone: address.phone,
+        address: address.address,
+        city: address.city,
+        district: address.district,
+        postal_code: address.postal_code || "",
+        is_default: address.is_default,
+      });
+    } else {
+      resetForm();
+    }
+    setIsOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingAddress) {
+      updateAddress.mutate({ id: editingAddress.id, ...formData }, {
+        onSuccess: () => setIsOpen(false)
+      });
+    } else {
+      createAddress.mutate(formData, {
+        onSuccess: () => setIsOpen(false)
+      });
+    }
+  };
+
+  const handleSetDefault = (address: any) => {
+    updateAddress.mutate({ id: address.id, is_default: true });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
     );
-    toast({
-      title: "Varsayılan Adres Güncellendi",
-      description: "Varsayılan teslimat adresiniz değiştirildi.",
-    });
-  };
+  }
 
   return (
     <div>
@@ -81,60 +96,98 @@ const Addresses = () => {
         <h2 className="font-serif text-xl font-medium">Adreslerim</h2>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={() => handleOpenDialog()}>
               <Plus className="h-4 w-4 mr-2" />
               Yeni Adres
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Yeni Adres Ekle</DialogTitle>
+              <DialogTitle>{editingAddress ? "Adresi Düzenle" : "Yeni Adres Ekle"}</DialogTitle>
             </DialogHeader>
-            <form className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="title">Adres Başlığı</Label>
-                <Input id="title" placeholder="Ev, İş, vb." />
+                <Input
+                  id="title"
+                  placeholder="Ev, İş, vb."
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  required
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Ad Soyad</Label>
-                  <Input id="fullName" />
+                  <Input
+                    id="fullName"
+                    value={formData.full_name}
+                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Telefon</Label>
-                  <Input id="phone" />
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    required
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="address">Adres</Label>
-                <Input id="address" />
+                <Input
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  required
+                />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="city">İl</Label>
-                  <Input id="city" />
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="district">İlçe</Label>
-                  <Input id="district" />
+                  <Input
+                    id="district"
+                    value={formData.district}
+                    onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="postalCode">Posta Kodu</Label>
-                  <Input id="postalCode" />
+                  <Input
+                    id="postalCode"
+                    value={formData.postal_code}
+                    onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                  />
                 </div>
               </div>
-              <div className="flex justify-end gap-2">
+              <DialogFooter>
                 <Button variant="outline" type="button" onClick={() => setIsOpen(false)}>
                   İptal
                 </Button>
-                <Button type="submit">Kaydet</Button>
-              </div>
+                <Button type="submit" disabled={createAddress.isPending || updateAddress.isPending}>
+                  {(createAddress.isPending || updateAddress.isPending) && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  Kaydet
+                </Button>
+              </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      {addresses.length === 0 ? (
+      {!addresses || addresses.length === 0 ? (
         <div className="text-center py-12">
           <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground mb-4">Henüz kayıtlı adresiniz bulunmuyor.</p>
@@ -144,40 +197,49 @@ const Addresses = () => {
           {addresses.map((address) => (
             <div
               key={address.id}
-              className={`border rounded-xl p-4 relative ${
-                address.isDefault ? "border-primary" : "border-border"
-              }`}
+              className={`border rounded-xl p-4 relative ${address.is_default ? "border-primary bg-primary/5" : "border-border"
+                }`}
             >
-              {address.isDefault && (
-                <span className="absolute top-4 right-4 text-xs font-medium text-primary">
-                  Varsayılan
-                </span>
-              )}
-              <p className="font-medium mb-2">{address.title}</p>
-              <p className="text-sm text-muted-foreground mb-1">{address.fullName}</p>
+              <div className="flex justify-between items-start mb-2">
+                <p className="font-medium">{address.title}</p>
+                {address.is_default && (
+                  <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                    Varsayılan
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mb-1">{address.full_name}</p>
               <p className="text-sm text-muted-foreground mb-1">{address.phone}</p>
               <p className="text-sm text-muted-foreground mb-1">{address.address}</p>
               <p className="text-sm text-muted-foreground">
-                {address.district}, {address.city} {address.postalCode}
+                {address.district}, {address.city} {address.postal_code}
               </p>
 
               <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
-                {!address.isDefault && (
+                {!address.is_default && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleSetDefault(address.id)}
+                    className="text-primary hover:text-primary hover:bg-primary/10"
+                    onClick={() => handleSetDefault(address)}
+                    disabled={updateAddress.isPending}
                   >
                     Varsayılan Yap
                   </Button>
                 )}
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" onClick={() => handleOpenDialog(address)}>
                   <Pencil className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDelete(address.id)}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => {
+                    if (confirm("Bu adresi silmek istediğinize emin misiniz?")) {
+                      deleteAddress.mutate(address.id);
+                    }
+                  }}
+                  disabled={deleteAddress.isPending}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

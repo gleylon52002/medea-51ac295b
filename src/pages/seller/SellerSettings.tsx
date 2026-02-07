@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +45,27 @@ const SellerSettings = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateProfile.mutateAsync(formData);
+
+    // Basic validations
+    if (formData.phone && !/^\d{10,11}$/.test(formData.phone.replace(/\s/g, ""))) {
+      toast.error("Geçerli bir telefon numarası giriniz (örn: 05321234567)");
+      return;
+    }
+
+    if (formData.iban && !/^TR\d{24}$/.test(formData.iban.replace(/\s/g, "").toUpperCase())) {
+      toast.error("Geçerli bir TR IBAN giriniz (26 karakter)");
+      return;
+    }
+
+    try {
+      await updateProfile.mutateAsync({
+        ...formData,
+        iban: formData.iban.replace(/\s/g, "").toUpperCase(),
+        phone: formData.phone.replace(/\s/g, "")
+      });
+    } catch (error) {
+      console.error("Update error:", error);
+    }
   };
 
   if (isLoading) {

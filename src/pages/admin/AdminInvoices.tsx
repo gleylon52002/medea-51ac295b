@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { FileText, Search, TrendingUp, Filter } from "lucide-react";
-import { generateInvoicePDF } from "@/lib/invoiceGenerator";
+import { generateProfessionalInvoice } from "@/lib/professionalInvoiceGenerator";
 import { Input } from "@/components/ui/input";
 import {
     Table,
@@ -72,7 +72,7 @@ const AdminInvoices = () => {
     const totalCommission = transactions?.reduce((sum: number, t: any) => sum + (t.commission_amount || 0), 0) || 0;
 
     const handleDownloadInvoice = (order: any) => {
-        generateInvoicePDF(order); // Admin sees full invoice
+        generateProfessionalInvoice(order); // Admin sees full invoice
     };
 
     return (

@@ -55,7 +55,11 @@ export const useConversations = () => {
             if (error) throw error;
 
             return (data as any[]).map(conv => {
-                const lastMsg = conv.messages?.[0];
+                // Get the most recent message
+                const sortedMessages = [...(conv.messages || [])].sort((a, b) =>
+                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                );
+                const lastMsg = sortedMessages[0];
                 const unreadCount = conv.messages?.filter((m: any) => !m.is_read && m.sender_id !== user.id).length || 0;
 
                 return {
@@ -188,7 +192,7 @@ export const useGetOrCreateConversation = () => {
                 .eq("context_id", contextId || null)
                 .single();
 
-            if (existing) return existing.id;
+            if (existing) return (existing as any).id;
 
             // Create new
             const { data: newConv, error } = await supabase
@@ -202,7 +206,7 @@ export const useGetOrCreateConversation = () => {
                 .single();
 
             if (error) throw error;
-            return newConv.id;
+            return (newConv as any).id;
         }
     });
 };

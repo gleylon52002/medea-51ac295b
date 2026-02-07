@@ -13,7 +13,9 @@ import {
   Wallet,
   Menu,
   Truck,
-  FileText
+  FileText,
+  MessageSquare,
+  HelpCircle
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSellerProfile, useSellerNotifications } from "@/hooks/useSeller";

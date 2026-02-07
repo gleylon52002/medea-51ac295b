@@ -97,8 +97,8 @@ const SellerProducts = () => {
       name: formData.name,
       description: formData.description,
       short_description: formData.short_description,
-      price: parseFloat(formData.price),
-      sale_price: formData.sale_price ? parseFloat(formData.sale_price) : null,
+      price: parseFloat(formData.price) || 0,
+      sale_price: formData.sale_price ? (parseFloat(formData.sale_price) || null) : null,
       category_id: formData.category_id || null,
       stock: parseInt(formData.stock) || 0,
       images: formData.images,
@@ -111,14 +111,22 @@ const SellerProducts = () => {
         onSuccess: () => {
           setIsDialogOpen(false);
           resetForm();
+          toast.success("Ürün başarıyla güncellendi");
         },
+        onError: () => {
+          toast.error("Ürün güncellenirken bir hata oluştu");
+        }
       });
     } else {
       createProduct.mutate(data, {
         onSuccess: () => {
           setIsDialogOpen(false);
           resetForm();
+          toast.success("Ürün başarıyla eklendi");
         },
+        onError: () => {
+          toast.error("Ürün eklenirken bir hata oluştu");
+        }
       });
     }
   };

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -60,6 +61,7 @@ import AdminHero from "./pages/admin/AdminHero";
 import AdminSellerApplications from "./pages/admin/AdminSellerApplications";
 import AdminSellers from "./pages/admin/AdminSellers";
 import AdminSellerSettings from "./pages/admin/AdminSellerSettings";
+import AdminPayouts from "./pages/admin/AdminPayouts";
 import AdminInvoices from "./pages/admin/AdminInvoices";
 
 // Seller Pages
@@ -77,10 +79,23 @@ import SellerCargo from "./pages/seller/SellerCargo";
 import SellerSettings from "./pages/seller/SellerSettings";
 import SellerInvoices from "./pages/seller/SellerInvoices";
 import SellerAnalytics from "./pages/seller/SellerAnalytics";
+import SellerQuestions from "./pages/seller/SellerQuestions";
 
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+const ReferralTracker = () => {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) {
+      sessionStorage.setItem("referral_code", ref);
+      console.log("Referral code captured:", ref);
+    }
+  }, []);
+  return null;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -90,6 +105,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <ReferralTracker />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/urunler" element={<Products />} />
@@ -133,10 +149,12 @@ const App = () => (
                 <Route path="kampanyalar" element={<AdminCampaigns />} />
                 <Route path="mesajlar" element={<AdminMessages />} />
                 <Route path="bulten" element={<AdminNewsletter />} />
+                <Route path="bulten-mesajlari" element={<AdminNewsletter />} />
                 <Route path="sss" element={<AdminFAQ />} />
                 <Route path="sosyal-medya" element={<AdminSocialMedia />} />
                 <Route path="kargo" element={<AdminShipping />} />
                 <Route path="faturalar" element={<AdminInvoices />} />
+                <Route path="odemeler" element={<AdminPayouts />} />
                 <Route path="odeme" element={<AdminPayment />} />
                 <Route path="hero" element={<AdminHero />} />
                 <Route path="tema" element={<AdminTheme />} />

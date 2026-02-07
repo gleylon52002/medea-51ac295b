@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Users, Star, AlertTriangle, Ban, Pause, Play, Loader2, Search, TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -28,11 +29,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MessageSquare } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   useAllSellers,
   useUpdateSeller,
   useAddSellerPoints,
 } from "@/hooks/useAdminSellers";
+import { useGetOrCreateConversation } from "@/hooks/useMessages";
 import { formatPrice } from "@/lib/utils";
 import type { Seller } from "@/hooks/useSeller";
 
@@ -40,6 +44,8 @@ const AdminSellers = () => {
   const { data: sellers, isLoading } = useAllSellers();
   const updateSeller = useUpdateSeller();
   const addPoints = useAddSellerPoints();
+  const getOrCreateConversation = useGetOrCreateConversation();
+  const navigate = useNavigate();
 
   const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -84,10 +90,10 @@ const AdminSellers = () => {
     updateSeller.mutate({
       sellerId: selectedSeller.id,
       data: {
-        commission_rate: parseFloat(editForm.commission_rate),
+        commission_rate: parseFloat(editForm.commission_rate) || 0,
         status: editForm.status as "active" | "suspended" | "banned",
         suspended_reason: editForm.status !== "active" ? editForm.suspended_reason : null,
-        suspended_until: editForm.status === "suspended" 
+        suspended_until: editForm.status === "suspended"
           ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
           : null,
       },
@@ -103,7 +109,7 @@ const AdminSellers = () => {
     if (!selectedSeller) return;
     addPoints.mutate({
       sellerId: selectedSeller.id,
-      points: parseInt(pointsForm.points),
+      points: parseInt(pointsForm.points) || 0,
       pointType: pointsForm.pointType,
       reason: pointsForm.reason,
     }, {
@@ -114,9 +120,23 @@ const AdminSellers = () => {
     });
   };
 
+  const handleMessageSeller = async (seller: Seller) => {
+    try {
+      const conversationId = await getOrCreateConversation.mutateAsync({
+        participantId: seller.user_id,
+        contextType: 'direct'
+      });
+      navigate(`/admin/mesajlar?id=${conversationId}`);
+      toast.success("Mesajlaşma başlatıldı");
+    } catch (error: any) {
+      console.error("Messaging error:", error);
+      toast.error("Mesajlaşma başlatılamadı: " + (error.message || "Bilinmeyen hata"));
+    }
+  };
+
   const filteredSellers = sellers?.filter(s => {
-    const matchesSearch = s.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.tax_number.includes(searchTerm);
+    const matchesSearch = (s.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.tax_number && s.tax_number.includes(searchTerm)));
     const matchesStatus = statusFilter === "all" || s.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -287,6 +307,14 @@ const AdminSellers = () => {
                       <Button
                         size="sm"
                         variant="ghost"
+                        onClick={() => handleMessageSeller(seller)}
+                        title="Mesaj Gönder"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         onClick={() => openEditDialog(seller)}
                         title="Düzenle"
                       >
@@ -385,7 +413,7 @@ const AdminSellers = () => {
               <Label>Puan Tipi</Label>
               <Select
                 value={pointsForm.pointType}
-                onValueChange={(value: "reputation" | "penalty" | "purchased") => 
+                onValueChange={(value: "reputation" | "penalty" | "purchased") =>
                   setPointsForm({ ...pointsForm, pointType: value })
                 }
               >
@@ -437,8 +465,8 @@ const AdminSellers = () => {
             <Button variant="outline" onClick={() => setPointsDialogOpen(false)}>
               İptal
             </Button>
-            <Button 
-              onClick={handleAddPoints} 
+            <Button
+              onClick={handleAddPoints}
               disabled={!pointsForm.points || !pointsForm.reason || addPoints.isPending}
             >
               {addPoints.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}

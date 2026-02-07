@@ -15,8 +15,8 @@ const SellerDashboard = () => {
   const { data: notifications } = useSellerNotifications();
 
   const unreadNotifications = notifications?.filter(n => !n.is_read) || [];
-  const totalEarnings = transactions?.filter(t => t.status === "completed").reduce((sum, t) => sum + t.net_amount, 0) || 0;
-  const pendingEarnings = transactions?.filter(t => t.status === "pending").reduce((sum, t) => sum + t.net_amount, 0) || 0;
+  const totalEarnings = transactions?.filter(t => t.status === "completed").reduce((sum, t) => sum + (Number(t.net_amount) || 0), 0) || 0;
+  const pendingEarnings = transactions?.filter(t => t.status === "pending").reduce((sum, t) => sum + (Number(t.net_amount) || 0), 0) || 0;
 
   if (sellerLoading) {
     return (
