@@ -107,7 +107,12 @@
 - **Fiyat Alarmı**: Hedef fiyat belirleme, düşünce bildirim (price_alerts tablosu)
 - **Stok Alarmı**: Tükenen ürün stoğa girince bildirim (stock_alerts tablosu)
 
----
+### 13. Sprint 3 Özellikler (Büyüme)
+- **Müşteri Sadakat Sistemi**: Bronz/Gümüş/Altın/Platin seviyeler, puan kazanma/harcama (loyalty_points, loyalty_transactions tabloları)
+- **Satıcı Mağaza Sayfası**: /magaza/:slug URL ile satıcı profili, ürün listesi, istatistikler
+- **Toplu Ürün Yükleme (CSV)**: Satıcı panelinde CSV şablonu indirme ve toplu import
+- **Satıcı Profil Zenginleştirme**: slug, description, logo_url, banner_url alanları sellers tablosuna eklendi
+
 
 ## 🐛 Tespit Edilen Hatalar ve Düzeltmeler
 

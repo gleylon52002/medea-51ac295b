@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { User, Package, Heart, MapPin, Settings, LogOut, Users } from "lucide-react";
+import { User, Package, Heart, MapPin, Settings, LogOut, Users, Award } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 
@@ -12,6 +12,7 @@ const Account = () => {
     { path: "/hesabim/favoriler", label: "Favorilerim", icon: Heart },
     { path: "/hesabim/adresler", label: "Adreslerim", icon: MapPin },
     { path: "/hesabim/referans", label: "Referans Programı", icon: Users },
+    { path: "/hesabim/sadakat", label: "Sadakat Programı", icon: Award },
     { path: "/hesabim/ayarlar", label: "Ayarlar", icon: Settings },
   ];
 
