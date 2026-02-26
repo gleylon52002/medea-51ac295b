@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import RatingDistribution from "./RatingDistribution";
 import { Star, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -139,6 +140,11 @@ const ProductReviews = ({ productId }: ProductReviewsProps) => {
         </div>
       )}
 
+      {/* Rating Distribution */}
+      {reviews && reviews.length > 0 && (
+        <RatingDistribution reviews={reviews} />
+      )}
+
       {/* Reviews List */}
       <div className="space-y-6">
         <h3 className="font-medium">
@@ -163,6 +169,11 @@ const ProductReviews = ({ productId }: ProductReviewsProps) => {
                       ))}
                     </div>
                     <span className="text-sm font-medium">Müşteri</span>
+                    {review.order_id && (
+                      <span className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                        ✓ Doğrulanmış Alıcı
+                      </span>
+                    )}
                   </div>
                   <span className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(review.created_at), {

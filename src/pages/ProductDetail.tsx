@@ -22,6 +22,9 @@ import StickyAddToCart from "@/components/cart/StickyAddToCart";
 import VariantSelector from "@/components/products/VariantSelector";
 import CompareButton from "@/components/products/CompareButton";
 import ProductQuestions from "@/components/products/ProductQuestions";
+import InstallmentCalculator from "@/components/products/InstallmentCalculator";
+import PurchaseCounter from "@/components/products/PurchaseCounter";
+import ProductSchema from "@/components/products/ProductSchema";
 import { ProductVariant } from "@/hooks/useProductVariants";
 import { ProductVariantInfo } from "@/types/product";
 import { useRelatedProducts } from "@/hooks/useRelatedProducts";
@@ -140,6 +143,7 @@ const ProductDetail = () => {
 
   return (
     <Layout>
+      <ProductSchema product={product} rating={rating} />
       <div className="container-main py-8 lg:py-12">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
@@ -235,6 +239,12 @@ const ProductDetail = () => {
                 </span>
               )}
             </div>
+
+            {/* Installment Calculator */}
+            <InstallmentCalculator price={finalPrice} />
+
+            {/* Purchase Counter */}
+            <PurchaseCounter productId={product.id} />
 
             <p className="text-muted-foreground leading-relaxed">
               {product.description}
