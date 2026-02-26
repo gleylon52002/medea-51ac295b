@@ -16,6 +16,7 @@ export interface Product {
   rating: number;
   reviewCount: number;
   createdAt: string;
+  sellerId?: string | null;
 }
 
 export interface Category {

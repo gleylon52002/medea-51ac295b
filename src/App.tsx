@@ -63,7 +63,7 @@ import AdminSellers from "./pages/admin/AdminSellers";
 import AdminSellerSettings from "./pages/admin/AdminSellerSettings";
 import AdminPayouts from "./pages/admin/AdminPayouts";
 import AdminInvoices from "./pages/admin/AdminInvoices";
-
+import AdminUserCarts from "./pages/admin/AdminUserCarts";
 // Seller Pages
 import SellerGuard from "./components/seller/SellerGuard";
 import SellerLayout from "./components/seller/SellerLayout";
@@ -80,6 +80,7 @@ import SellerSettings from "./pages/seller/SellerSettings";
 import SellerInvoices from "./pages/seller/SellerInvoices";
 import SellerAnalytics from "./pages/seller/SellerAnalytics";
 import SellerQuestions from "./pages/seller/SellerQuestions";
+import SellerBuyPoints from "./pages/seller/SellerBuyPoints";
 
 import NotFound from "./pages/NotFound";
 
@@ -163,6 +164,7 @@ const App = () => (
                 <Route path="saticilar" element={<AdminSellers />} />
                 <Route path="satici-ayarlari" element={<AdminSellerSettings />} />
                 <Route path="ayarlar" element={<AdminSettings />} />
+                <Route path="sepetler" element={<AdminUserCarts />} />
               </Route>
 
               {/* Seller Routes */}
@@ -174,6 +176,7 @@ const App = () => (
                 <Route path="analiz" element={<SellerAnalytics />} />
                 <Route path="faturalar" element={<SellerInvoices />} />
                 <Route path="puanlar" element={<SellerPoints />} />
+                <Route path="puan-satin-al" element={<SellerBuyPoints />} />
                 <Route path="one-cikar" element={<SellerFeature />} />
                 <Route path="bildirimler" element={<SellerNotifications />} />
                 <Route path="mesajlar" element={<SellerMessages />} />

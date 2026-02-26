@@ -56,6 +56,7 @@ const menuItems = [
   { icon: Truck, label: "Kargo", path: "/admin/kargo" },
   { icon: FileText, label: "Faturalar", path: "/admin/faturalar" },
   { icon: CreditCard, label: "Ödemeler", path: "/admin/odemeler" },
+  { icon: Tag, label: "Kullanıcı Sepetleri", path: "/admin/sepetler" },
   { icon: Image, label: "Hero", path: "/admin/hero" },
   { icon: Palette, label: "Tema", path: "/admin/tema" },
   { icon: Search, label: "SEO", path: "/admin/seo" },

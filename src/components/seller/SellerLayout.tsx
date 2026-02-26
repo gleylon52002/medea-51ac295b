@@ -34,6 +34,7 @@ const menuItems = [
   { icon: TrendingUp, label: "Analizler", path: "/satici/analiz" },
   { icon: FileText, label: "Faturalar", path: "/satici/faturalar" },
   { icon: Star, label: "Puanlarım", path: "/satici/puanlar" },
+  { icon: Wallet, label: "Puan Satın Al", path: "/satici/puan-satin-al" },
   { icon: TrendingUp, label: "Öne Çıkar", path: "/satici/one-cikar" },
   { icon: Bell, label: "Bildirimler", path: "/satici/bildirimler" },
   { icon: MessageSquare, label: "Mesajlarım", path: "/satici/mesajlar" },
