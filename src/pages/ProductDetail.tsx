@@ -209,7 +209,7 @@ const ProductDetail = () => {
                     <Star
                       key={i}
                       className={`h-5 w-5 ${i < Math.floor(rating?.average || 0)
-                        ? "fill-terracotta text-terracotta"
+                    ? "fill-primary text-primary"
                         : "fill-muted text-muted"
                         }`}
                     />
@@ -231,7 +231,7 @@ const ProductDetail = () => {
                   <span className="text-xl text-muted-foreground line-through">
                     {formatPrice(Number(product.price))}
                   </span>
-                  <span className="px-2 py-1 bg-terracotta text-white text-sm font-medium rounded">
+                  <span className="px-2 py-1 bg-destructive text-destructive-foreground text-sm font-medium rounded">
                     %{discountPercent} İndirim
                   </span>
                 </>
@@ -307,7 +307,7 @@ const ProductDetail = () => {
                   variant="outline"
                   onClick={() => toggleFavorite.mutate(product.id)}
                 >
-                  <Heart className={`h-5 w-5 ${isFavorite ? "fill-terracotta text-terracotta" : ""}`} />
+                  <Heart className={`h-5 w-5 ${isFavorite ? "fill-primary text-primary" : ""}`} />
                 </Button>
               )}
               <CompareButton productId={product.id} variant="icon" />

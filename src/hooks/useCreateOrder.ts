@@ -3,9 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { CartItem } from "@/types/product";
 import { Database } from "@/integrations/supabase/types";
-import { Json } from "@/integrations/supabase/types";
-
-type PaymentMethod = Database["public"]["Enums"]["payment_method"];
 
 interface ShippingAddress {
   full_name: string;
@@ -30,12 +27,6 @@ interface CreateOrderParams {
   referralCode?: string | null;
   walletAmount?: number;
 }
-
-const generateOrderNumber = (): string => {
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `MDA-${timestamp}-${random}`;
-};
 
 export const useCreateOrder = () => {
   const { user } = useAuth();

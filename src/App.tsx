@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { initGA4 } from "@/lib/analytics";
+import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -103,13 +104,10 @@ const ReferralTracker = () => {
 
 const GA4Init = () => {
   useEffect(() => {
-    // Fetch GA4 ID from site settings
-    import("@/integrations/supabase/client").then(({ supabase }) => {
-      supabase.from("site_settings").select("value").eq("key", "ga4_measurement_id").maybeSingle().then(({ data }) => {
-        if (data?.value) {
-          initGA4(typeof data.value === "string" ? data.value : String(data.value));
-        }
-      });
+    supabase.from("site_settings").select("value").eq("key", "ga4_measurement_id").maybeSingle().then(({ data }) => {
+      if (data?.value) {
+        initGA4(typeof data.value === "string" ? data.value : String(data.value));
+      }
     });
   }, []);
   return null;

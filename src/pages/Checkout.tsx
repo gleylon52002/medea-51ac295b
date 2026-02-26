@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronRight, CreditCard, Truck, MapPin, Check, Loader2, ShoppingBag, Wallet, Banknote, Building2, Plus } from "lucide-react";
 import Layout from "@/components/layout/Layout";
@@ -78,8 +78,9 @@ const Checkout = () => {
     if (code) setReferralCode(code);
   }, []);
 
+  const computedShipping = total >= 300 ? 0 : 29.90;
   const walletAmount = useWalletBalance && wallet ? Math.min(wallet.balance, total - (appliedCoupon?.discount || 0)) : 0;
-  const finalTotal = Math.max(0, total - (appliedCoupon?.discount || 0) - walletAmount);
+  const finalTotal = Math.max(0, total - (appliedCoupon?.discount || 0) - walletAmount + computedShipping);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -141,16 +142,17 @@ const Checkout = () => {
   // Check if cart has seller products (require credit card only)
   const hasSellerProducts = items.some(item => item.product.sellerId);
 
-  // Filter available payment methods
-  const availablePaymentMethods = allPaymentMethods.filter(method => {
-    const isActive = paymentSettings?.some(ps => ps.method === method.dbKey && ps.is_active);
-    if (!isActive) return false;
-    // If cart has seller products, only allow credit card methods
-    if (hasSellerProducts && !["credit-card", "shopier", "shopinext", "payizone"].includes(method.key)) {
-      return false;
-    }
-    return true;
-  });
+  // Filter available payment methods (memoized to prevent infinite loops)
+  const availablePaymentMethods = React.useMemo(() => {
+    return allPaymentMethods.filter(method => {
+      const isActive = paymentSettings?.some(ps => ps.method === method.dbKey && ps.is_active);
+      if (!isActive) return false;
+      if (hasSellerProducts && !["credit-card", "shopier", "shopinext", "payizone"].includes(method.key)) {
+        return false;
+      }
+      return true;
+    });
+  }, [paymentSettings, hasSellerProducts]);
 
   // Set first available payment method as default
   useEffect(() => {
@@ -166,7 +168,6 @@ const Checkout = () => {
 
   const shippingCost = total >= 300 ? 0 : 29.90;
   const discountAmount = appliedCoupon?.discount || 0;
-  const grandTotal = total - discountAmount + shippingCost;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -198,7 +199,7 @@ const Checkout = () => {
         },
         paymentMethod: paymentMethodMap[paymentMethod],
         subtotal: total,
-        shippingCost: 0,
+        shippingCost: shippingCost,
         total: finalTotal,
         notes: "",
         couponCode: appliedCoupon?.coupon.code,
@@ -224,7 +225,7 @@ const Checkout = () => {
             body: {
               orderId: result.order.id,
               orderNumber: result.orderNumber,
-              amount: grandTotal,
+              amount: finalTotal,
               provider: paymentMethod,
               customerName: `${formData.firstName} ${formData.lastName}`,
               customerEmail: formData.email,
@@ -740,7 +741,11 @@ const Checkout = () => {
                 )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Kargo</span>
-                  <span className="text-green-600 font-medium">Ücretsiz</span>
+                  {shippingCost === 0 ? (
+                    <span className="text-green-600 font-medium">Ücretsiz</span>
+                  ) : (
+                    <span>{formatPrice(shippingCost)}</span>
+                  )}
                 </div>
                 <Separator className="my-2" />
                 <div className="flex justify-between text-lg font-bold">
