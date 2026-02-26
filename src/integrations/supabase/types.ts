@@ -1257,6 +1257,39 @@ export type Database = {
           },
         ]
       }
+      seller_point_packages: {
+        Row: {
+          bonus_points: number | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          name: string
+          points: number
+          price: number
+          sort_order: number | null
+        }
+        Insert: {
+          bonus_points?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          points: number
+          price: number
+          sort_order?: number | null
+        }
+        Update: {
+          bonus_points?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          points?: number
+          price?: number
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
       seller_points_history: {
         Row: {
           created_at: string
@@ -1576,6 +1609,73 @@ export type Database = {
           url?: string
         }
         Relationships: []
+      }
+      user_carts: {
+        Row: {
+          created_at: string
+          discount_note: string | null
+          id: string
+          personal_discount: number | null
+          price_adjustment: number | null
+          product_id: string
+          quantity: number
+          seller_id: string | null
+          updated_at: string
+          user_id: string
+          variant_id: string | null
+          variant_info: Json | null
+        }
+        Insert: {
+          created_at?: string
+          discount_note?: string | null
+          id?: string
+          personal_discount?: number | null
+          price_adjustment?: number | null
+          product_id: string
+          quantity?: number
+          seller_id?: string | null
+          updated_at?: string
+          user_id: string
+          variant_id?: string | null
+          variant_info?: Json | null
+        }
+        Update: {
+          created_at?: string
+          discount_note?: string | null
+          id?: string
+          personal_discount?: number | null
+          price_adjustment?: number | null
+          product_id?: string
+          quantity?: number
+          seller_id?: string | null
+          updated_at?: string
+          user_id?: string
+          variant_id?: string | null
+          variant_info?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_carts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_carts_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_carts_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

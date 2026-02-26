@@ -121,6 +121,7 @@ const ProductDetail = () => {
       rating: rating?.average || 0,
       reviewCount: rating?.count || 0,
       createdAt: product.created_at,
+      sellerId: product.seller_id,
     };
 
     // Convert ProductVariant to ProductVariantInfo for cart

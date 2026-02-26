@@ -20,6 +20,7 @@ import { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useWallet } from "@/hooks/useAffiliate";
+import { usePersonalDiscounts } from "@/hooks/useUserCart";
 
 type PaymentMethodType = "credit-card" | "bank-transfer" | "cash-on-delivery" | "shopier" | "shopinext" | "payizone";
 type DbPaymentMethod = Database["public"]["Enums"]["payment_method"];
@@ -68,6 +69,7 @@ const Checkout = () => {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [useWalletBalance, setUseWalletBalance] = useState(false);
   const { data: wallet } = useWallet();
+  const { data: personalDiscounts } = usePersonalDiscounts();
   const [referralCode, setReferralCode] = useState<string | null>(null);
 
   // Load referral code from session
@@ -136,10 +138,19 @@ const Checkout = () => {
     },
   });
 
+  // Check if cart has seller products (require credit card only)
+  const hasSellerProducts = items.some(item => item.product.sellerId);
+
   // Filter available payment methods
-  const availablePaymentMethods = allPaymentMethods.filter(method =>
-    paymentSettings?.some(ps => ps.method === method.dbKey && ps.is_active)
-  );
+  const availablePaymentMethods = allPaymentMethods.filter(method => {
+    const isActive = paymentSettings?.some(ps => ps.method === method.dbKey && ps.is_active);
+    if (!isActive) return false;
+    // If cart has seller products, only allow credit card methods
+    if (hasSellerProducts && !["credit-card", "shopier", "shopinext", "payizone"].includes(method.key)) {
+      return false;
+    }
+    return true;
+  });
 
   // Set first available payment method as default
   useEffect(() => {
@@ -466,6 +477,14 @@ const Checkout = () => {
                   <CreditCard className="h-5 w-5 text-primary" />
                   <h2 className="font-serif text-lg sm:text-xl font-medium">Ödeme Yöntemi</h2>
                 </div>
+
+                {hasSellerProducts && (
+                  <div className="p-3 bg-muted/50 rounded-lg mb-4">
+                    <p className="text-sm text-muted-foreground">
+                      ⚠️ Sepetinizde satıcı ürünleri bulunduğu için yalnızca kredi kartı ile ödeme yapabilirsiniz.
+                    </p>
+                  </div>
+                )}
 
                 {availablePaymentMethods.length === 0 ? (
                   <div className="p-4 bg-muted/50 rounded-lg text-center">

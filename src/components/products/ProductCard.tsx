@@ -56,6 +56,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
       rating: 0,
       reviewCount: 0,
       createdAt: product.created_at,
+      sellerId: product.seller_id,
     };
     addToCart(cartProduct);
   };
