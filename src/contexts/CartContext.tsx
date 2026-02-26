@@ -34,8 +34,13 @@ const getCartItemKey = (productId: string, variantId?: string) => {
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("medea-cart");
-      return saved ? JSON.parse(saved) : [];
+      try {
+        const saved = localStorage.getItem("medea-cart");
+        return saved ? JSON.parse(saved) : [];
+      } catch {
+        localStorage.removeItem("medea-cart");
+        return [];
+      }
     }
     return [];
   });

@@ -82,10 +82,7 @@ const Header = () => {
 
           {/* Right side icons */}
           <div className="flex items-center gap-1 sm:gap-2">
-            <Button variant="ghost" size="icon" className="hidden sm:flex" onClick={() => setIsSearchOpen(true)}>
-              <Search className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => setIsSearchOpen(true)}>
+            <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
               <Search className="h-5 w-5" />
             </Button>
             <SearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} />
