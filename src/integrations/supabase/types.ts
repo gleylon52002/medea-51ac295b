@@ -1798,6 +1798,19 @@ export type Database = {
       }
     }
     Functions: {
+      create_order_secure: {
+        Args: {
+          p_coupon_code?: string
+          p_items: Json
+          p_notes?: string
+          p_payment_method: Database["public"]["Enums"]["payment_method"]
+          p_referral_code?: string
+          p_shipping_address: Json
+          p_shipping_cost: number
+          p_wallet_amount?: number
+        }
+        Returns: Json
+      }
       get_seller_id: { Args: never; Returns: string }
       has_purchased_product: {
         Args: { p_product_id: string; p_user_id: string }
