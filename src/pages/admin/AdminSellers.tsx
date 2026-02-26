@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, Star, AlertTriangle, Ban, Pause, Play, Loader2, Search, TrendingUp, TrendingDown } from "lucide-react";
+import { Users, Star, AlertTriangle, Ban, Pause, Play, Loader2, Search, TrendingUp, TrendingDown, Bell } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ import {
 } from "@/hooks/useAdminSellers";
 import { useGetOrCreateConversation } from "@/hooks/useMessages";
 import { formatPrice } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import type { Seller } from "@/hooks/useSeller";
 
 const AdminSellers = () => {
@@ -50,6 +51,7 @@ const AdminSellers = () => {
   const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [pointsDialogOpen, setPointsDialogOpen] = useState(false);
+  const [notifyDialogOpen, setNotifyDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
@@ -57,6 +59,13 @@ const AdminSellers = () => {
     commission_rate: "",
     status: "",
     suspended_reason: "",
+  });
+
+  const [notifyForm, setNotifyForm] = useState({
+    title: "",
+    message: "",
+    notificationType: "system" as string,
+    sendToAll: false,
   });
 
   const [pointsForm, setPointsForm] = useState({
@@ -134,6 +143,41 @@ const AdminSellers = () => {
     }
   };
 
+  const handleSendNotification = async () => {
+    if (!notifyForm.title || !notifyForm.message) {
+      toast.error("Başlık ve mesaj gereklidir");
+      return;
+    }
+
+    try {
+      const targetSellers = notifyForm.sendToAll
+        ? sellers || []
+        : selectedSeller ? [selectedSeller] : [];
+
+      if (targetSellers.length === 0) {
+        toast.error("Bildirim gönderilecek satıcı seçilmedi");
+        return;
+      }
+
+      const notifications = targetSellers.map(s => ({
+        seller_id: s.id,
+        title: notifyForm.title,
+        message: notifyForm.message,
+        notification_type: notifyForm.notificationType,
+      }));
+
+      const { error } = await supabase.from("seller_notifications").insert(notifications);
+      if (error) throw error;
+
+      toast.success(`${targetSellers.length} satıcıya bildirim gönderildi`);
+      setNotifyDialogOpen(false);
+      setNotifyForm({ title: "", message: "", notificationType: "system", sendToAll: false });
+      setSelectedSeller(null);
+    } catch (error: any) {
+      toast.error("Bildirim gönderilemedi: " + error.message);
+    }
+  };
+
   const filteredSellers = sellers?.filter(s => {
     const matchesSearch = (s.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (s.tax_number && s.tax_number.includes(searchTerm)));
@@ -155,9 +199,19 @@ const AdminSellers = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Satıcı Yönetimi</h1>
-        <p className="text-muted-foreground">Tüm satıcıları yönetin, puan ekleyin veya çıkarın</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Satıcı Yönetimi</h1>
+          <p className="text-muted-foreground">Tüm satıcıları yönetin, puan ekleyin veya çıkarın</p>
+        </div>
+        <Button onClick={() => {
+          setSelectedSeller(null);
+          setNotifyForm({ ...notifyForm, sendToAll: true });
+          setNotifyDialogOpen(true);
+        }} className="gap-2">
+          <Bell className="h-4 w-4" />
+          Toplu Bildirim
+        </Button>
       </div>
 
       {/* Stats */}
@@ -303,6 +357,18 @@ const AdminSellers = () => {
                         title="Puan Ekle/Çıkar"
                       >
                         <Star className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedSeller(seller);
+                          setNotifyForm({ title: "", message: "", notificationType: "system", sendToAll: false });
+                          setNotifyDialogOpen(true);
+                        }}
+                        title="Bildirim Gönder"
+                      >
+                        <Bell className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
@@ -471,6 +537,61 @@ const AdminSellers = () => {
             >
               {addPoints.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Puan Ekle
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Notification Dialog */}
+      <Dialog open={notifyDialogOpen} onOpenChange={setNotifyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {notifyForm.sendToAll ? "Tüm Satıcılara Bildirim" : `Bildirim - ${selectedSeller?.company_name}`}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Bildirim Türü</Label>
+              <Select
+                value={notifyForm.notificationType}
+                onValueChange={(value) => setNotifyForm({ ...notifyForm, notificationType: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="system">📢 Sistem Duyurusu</SelectItem>
+                  <SelectItem value="warning">⚠️ Uyarı</SelectItem>
+                  <SelectItem value="order">📦 Sipariş Bildirimi</SelectItem>
+                  <SelectItem value="review">⭐ Değerlendirme</SelectItem>
+                  <SelectItem value="points">🏆 Puan Bildirimi</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Başlık</Label>
+              <Input
+                value={notifyForm.title}
+                onChange={(e) => setNotifyForm({ ...notifyForm, title: e.target.value })}
+                placeholder="Bildirim başlığı..."
+              />
+            </div>
+            <div>
+              <Label>Mesaj</Label>
+              <Textarea
+                value={notifyForm.message}
+                onChange={(e) => setNotifyForm({ ...notifyForm, message: e.target.value })}
+                placeholder="Bildirim detayları..."
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNotifyDialogOpen(false)}>İptal</Button>
+            <Button onClick={handleSendNotification} disabled={!notifyForm.title || !notifyForm.message}>
+              <Bell className="h-4 w-4 mr-2" />
+              Gönder
             </Button>
           </DialogFooter>
         </DialogContent>

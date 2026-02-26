@@ -25,7 +25,7 @@ const CargoCompaniesModal = ({ onSelect }: CargoCompaniesModalProps) => {
         queryKey: ["cargo-companies"],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from("cargo_companies")
+                .from("shipping_companies")
                 .select("*")
                 .eq("is_active", true)
                 .order("name");
@@ -79,9 +79,11 @@ const CargoCompaniesModal = ({ onSelect }: CargoCompaniesModalProps) => {
                                             <Truck className="h-5 w-5 text-primary" />
                                             <h3 className="font-semibold">{company.name}</h3>
                                         </div>
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                            Kod: {company.code}
-                                        </p>
+                                        {company.tracking_url && (
+                                            <p className="text-xs text-muted-foreground mt-1 truncate">
+                                                {company.tracking_url}
+                                            </p>
+                                        )}
                                     </div>
                                     {selectedCompany === company.id && (
                                         <Check className="h-5 w-5 text-primary" />

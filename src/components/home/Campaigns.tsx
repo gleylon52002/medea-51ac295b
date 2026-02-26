@@ -61,9 +61,9 @@ const Campaigns = () => {
                                     <p className="text-sm text-muted-foreground line-clamp-2">
                                         {campaign.description}
                                     </p>
-                                    {campaign.min_purchase_amount && (
+                                    {(campaign as any).min_purchase_amount && (
                                         <p className="text-xs text-muted-foreground mt-3">
-                                            Min. {campaign.min_purchase_amount}₺ alışveriş
+                                            Min. {(campaign as any).min_purchase_amount}₺ alışveriş
                                         </p>
                                     )}
                                 </CardContent>

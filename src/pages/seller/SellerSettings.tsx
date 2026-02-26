@@ -5,11 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useSellerProfile, useUpdateSellerProfile } from "@/hooks/useSeller";
-import { Building2, MapPin, Phone, CreditCard, User, Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { useSellerProfile, useUpdateSellerProfile, useSellerSettings } from "@/hooks/useSeller";
+import { Building2, MapPin, Phone, CreditCard, Shield, Bell, Loader2, Info } from "lucide-react";
 
 const SellerSettings = () => {
   const { data: profile, isLoading } = useSellerProfile();
+  const { data: globalSettings } = useSellerSettings();
   const updateProfile = useUpdateSellerProfile();
 
   const [formData, setFormData] = useState({
@@ -46,14 +50,13 @@ const SellerSettings = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Basic validations
     if (formData.phone && !/^\d{10,11}$/.test(formData.phone.replace(/\s/g, ""))) {
-      toast.error("Geçerli bir telefon numarası giriniz (örn: 05321234567)");
+      toast.error("Gecerli bir telefon numarasi giriniz (orn: 05321234567)");
       return;
     }
 
     if (formData.iban && !/^TR\d{24}$/.test(formData.iban.replace(/\s/g, "").toUpperCase())) {
-      toast.error("Geçerli bir TR IBAN giriniz (26 karakter)");
+      toast.error("Gecerli bir TR IBAN giriniz (26 karakter)");
       return;
     }
 
@@ -80,8 +83,46 @@ const SellerSettings = () => {
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Mağaza Ayarları</h1>
-        <p className="text-muted-foreground">Profil ve ödeme bilgilerinizi güncelleyin</p>
+        <p className="text-muted-foreground">Profil, ödeme ve mağaza bilgilerinizi güncelleyin</p>
       </div>
+
+      {/* Account Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            Hesap Durumu
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <p className="text-xs text-muted-foreground">Durum</p>
+              <Badge className={profile?.status === 'active' ? 'bg-green-500 mt-1' : 'bg-yellow-500 mt-1'}>
+                {profile?.status === 'active' ? 'Aktif' : profile?.status === 'suspended' ? 'Askıda' : 'Yasaklı'}
+              </Badge>
+            </div>
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <p className="text-xs text-muted-foreground">Komisyon Oranı</p>
+              <p className="font-bold text-lg">%{profile?.commission_rate || 0}</p>
+            </div>
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <p className="text-xs text-muted-foreground">Toplam Satış</p>
+              <p className="font-bold text-lg">{profile?.total_orders || 0} sipariş</p>
+            </div>
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <p className="text-xs text-muted-foreground">Takdir Puanı</p>
+              <p className="font-bold text-lg text-green-600">{profile?.reputation_points || 0}</p>
+            </div>
+          </div>
+          {profile?.suspended_reason && (
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <p className="text-sm text-destructive font-medium">Askıya Alma Nedeni:</p>
+              <p className="text-sm text-muted-foreground">{profile.suspended_reason}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Company Information */}
@@ -205,6 +246,48 @@ const SellerSettings = () => {
                   required
                 />
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Platform Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-primary" />
+              Platform Bilgileri
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div>
+                <p className="font-medium text-sm">Askıya Alma Limiti</p>
+                <p className="text-xs text-muted-foreground">Bu ceza puanına ulaşıldığında hesap askıya alınır</p>
+              </div>
+              <Badge variant="destructive">{globalSettings?.suspension_threshold || 50} puan</Badge>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div>
+                <p className="font-medium text-sm">Kalıcı Yasaklama Limiti</p>
+                <p className="text-xs text-muted-foreground">Bu puanda hesap kalıcı olarak kapatılır</p>
+              </div>
+              <Badge variant="destructive">{globalSettings?.ban_threshold || 100} puan</Badge>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div>
+                <p className="font-medium text-sm">Öne Çıkarma için Gereken Puan</p>
+                <p className="text-xs text-muted-foreground">Ürün öne çıkarma için minimum takdir puanı</p>
+              </div>
+              <Badge variant="secondary">{globalSettings?.min_reputation_for_feature || 200} puan</Badge>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div>
+                <p className="font-medium text-sm">Kayıt Tarihi</p>
+                <p className="text-xs text-muted-foreground">Mağazanızın açılış tarihi</p>
+              </div>
+              <span className="text-sm font-medium">
+                {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('tr-TR') : '-'}
+              </span>
             </div>
           </CardContent>
         </Card>

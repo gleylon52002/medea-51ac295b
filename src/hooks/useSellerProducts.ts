@@ -139,28 +139,32 @@ export const useUpdateSellerProduct = () => {
     mutationFn: async ({ id, ...data }: Partial<SellerProduct> & { id: string }) => {
       if (!user) throw new Error("Giriş yapmanız gerekiyor");
 
+      // Build update object - only include defined fields
+      const updateData: Record<string, any> = {};
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.description !== undefined) updateData.description = data.description;
+      if (data.short_description !== undefined) updateData.short_description = data.short_description;
+      if (data.price !== undefined) updateData.price = data.price;
+      if (data.sale_price !== undefined) updateData.sale_price = data.sale_price;
+      if (data.images !== undefined) updateData.images = data.images;
+      if (data.category_id !== undefined) updateData.category_id = data.category_id;
+      if (data.stock !== undefined) updateData.stock = data.stock;
+      if (data.ingredients !== undefined) updateData.ingredients = data.ingredients;
+      if (data.usage_instructions !== undefined) updateData.usage_instructions = data.usage_instructions;
+      if (data.is_featured !== undefined) updateData.is_featured = data.is_featured;
+      if (data.is_active !== undefined) updateData.is_active = data.is_active;
+      
       const { error } = await supabase
         .from("products")
-        .update({
-          name: data.name,
-          description: data.description,
-          short_description: data.short_description,
-          price: data.price,
-          sale_price: data.sale_price,
-          images: data.images,
-          category_id: data.category_id,
-          stock: data.stock,
-          ingredients: data.ingredients,
-          usage_instructions: data.usage_instructions,
-          is_active: false, // Reset to false for re-approval after update
-        })
+        .update(updateData)
         .eq("id", id);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["seller-products"] });
-      toast.success("Ürün güncellendi! Değişiklikler admin onayından sonra yayınlanacaktır.");
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Ürün güncellendi!");
     },
     onError: (error: Error) => {
       toast.error(error.message);
