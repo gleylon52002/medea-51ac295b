@@ -1,4 +1,4 @@
-const CACHE_NAME = 'medea-v1';
+const CACHE_NAME = 'medea-v2';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -25,21 +25,43 @@ self.addEventListener('activate', (event) => {
 
 // Fetch - network first, fallback to cache
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET and API requests
+  // Skip non-GET requests
   if (event.request.method !== 'GET') return;
+
   const url = new URL(event.request.url);
-  if (url.pathname.startsWith('/rest/') || url.pathname.startsWith('/auth/')) return;
+
+  // Only handle same-origin requests
+  if (url.origin !== self.location.origin) return;
+
+  // Skip API, auth, and source file requests
+  if (
+    url.pathname.startsWith('/rest/') ||
+    url.pathname.startsWith('/auth/') ||
+    url.pathname.startsWith('/src/') ||
+    url.pathname.startsWith('/node_modules/') ||
+    url.pathname.startsWith('/@') ||
+    url.pathname.includes('.tsx') ||
+    url.pathname.includes('.ts') ||
+    url.pathname.includes('.jsx')
+  ) {
+    return;
+  }
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache successful responses
-        if (response.ok && url.origin === self.location.origin) {
+        // Only cache successful, non-opaque responses
+        if (response && response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(() => {
+        return caches.match(event.request).then((cached) => {
+          // Return cached response or a proper fallback, never undefined
+          return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+        });
+      })
   );
 });
