@@ -27,6 +27,7 @@ import Favorites from "./pages/account/Favorites";
 import Addresses from "./pages/account/Addresses";
 import Affiliate from "./pages/account/Affiliate";
 import AccountSettings from "./pages/account/AccountSettings";
+import Loyalty from "./pages/account/Loyalty";
 
 // Legal Pages
 import KVKK from "./pages/legal/KVKK";
@@ -82,6 +83,7 @@ import SellerAnalytics from "./pages/seller/SellerAnalytics";
 import SellerQuestions from "./pages/seller/SellerQuestions";
 import SellerBuyPoints from "./pages/seller/SellerBuyPoints";
 
+import SellerStore from "./pages/SellerStore";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -126,6 +128,7 @@ const App = () => (
                 <Route path="favoriler" element={<Favorites />} />
                 <Route path="adresler" element={<Addresses />} />
                 <Route path="referans" element={<Affiliate />} />
+                <Route path="sadakat" element={<Loyalty />} />
                 <Route path="ayarlar" element={<AccountSettings />} />
               </Route>
 
@@ -137,6 +140,7 @@ const App = () => (
               <Route path="/cerez-politikasi" element={<CookiePolicy />} />
               <Route path="/sss" element={<FAQ />} />
               <Route path="/karsilastir" element={<Compare />} />
+              <Route path="/magaza/:slug" element={<SellerStore />} />
 
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>

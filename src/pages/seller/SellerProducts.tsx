@@ -32,9 +32,12 @@ import { useSellerProducts, useCreateSellerProduct, useUpdateSellerProduct, useD
 import { useCategories } from "@/hooks/useCategories";
 import { formatPrice } from "@/lib/utils";
 import ImageUpload from "@/components/admin/ImageUpload";
+import BulkProductUpload from "@/components/seller/BulkProductUpload";
 import { toast } from "sonner";
+import { useSellerProfile } from "@/hooks/useSeller";
 
 const SellerProducts = () => {
+  const { data: seller } = useSellerProfile();
   const { data: products, isLoading } = useSellerProducts();
   const { data: categories } = useCategories();
   const createProduct = useCreateSellerProduct();
@@ -393,6 +396,9 @@ const SellerProducts = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Bulk Upload */}
+      <BulkProductUpload sellerId={seller?.id} />
     </div>
   );
 };

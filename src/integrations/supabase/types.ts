@@ -510,6 +510,77 @@ export type Database = {
           },
         ]
       }
+      loyalty_points: {
+        Row: {
+          created_at: string
+          id: string
+          points: number
+          tier: string
+          total_earned: number
+          total_spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          points?: number
+          tier?: string
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          points?: number
+          tier?: string
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      loyalty_transactions: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          order_id: string | null
+          points: number
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          order_id?: string | null
+          points: number
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          order_id?: string | null
+          points?: number
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_attachments: {
         Row: {
           created_at: string
@@ -1490,17 +1561,21 @@ export type Database = {
           address: string
           application_id: string | null
           bank_name: string
+          banner_url: string | null
           city: string
           commission_rate: number
           company_name: string
           created_at: string
+          description: string | null
           district: string
           iban: string
           id: string
           is_featured: boolean
+          logo_url: string | null
           penalty_points: number
           phone: string
           reputation_points: number
+          slug: string | null
           status: string
           suspended_reason: string | null
           suspended_until: string | null
@@ -1515,17 +1590,21 @@ export type Database = {
           address: string
           application_id?: string | null
           bank_name: string
+          banner_url?: string | null
           city: string
           commission_rate?: number
           company_name: string
           created_at?: string
+          description?: string | null
           district: string
           iban: string
           id?: string
           is_featured?: boolean
+          logo_url?: string | null
           penalty_points?: number
           phone: string
           reputation_points?: number
+          slug?: string | null
           status?: string
           suspended_reason?: string | null
           suspended_until?: string | null
@@ -1540,17 +1619,21 @@ export type Database = {
           address?: string
           application_id?: string | null
           bank_name?: string
+          banner_url?: string | null
           city?: string
           commission_rate?: number
           company_name?: string
           created_at?: string
+          description?: string | null
           district?: string
           iban?: string
           id?: string
           is_featured?: boolean
+          logo_url?: string | null
           penalty_points?: number
           phone?: string
           reputation_points?: number
+          slug?: string | null
           status?: string
           suspended_reason?: string | null
           suspended_until?: string | null
