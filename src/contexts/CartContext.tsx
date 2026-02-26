@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Product, CartItem, Cart, ProductVariantInfo } from "@/types/product";
 import { toast } from "sonner";
+import { trackAddToCart, trackRemoveFromCart } from "@/lib/analytics";
 
 interface CartContextType {
   cart: Cart;
@@ -69,13 +70,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const variantName = variant ? ` (${variant.name})` : "";
     toast.success(`${product.name}${variantName} sepete eklendi`);
     setIsCartOpen(true);
+    trackAddToCart({ id: product.id, name: product.name, price: product.salePrice || product.price, quantity });
   };
 
   const removeFromCart = (productId: string, variantId?: string) => {
     const itemKey = getCartItemKey(productId, variantId);
+    const removedItem = items.find((item) => getCartItemKey(item.product.id, item.variant?.id) === itemKey);
     setItems((prev) =>
       prev.filter((item) => getCartItemKey(item.product.id, item.variant?.id) !== itemKey)
     );
+    if (removedItem) {
+      trackRemoveFromCart({ id: removedItem.product.id, name: removedItem.product.name, price: removedItem.product.salePrice || removedItem.product.price, quantity: removedItem.quantity });
+    }
     toast.info("Ürün sepetten çıkarıldı");
   };
 

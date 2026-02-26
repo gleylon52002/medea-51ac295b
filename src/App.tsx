@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { initGA4 } from "@/lib/analytics";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -94,8 +95,21 @@ const ReferralTracker = () => {
     const ref = params.get("ref");
     if (ref) {
       sessionStorage.setItem("referral_code", ref);
-      console.log("Referral code captured:", ref);
     }
+  }, []);
+  return null;
+};
+
+const GA4Init = () => {
+  useEffect(() => {
+    // Fetch GA4 ID from site settings
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.from("site_settings").select("value").eq("key", "ga4_measurement_id").maybeSingle().then(({ data }) => {
+        if (data?.value) {
+          initGA4(typeof data.value === "string" ? data.value : String(data.value));
+        }
+      });
+    });
   }, []);
   return null;
 };
@@ -109,6 +123,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ReferralTracker />
+            <GA4Init />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/urunler" element={<Products />} />
