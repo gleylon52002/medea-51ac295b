@@ -94,7 +94,18 @@
 ### 11. Arama ve Keşif
 - **Arama Dialog**: Ürün arama
 - **Son Görüntülenen**: Kullanıcı bazlı geçmiş
-- **Ürün Yorumları**: Yıldız puanlama + yorum
+- **Ürün Yorumları**: Yıldız puanlama + yorum + doğrulanmış alıcı rozeti
+
+### 12. Sprint 1-2 Yeni Özellikler (Güven & Dönüşüm)
+- **Taksit Hesaplayıcı**: Ürün sayfasında 12 taksit hesaplama overlay
+- **Satın Alma Sayacı**: "Bu hafta X kişi satın aldı" sosyal kanıt
+- **Doğrulanmış Alıcı Rozeti**: Yorumlarda sipariş doğrulamalı rozet
+- **Flash Satış Geri Sayımı**: Kampanyalara bağlı canlı geri sayım banner
+- **Puan Dağılım Çubuğu**: Amazon stili yıldız dağılımı (5→1)
+- **JSON-LD Schema Markup**: Ürün + AggregateRating zengin snippet
+- **Hızlı Önizleme (Quick View)**: Ürün kartında modal önizleme
+- **Fiyat Alarmı**: Hedef fiyat belirleme, düşünce bildirim (price_alerts tablosu)
+- **Stok Alarmı**: Tükenen ürün stoğa girince bildirim (stock_alerts tablosu)
 
 ---
 

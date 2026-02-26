@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingBag, Heart, Scale } from "lucide-react";
+import { ShoppingBag, Heart, Scale, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +10,7 @@ import { formatPrice } from "@/lib/utils";
 import { ProductWithCategory } from "@/hooks/useProducts";
 import StockUrgencyBadge from "./StockUrgencyBadge";
 import ProductBadges from "./ProductBadges";
+import QuickView from "./QuickView";
 import { toast } from "sonner";
 
 interface ProductCardProps {
@@ -16,6 +18,7 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
+  const [quickViewOpen, setQuickViewOpen] = useState(false);
   const { addToCart } = useCart();
   const { user } = useAuth();
   const { data: isFavorite } = useIsFavorite(product.id);
@@ -96,6 +99,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
         >
           <Scale className={`h-4 w-4 ${isInComparison ? "" : "text-muted-foreground"}`} />
         </button>
+        <button
+          onClick={() => setQuickViewOpen(true)}
+          className="p-2 bg-background/80 backdrop-blur-sm rounded-full hover:bg-background transition-colors opacity-0 group-hover:opacity-100"
+          title="Hızlı Önizleme"
+        >
+          <Eye className="h-4 w-4 text-muted-foreground" />
+        </button>
       </div>
 
       {/* Image */}
@@ -164,6 +174,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </Button>
         </div>
       </div>
+      <QuickView product={product} open={quickViewOpen} onOpenChange={setQuickViewOpen} />
     </div>
   );
 };
