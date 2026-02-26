@@ -465,7 +465,27 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                <Button onClick={() => setStep(2)} className="w-full sm:w-auto">
+                <Button onClick={() => {
+                  // Validate shipping form
+                  if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.address.trim() || !formData.city.trim() || !formData.district.trim()) {
+                    toast({
+                      title: "Eksik Bilgi",
+                      description: "Lütfen tüm teslimat bilgilerini doldurun.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  // Basic email validation
+                  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+                    toast({
+                      title: "Geçersiz E-posta",
+                      description: "Lütfen geçerli bir e-posta adresi girin.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  setStep(2);
+                }} className="w-full sm:w-auto">
                   Ödemeye Geç
                 </Button>
               </div>
@@ -555,7 +575,17 @@ const Checkout = () => {
                   <Button variant="outline" onClick={() => setStep(1)} className="order-2 sm:order-1">
                     Geri
                   </Button>
-                  <Button onClick={() => setStep(3)} className="order-1 sm:order-2">
+                  <Button onClick={() => {
+                    if (availablePaymentMethods.length === 0) {
+                      toast({
+                        title: "Ödeme Yöntemi Yok",
+                        description: "Aktif bir ödeme yöntemi bulunmuyor.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    setStep(3);
+                  }} className="order-1 sm:order-2">
                     Siparişi Onayla
                   </Button>
                 </div>
