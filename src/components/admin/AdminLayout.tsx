@@ -42,12 +42,12 @@ const menuItems = [
   { icon: FolderTree, label: "Kategoriler", path: "/admin/kategoriler" },
   { icon: ShoppingCart, label: "Siparişler", path: "/admin/siparisler" },
   { icon: Users, label: "Kullanıcılar", path: "/admin/kullanicilar" },
-  { icon: Star, label: "Yorumlar", path: "/admin/yorumlar" }, // Changed icon from MessageSquare to Star
-  { icon: MessageSquare, label: "Mesajlar", path: "/admin/mesajlar" }, // Added new 'Mesajlar' item with MessageSquare icon
-  { icon: Ticket, label: "Kuponlar", path: "/admin/kuponlar" }, // Changed icon from Tag to Ticket
+  { icon: Star, label: "Yorumlar", path: "/admin/yorumlar" },
+  { icon: MessageSquare, label: "Mesajlar", path: "/admin/mesajlar" },
+  { icon: Mail, label: "İletişim Mesajları", path: "/admin/bulten-mesajlari" },
+  { icon: Ticket, label: "Kuponlar", path: "/admin/kuponlar" },
   { icon: Percent, label: "Kampanyalar", path: "/admin/kampanyalar" },
-  { icon: Mail, label: "Bülten Mesajları", path: "/admin/bulten-mesajlari" }, // Modified existing 'Mesajlar' to 'Bülten Mesajları' and path
-  { icon: Newspaper, label: "Bülten", path: "/admin/bulten" },
+  { icon: Newspaper, label: "Bülten Aboneleri", path: "/admin/bulten" },
   { icon: HelpCircle, label: "SSS", path: "/admin/sss" },
   { icon: Share2, label: "Sosyal Medya", path: "/admin/sosyal-medya" },
   { icon: Store, label: "Satıcı Başvuruları", path: "/admin/satici-basvurulari" },
@@ -55,7 +55,8 @@ const menuItems = [
   { icon: Sliders, label: "Satıcı Ayarları", path: "/admin/satici-ayarlari" },
   { icon: Truck, label: "Kargo", path: "/admin/kargo" },
   { icon: FileText, label: "Faturalar", path: "/admin/faturalar" },
-  { icon: CreditCard, label: "Ödemeler", path: "/admin/odemeler" },
+  { icon: CreditCard, label: "Ödeme Yöntemleri", path: "/admin/odeme" },
+  { icon: Tag, label: "Satıcı Ödemeleri", path: "/admin/odemeler" },
   { icon: Tag, label: "Kullanıcı Sepetleri", path: "/admin/sepetler" },
   { icon: Image, label: "Hero", path: "/admin/hero" },
   { icon: Palette, label: "Tema", path: "/admin/tema" },

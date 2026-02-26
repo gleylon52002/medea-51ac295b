@@ -54,6 +54,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminNewsletter from "./pages/admin/AdminNewsletter";
+import AdminContactMessages from "./pages/admin/AdminContactMessages";
 import AdminCampaigns from "./pages/admin/AdminCampaigns";
 import AdminFAQ from "./pages/admin/AdminFAQ";
 import AdminSocialMedia from "./pages/admin/AdminSocialMedia";
@@ -169,7 +170,7 @@ const App = () => (
                 <Route path="kampanyalar" element={<AdminCampaigns />} />
                 <Route path="mesajlar" element={<AdminMessages />} />
                 <Route path="bulten" element={<AdminNewsletter />} />
-                <Route path="bulten-mesajlari" element={<AdminNewsletter />} />
+                <Route path="bulten-mesajlari" element={<AdminContactMessages />} />
                 <Route path="sss" element={<AdminFAQ />} />
                 <Route path="sosyal-medya" element={<AdminSocialMedia />} />
                 <Route path="kargo" element={<AdminShipping />} />
