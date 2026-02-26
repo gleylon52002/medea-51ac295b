@@ -25,6 +25,7 @@ import ProductQuestions from "@/components/products/ProductQuestions";
 import InstallmentCalculator from "@/components/products/InstallmentCalculator";
 import PurchaseCounter from "@/components/products/PurchaseCounter";
 import ProductSchema from "@/components/products/ProductSchema";
+import ProductAlerts from "@/components/products/ProductAlerts";
 import { ProductVariant } from "@/hooks/useProductVariants";
 import { ProductVariantInfo } from "@/types/product";
 import { useRelatedProducts } from "@/hooks/useRelatedProducts";
@@ -309,6 +310,14 @@ const ProductDetail = () => {
               )}
               <CompareButton productId={product.id} variant="icon" />
             </div>
+
+            {/* Price & Stock Alerts */}
+            <ProductAlerts
+              productId={product.id}
+              currentPrice={finalPrice}
+              stock={selectedVariant?.stock ?? product.stock}
+              variantId={selectedVariant?.id}
+            />
 
             {/* Trust Features */}
             <TrustBadges variant="grid" className="pt-6 border-t border-border" />
