@@ -32,6 +32,7 @@ import { useSellerProducts, useCreateSellerProduct, useUpdateSellerProduct, useD
 import { useCategories } from "@/hooks/useCategories";
 import { formatPrice } from "@/lib/utils";
 import ImageUpload from "@/components/admin/ImageUpload";
+import { toast } from "sonner";
 
 const SellerProducts = () => {
   const { data: products, isLoading } = useSellerProducts();

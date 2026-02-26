@@ -62,6 +62,15 @@ export const useCreateReview = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Giriş yapmalısınız");
 
+      // Server-side purchase check
+      const { data: hasPurchased, error: checkError } = await supabase.rpc('has_purchased_product', {
+        p_user_id: user.id,
+        p_product_id: productId
+      });
+
+      if (checkError) throw checkError;
+      if (!hasPurchased) throw new Error("Bu ürünü satın almadan değerlendirme yapamazsınız");
+
       const { error } = await supabase.from("reviews").insert({
         product_id: productId,
         user_id: user.id,

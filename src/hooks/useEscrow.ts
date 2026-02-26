@@ -29,7 +29,7 @@ export const useEscrow = () => {
             if (!seller) return null;
 
             const { data, error } = await supabase
-                .from("seller_escrow_balances")
+                .from("seller_escrow_balances" as any)
                 .select("*")
                 .eq("seller_id", seller.id)
                 .single();
@@ -39,7 +39,7 @@ export const useEscrow = () => {
             if (!data) {
                 // Initialize if doesn't exist
                 const { data: newEscrow, error: initError } = await supabase
-                    .from("seller_escrow_balances")
+                    .from("seller_escrow_balances" as any)
                     .insert({
                         seller_id: seller.id,
                         pending_balance: 0,
@@ -50,10 +50,10 @@ export const useEscrow = () => {
                     .single();
 
                 if (initError) throw initError;
-                return newEscrow as EscrowBalance;
+                return newEscrow as unknown as EscrowBalance;
             }
 
-            return data as EscrowBalance;
+            return data as unknown as EscrowBalance;
         },
         enabled: !!user,
     });
@@ -105,7 +105,7 @@ export const usePayoutRequests = () => {
             if (!seller) return [];
 
             const { data, error } = await supabase
-                .from("seller_payout_requests")
+                .from("seller_payout_requests" as any)
                 .select("*")
                 .eq("seller_id", seller.id)
                 .order("created_at", { ascending: false });
@@ -134,7 +134,7 @@ export const useCreatePayoutRequest = () => {
             if (!seller) throw new Error("Satıcı profili bulunamadı");
 
             // CRITICAL FIX: Check AND lock balance atomically using RPC
-            const { data: lockResult, error: lockError } = await supabase.rpc('lock_seller_balance_for_payout', {
+            const { data: lockResult, error: lockError } = await (supabase.rpc as any)('lock_seller_balance_for_payout', {
                 p_seller_id: seller.id,
                 p_amount: amount
             });
@@ -148,7 +148,7 @@ export const useCreatePayoutRequest = () => {
 
             // Now create the payout request with the locked balance
             const { data, error } = await supabase
-                .from("seller_payout_requests")
+                .from("seller_payout_requests" as any)
                 .insert({
                     seller_id: seller.id,
                     amount,
@@ -160,7 +160,7 @@ export const useCreatePayoutRequest = () => {
 
             if (error) {
                 // Rollback balance lock if insertion fails
-                await supabase.rpc('unlock_seller_balance', {
+                await (supabase.rpc as any)('unlock_seller_balance', {
                     p_seller_id: seller.id,
                     p_amount: amount
                 });

@@ -3,11 +3,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 import { useSellerTransactions, useSellerProfile } from "@/hooks/useSeller";
 import { useEscrow, usePayoutRequests, useCreatePayoutRequest } from "@/hooks/useEscrow";
+import { generateProfessionalInvoice } from "@/lib/professionalInvoiceGenerator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPrice } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Wallet, TrendingUp, Clock, CheckCircle, CalendarDays, ArrowRightLeft, Loader2, Send } from "lucide-react";
+import { Wallet, TrendingUp, Clock, CheckCircle, CalendarDays, ArrowRightLeft, Loader2, Send, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -336,7 +337,41 @@ const SellerEarnings = () => {
                   <p className="text-xs text-muted-foreground mt-1">
                     Toplam Komisyon: {formatPrice(totalCommission)} (%{seller?.commission_rate || 0})
                   </p>
-                  <Button variant="link" className="p-0 h-auto text-xs mt-2">Detaylı Fatura indir (PDF)</Button>
+                  <Button variant="link" className="p-0 h-auto text-xs mt-2" onClick={() => {
+                    // Generate commission report PDF using jsPDF
+                    import('jspdf').then(({ default: jsPDF }) => {
+                      import('jspdf-autotable').then(({ default: autoTable }) => {
+                        const doc = new jsPDF();
+                        doc.setFontSize(18);
+                        doc.text("Komisyon Kesinti Raporu", 14, 22);
+                        doc.setFontSize(10);
+                        doc.text(`Magaza: ${seller?.company_name || '-'}`, 14, 32);
+                        doc.text(`Komisyon Orani: %${seller?.commission_rate || 0}`, 14, 38);
+                        doc.text(`Tarih: ${new Date().toLocaleDateString('tr-TR')}`, 14, 44);
+
+                        const tableData = transactions?.map(t => [
+                          new Date(t.created_at).toLocaleDateString('tr-TR'),
+                          t.product?.name || '-',
+                          formatPrice(t.sale_amount),
+                          `%${t.commission_rate}`,
+                          formatPrice(t.commission_amount),
+                          formatPrice(t.net_amount)
+                        ]) || [];
+
+                        autoTable(doc, {
+                          startY: 52,
+                          head: [['Tarih', 'Urun', 'Satis', 'Oran', 'Komisyon', 'Net']],
+                          body: tableData,
+                        });
+
+                        doc.save(`Komisyon-Raporu-${new Date().toISOString().split('T')[0]}.pdf`);
+                        toast.success("Rapor indirildi");
+                      });
+                    });
+                  }}>
+                    <Download className="h-3 w-3 mr-1" />
+                    Detayli Fatura indir (PDF)
+                  </Button>
                 </div>
               </div>
             </CardContent>

@@ -364,7 +364,7 @@ export const useAdminPayoutRequests = () => {
     queryKey: ["admin-payout-requests"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("seller_payout_requests")
+        .from("seller_payout_requests" as any)
         .select(`
           *,
           seller:sellers (
@@ -390,7 +390,7 @@ export const useUpdatePayoutRequest = () => {
   return useMutation({
     mutationFn: async ({ requestId, status, adminNotes }: { requestId: string; status: string; adminNotes?: string }) => {
       const { data: request, error: fetchError } = await supabase
-        .from("seller_payout_requests")
+        .from("seller_payout_requests" as any)
         .select("*")
         .eq("id", requestId)
         .single();
@@ -398,7 +398,7 @@ export const useUpdatePayoutRequest = () => {
       if (fetchError || !request) throw new Error("Talep bulunamadı");
 
       const { error: updateError } = await supabase
-        .from("seller_payout_requests")
+        .from("seller_payout_requests" as any)
         .update({
           status,
           admin_notes: adminNotes,
@@ -412,26 +412,26 @@ export const useUpdatePayoutRequest = () => {
       // Handle balance based on status
       if (status === 'paid') {
         // Deduct from pending balance (already locked when request was created)
-        const { error: balanceError } = await supabase.rpc('deduct_seller_balance', {
-          p_seller_id: request.seller_id,
-          p_amount: request.amount
+        const { error: balanceError } = await (supabase.rpc as any)('deduct_seller_balance', {
+          p_seller_id: (request as any).seller_id,
+          p_amount: (request as any).amount
         });
         if (balanceError) throw balanceError;
       } else if (status === 'rejected') {
         // Unlock balance back to available
-        const { error: unlockError } = await supabase.rpc('reject_payout_and_unlock', {
-          p_seller_id: request.seller_id,
-          p_amount: request.amount
+        const { error: unlockError } = await (supabase.rpc as any)('reject_payout_and_unlock', {
+          p_seller_id: (request as any).seller_id,
+          p_amount: (request as any).amount
         });
         if (unlockError) throw unlockError;
       }
 
       // Create notification for seller
       await supabase.from("seller_notifications").insert({
-        seller_id: request.seller_id,
+        seller_id: (request as any).seller_id,
         title: status === 'paid' ? "💰 Ödemeniz Yapıldı" :
           status === 'approved' ? "✅ Ödeme Talebiniz Onaylandı" : "❌ Ödeme Talebiniz Reddedildi",
-        message: status === 'paid' ? `${request.amount} TL tutarındaki ödemeniz banka hesabınıza aktarılmıştır.` :
+        message: status === 'paid' ? `${(request as any).amount} TL tutarındaki ödemeniz banka hesabınıza aktarılmıştır.` :
           status === 'rejected' ? `Ödeme talebiniz reddedildi. Bakiyeniz serbest bırakıldı. Sebep: ${adminNotes || 'Belirtilmedi'}` :
             "Ödeme talebiniz işleme alınmıştır.",
         notification_type: status === 'rejected' ? "warning" : "system",

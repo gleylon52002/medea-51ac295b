@@ -19,7 +19,7 @@ export const useAudit = () => {
             changes?: any
         }) => {
             const { error } = await supabase
-                .from("audit_logs")
+                .from("audit_logs" as any)
                 .insert({
                     user_id: user?.id,
                     action,
