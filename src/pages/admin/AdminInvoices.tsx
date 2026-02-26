@@ -4,8 +4,8 @@ import { useAllTransactions } from "@/hooks/useAdminSellers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { FileText, Search, TrendingUp, Filter } from "lucide-react";
-import { generateProfessionalInvoice } from "@/lib/professionalInvoiceGenerator";
+import { FileText, Search, TrendingUp, Filter, Download } from "lucide-react";
+import { generateProfessionalInvoice, generateSampleInvoice } from "@/lib/professionalInvoiceGenerator";
 import { Input } from "@/components/ui/input";
 import {
     Table,
@@ -84,17 +84,23 @@ const AdminInvoices = () => {
                         Tüm satış faturalarını ve komisyon gelirlerini yönetin
                     </p>
                 </div>
-                <Card className="bg-primary/5 border-primary/20">
-                    <CardContent className="p-4 flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-full text-primary">
-                            <TrendingUp className="h-5 w-5" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-muted-foreground font-medium">Toplam Komisyon</p>
-                            <p className="text-xl font-bold text-primary">{formatPrice(totalCommission)}</p>
-                        </div>
-                    </CardContent>
-                </Card>
+                <div className="flex items-center gap-3">
+                    <Card className="bg-primary/5 border-primary/20">
+                        <CardContent className="p-4 flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 rounded-full text-primary">
+                                <TrendingUp className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground font-medium">Toplam Komisyon</p>
+                                <p className="text-xl font-bold text-primary">{formatPrice(totalCommission)}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Button variant="outline" onClick={generateSampleInvoice}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Ornek Fatura
+                    </Button>
+                </div>
             </div>
 
             <Card>
