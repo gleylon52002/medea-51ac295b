@@ -11,6 +11,7 @@ import { useProductRating } from "@/hooks/useReviews";
 import { useToggleFavorite, useIsFavorite } from "@/hooks/useFavorites";
 import { addToRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { formatPrice } from "@/lib/utils";
+import { trackViewItem } from "@/lib/analytics";
 import ProductCard from "@/components/products/ProductCard";
 import ProductReviews from "@/components/products/ProductReviews";
 import StockUrgencyBadge from "@/components/products/StockUrgencyBadge";
@@ -57,6 +58,7 @@ const ProductDetail = () => {
   useEffect(() => {
     if (product?.id) {
       addToRecentlyViewed(product.id);
+      trackViewItem({ id: product.id, name: product.name, price: product.sale_price || product.price, category: product.categories?.name });
     }
   }, [product?.id]);
 

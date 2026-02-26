@@ -1,14 +1,24 @@
 import { useState } from "react";
-import { Star, ShoppingCart, Loader2, Gift, Sparkles } from "lucide-react";
+import { Star, ShoppingCart, Loader2, Gift, Sparkles, CreditCard, Lock, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useSellerProfile } from "@/hooks/useSeller";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatPrice } from "@/lib/utils";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface PointPackage {
   id: string;
@@ -23,7 +33,15 @@ interface PointPackage {
 const SellerBuyPoints = () => {
   const queryClient = useQueryClient();
   const { data: seller, isLoading: sellerLoading } = useSellerProfile();
-  const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [purchasing, setPurchasing] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<PointPackage | null>(null);
+  const [paymentStep, setPaymentStep] = useState<"card" | "processing" | "success">("card");
+
+  // Card form state
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvc, setCardCvc] = useState("");
+  const [cardName, setCardName] = useState("");
 
   const { data: packages, isLoading: packagesLoading } = useQuery({
     queryKey: ["seller-point-packages"],
@@ -38,12 +56,42 @@ const SellerBuyPoints = () => {
     },
   });
 
-  const handlePurchase = async (pkg: PointPackage) => {
-    if (!seller) return;
-    setPurchasing(pkg.id);
+  const formatCardNumber = (value: string) => {
+    const cleaned = value.replace(/\D/g, "").slice(0, 16);
+    return cleaned.replace(/(.{4})/g, "$1 ").trim();
+  };
+
+  const formatExpiry = (value: string) => {
+    const cleaned = value.replace(/\D/g, "").slice(0, 4);
+    if (cleaned.length >= 3) return `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
+    return cleaned;
+  };
+
+  const isCardValid = () => {
+    const num = cardNumber.replace(/\s/g, "");
+    const exp = cardExpiry.replace("/", "");
+    return num.length === 16 && exp.length === 4 && cardCvc.length >= 3 && cardName.trim().length > 2;
+  };
+
+  const openPaymentDialog = (pkg: PointPackage) => {
+    setSelectedPackage(pkg);
+    setPaymentStep("card");
+    setCardNumber("");
+    setCardExpiry("");
+    setCardCvc("");
+    setCardName("");
+  };
+
+  const handlePayment = async () => {
+    if (!seller || !selectedPackage || !isCardValid()) return;
+    setPurchasing(true);
+    setPaymentStep("processing");
 
     try {
-      const totalPoints = pkg.points + pkg.bonus_points;
+      // Simulate payment processing delay (real integration would call payment gateway)
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+
+      const totalPoints = selectedPackage.points + selectedPackage.bonus_points;
 
       // Update seller reputation points
       const { error: updateError } = await supabase
@@ -56,25 +104,22 @@ const SellerBuyPoints = () => {
       if (updateError) throw updateError;
 
       // Record in points history
-      const { error: historyError } = await supabase
-        .from("seller_points_history")
-        .insert({
-          seller_id: seller.id,
-          points: totalPoints,
-          point_type: "purchased",
-          reason: `${pkg.name} paketi satın alındı (${pkg.points}${pkg.bonus_points > 0 ? ` + ${pkg.bonus_points} bonus` : ""} puan)`,
-        });
-
-      if (historyError) console.error("History error:", historyError);
+      await supabase.from("seller_points_history").insert({
+        seller_id: seller.id,
+        points: totalPoints,
+        point_type: "purchased",
+        reason: `${selectedPackage.name} paketi satın alındı (${selectedPackage.points}${selectedPackage.bonus_points > 0 ? ` + ${selectedPackage.bonus_points} bonus` : ""} puan)`,
+      });
 
       queryClient.invalidateQueries({ queryKey: ["seller-profile"] });
       queryClient.invalidateQueries({ queryKey: ["seller-points-history"] });
 
-      toast.success(`${totalPoints} puan başarıyla hesabınıza eklendi!`);
+      setPaymentStep("success");
     } catch (error: any) {
-      toast.error("Satın alma başarısız: " + error.message);
+      toast.error("Ödeme başarısız: " + error.message);
+      setSelectedPackage(null);
     } finally {
-      setPurchasing(null);
+      setPurchasing(false);
     }
   };
 
@@ -163,14 +208,9 @@ const SellerBuyPoints = () => {
                   <Button
                     className="w-full"
                     variant={isPopular ? "default" : "outline"}
-                    onClick={() => handlePurchase(pkg)}
-                    disabled={purchasing === pkg.id}
+                    onClick={() => openPaymentDialog(pkg)}
                   >
-                    {purchasing === pkg.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                    )}
+                    <CreditCard className="h-4 w-4 mr-2" />
                     Satın Al
                   </Button>
                 </CardContent>
@@ -206,6 +246,105 @@ const SellerBuyPoints = () => {
           </ul>
         </CardContent>
       </Card>
+
+      {/* Payment Dialog */}
+      <Dialog open={!!selectedPackage} onOpenChange={(open) => !open && !purchasing && setSelectedPackage(null)}>
+        <DialogContent className="sm:max-w-md">
+          {paymentStep === "card" && selectedPackage && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Ödeme Bilgileri
+                </DialogTitle>
+                <DialogDescription>
+                  {selectedPackage.name} - {selectedPackage.points + selectedPackage.bonus_points} puan için {formatPrice(selectedPackage.price)} ödeme yapın
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label>Kart Üzerindeki İsim</Label>
+                  <Input
+                    placeholder="Ad Soyad"
+                    value={cardName}
+                    onChange={(e) => setCardName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Kart Numarası</Label>
+                  <Input
+                    placeholder="0000 0000 0000 0000"
+                    value={cardNumber}
+                    onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                    maxLength={19}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Son Kullanma</Label>
+                    <Input
+                      placeholder="AA/YY"
+                      value={cardExpiry}
+                      onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
+                      maxLength={5}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>CVC</Label>
+                    <Input
+                      placeholder="123"
+                      value={cardCvc}
+                      onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                      maxLength={4}
+                      type="password"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                  <Lock className="h-4 w-4 shrink-0" />
+                  <span>Ödeme bilgileriniz 256-bit SSL ile şifrelenir ve güvenle işlenir.</span>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setSelectedPackage(null)}>
+                  İptal
+                </Button>
+                <Button onClick={handlePayment} disabled={!isCardValid()}>
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  {formatPrice(selectedPackage.price)} Öde
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {paymentStep === "processing" && (
+            <div className="py-12 flex flex-col items-center gap-4">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <div className="text-center">
+                <p className="font-semibold text-lg">Ödeme İşleniyor...</p>
+                <p className="text-sm text-muted-foreground mt-1">Lütfen sayfayı kapatmayın</p>
+              </div>
+            </div>
+          )}
+
+          {paymentStep === "success" && selectedPackage && (
+            <div className="py-8 flex flex-col items-center gap-4">
+              <div className="p-4 rounded-full bg-green-100">
+                <CheckCircle2 className="h-12 w-12 text-green-600" />
+              </div>
+              <div className="text-center">
+                <p className="font-semibold text-lg">Ödeme Başarılı!</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {selectedPackage.points + selectedPackage.bonus_points} puan hesabınıza eklendi
+                </p>
+              </div>
+              <Button onClick={() => setSelectedPackage(null)} className="mt-2">
+                Tamam
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
