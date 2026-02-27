@@ -95,6 +95,23 @@ const AdminOrders = () => {
         .update({ status: status as Order["status"] })
         .eq("id", id);
       if (error) throw error;
+
+      // Send email notification for status changes
+      try {
+        const order = orders?.find(o => o.id === id);
+        if (order) {
+          const shippingAddress = order.shipping_address as any;
+          const emailTo = shippingAddress?.email;
+          if (emailTo) {
+            const emailType = status === "shipped" ? "shipping_notification" : "order_status_update";
+            await supabase.functions.invoke("send-email", {
+              body: { type: emailType, to: emailTo, orderId: id },
+            });
+          }
+        }
+      } catch (emailErr) {
+        console.error("Status update email failed:", emailErr);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
