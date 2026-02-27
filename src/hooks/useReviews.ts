@@ -15,7 +15,6 @@ export const useProductReviews = (productId: string) => {
         .eq("product_id", productId)
         .eq("is_approved", true)
         .order("created_at", { ascending: false });
-
       if (error) throw error;
       return data as Review[];
     },
@@ -32,13 +31,8 @@ export const useProductRating = (productId: string) => {
         .select("rating")
         .eq("product_id", productId)
         .eq("is_approved", true);
-
       if (error) throw error;
-      
-      if (!data || data.length === 0) {
-        return { average: 0, count: 0 };
-      }
-
+      if (!data || data.length === 0) return { average: 0, count: 0 };
       const average = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
       return { average: Math.round(average * 10) / 10, count: data.length };
     },
@@ -51,23 +45,19 @@ export const useCreateReview = () => {
 
   return useMutation({
     mutationFn: async ({
-      productId,
-      rating,
-      comment,
+      productId, rating, comment, images,
     }: {
       productId: string;
       rating: number;
       comment: string;
+      images?: string[];
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Giriş yapmalısınız");
 
-      // Server-side purchase check
       const { data: hasPurchased, error: checkError } = await supabase.rpc('has_purchased_product', {
-        p_user_id: user.id,
-        p_product_id: productId
+        p_user_id: user.id, p_product_id: productId
       });
-
       if (checkError) throw checkError;
       if (!hasPurchased) throw new Error("Bu ürünü satın almadan değerlendirme yapamazsınız");
 
@@ -76,8 +66,8 @@ export const useCreateReview = () => {
         user_id: user.id,
         rating,
         comment,
+        images: images || [],
       });
-
       if (error) throw error;
     },
     onSuccess: (_, variables) => {
