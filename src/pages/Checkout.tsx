@@ -20,7 +20,7 @@ import { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useWallet } from "@/hooks/useAffiliate";
-import { usePersonalDiscounts } from "@/hooks/useUserCart";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 type PaymentMethodType = "credit-card" | "bank-transfer" | "cash-on-delivery" | "shopier" | "shopinext" | "payizone";
 type DbPaymentMethod = Database["public"]["Enums"]["payment_method"];
@@ -69,7 +69,7 @@ const Checkout = () => {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [useWalletBalance, setUseWalletBalance] = useState(false);
   const { data: wallet } = useWallet();
-  const { data: personalDiscounts } = usePersonalDiscounts();
+  const { data: siteSettings } = useSiteSettings();
   const [referralCode, setReferralCode] = useState<string | null>(null);
 
   // Load referral code from session
@@ -78,7 +78,10 @@ const Checkout = () => {
     if (code) setReferralCode(code);
   }, []);
 
-  const computedShipping = total >= 300 ? 0 : 29.90;
+  const shippingSettings = siteSettings?.shipping as { free_shipping_threshold?: number; default_shipping_cost?: number } | undefined;
+  const freeShippingThreshold = shippingSettings?.free_shipping_threshold ?? 300;
+  const defaultShippingCost = shippingSettings?.default_shipping_cost ?? 29.90;
+  const computedShipping = total >= freeShippingThreshold ? 0 : defaultShippingCost;
   const walletAmount = useWalletBalance && wallet ? Math.min(wallet.balance, total - (appliedCoupon?.discount || 0)) : 0;
   const finalTotal = Math.max(0, total - (appliedCoupon?.discount || 0) - walletAmount + computedShipping);
 
@@ -167,7 +170,7 @@ const Checkout = () => {
   // For checkout, we just show a generic message
   const hasBankTransfer = paymentSettings?.some(ps => ps.method === "bank_transfer");
 
-  const shippingCost = total >= 300 ? 0 : 29.90;
+  const shippingCost = total >= freeShippingThreshold ? 0 : defaultShippingCost;
   const discountAmount = appliedCoupon?.discount || 0;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -562,21 +565,11 @@ const Checkout = () => {
                 )}
 
                 {paymentMethod === "credit-card" && (
-                  <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
-                    <div className="space-y-2">
-                      <Label htmlFor="cardNumber">Kart Numarası</Label>
-                      <Input id="cardNumber" placeholder="1234 5678 9012 3456" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="expiry">Son Kullanma</Label>
-                        <Input id="expiry" placeholder="AA/YY" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="cvv">CVV</Label>
-                        <Input id="cvv" placeholder="123" />
-                      </div>
-                    </div>
+                  <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      Siparişi tamamladıktan sonra güvenli ödeme sayfasına yönlendirileceksiniz. 
+                      Kart bilgileriniz ödeme sağlayıcısı üzerinden güvenle işlenecektir.
+                    </p>
                   </div>
                 )}
 
@@ -793,7 +786,7 @@ const Checkout = () => {
 
               {shippingCost > 0 && (
                 <p className="text-xs text-muted-foreground mt-4 text-center">
-                  {formatPrice(300 - total)} daha ekleyin, ücretsiz kargo kazanın!
+                  {formatPrice(freeShippingThreshold - total)} daha ekleyin, ücretsiz kargo kazanın!
                 </p>
               )}
             </div>

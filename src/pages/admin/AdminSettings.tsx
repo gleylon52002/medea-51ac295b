@@ -11,6 +11,8 @@ import { useState, useEffect } from "react";
 import { Database } from "@/integrations/supabase/types";
 import LogoUpload from "@/components/admin/LogoUpload";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, AlertCircle, Send, Loader2 } from "lucide-react";
 
 type SiteSetting = Database["public"]["Tables"]["site_settings"]["Row"];
 
@@ -38,6 +40,15 @@ interface LegalSettings {
   sales_agreement: string;
   return_policy: string;
   cookie_policy: string;
+}
+
+interface EmailSettings {
+  sender_email: string;
+  sender_name: string;
+  order_confirmation_enabled: boolean;
+  order_status_enabled: boolean;
+  shipping_notification_enabled: boolean;
+  contact_form_notification_email: string;
 }
 
 const AdminSettings = () => {
@@ -69,6 +80,18 @@ const AdminSettings = () => {
     cookie_policy: "",
   });
 
+  const [email, setEmail] = useState<EmailSettings>({
+    sender_email: "noreply@medea.lovable.app",
+    sender_name: "MEDEA",
+    order_confirmation_enabled: true,
+    order_status_enabled: true,
+    shipping_notification_enabled: true,
+    contact_form_notification_email: "",
+  });
+
+  const [testEmailTo, setTestEmailTo] = useState("");
+  const [isSendingTest, setIsSendingTest] = useState(false);
+
   const { data: settings, isLoading } = useQuery({
     queryKey: ["admin", "site-settings"],
     queryFn: async () => {
@@ -97,6 +120,9 @@ const AdminSettings = () => {
           case "legal_pages":
             setLegal(value as LegalSettings);
             break;
+          case "email":
+            setEmail(prev => ({ ...prev, ...value }));
+            break;
         }
       });
     }
@@ -104,7 +130,6 @@ const AdminSettings = () => {
 
   const saveMutation = useMutation({
     mutationFn: async ({ key, value }: { key: string; value: Record<string, any> }) => {
-      // Check if setting exists
       const { data: existing } = await supabase
         .from("site_settings")
         .select("id")
@@ -134,6 +159,38 @@ const AdminSettings = () => {
     },
   });
 
+  const sendTestEmail = async () => {
+    if (!testEmailTo) {
+      toast.error("Lütfen test e-posta adresi girin");
+      return;
+    }
+    setIsSendingTest(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-email", {
+        body: {
+          type: "order_confirmation",
+          to: testEmailTo,
+          data: {
+            orderNumber: "TEST-001",
+            customerName: "Test Kullanıcı",
+            total: "100.00₺",
+            shippingAddress: "Test Adresi, İstanbul",
+          },
+        },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        toast.success("Test e-postası gönderildi!");
+      } else {
+        toast.error(data?.message || "E-posta gönderilemedi. Resend API anahtarını kontrol edin.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Test e-postası gönderilemedi");
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-4 lg:p-8">
@@ -155,6 +212,7 @@ const AdminSettings = () => {
             <TabsTrigger value="general">Genel</TabsTrigger>
             <TabsTrigger value="contact">İletişim</TabsTrigger>
             <TabsTrigger value="shipping">Kargo</TabsTrigger>
+            <TabsTrigger value="email">E-posta</TabsTrigger>
             <TabsTrigger value="legal">Hukuki</TabsTrigger>
           </TabsList>
           <ScrollBar orientation="horizontal" />
@@ -288,6 +346,128 @@ const AdminSettings = () => {
               </Button>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="email">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>E-posta Gönderim Ayarları</CardTitle>
+                <CardDescription>
+                  E-posta bildirimleri Resend servisi üzerinden gönderilir. 
+                  API anahtarı Lovable Cloud üzerinden güvenli şekilde saklanır.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="sender_name">Gönderici Adı</Label>
+                    <Input
+                      id="sender_name"
+                      value={email.sender_name}
+                      onChange={(e) => setEmail(prev => ({ ...prev, sender_name: e.target.value }))}
+                      placeholder="MEDEA"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="sender_email">Gönderici E-posta</Label>
+                    <Input
+                      id="sender_email"
+                      type="email"
+                      value={email.sender_email}
+                      onChange={(e) => setEmail(prev => ({ ...prev, sender_email: e.target.value }))}
+                      placeholder="noreply@yourdomain.com"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="contact_notification_email">İletişim Formu Bildirim E-postası</Label>
+                  <Input
+                    id="contact_notification_email"
+                    type="email"
+                    value={email.contact_form_notification_email}
+                    onChange={(e) => setEmail(prev => ({ ...prev, contact_form_notification_email: e.target.value }))}
+                    placeholder="admin@example.com"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">İletişim formu mesajları bu adrese iletilir</p>
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Bildirim Türleri</Label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={email.order_confirmation_enabled}
+                        onChange={(e) => setEmail(prev => ({ ...prev, order_confirmation_enabled: e.target.checked }))}
+                        className="accent-primary"
+                      />
+                      <span className="text-sm">Sipariş onay e-postası</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={email.order_status_enabled}
+                        onChange={(e) => setEmail(prev => ({ ...prev, order_status_enabled: e.target.checked }))}
+                        className="accent-primary"
+                      />
+                      <span className="text-sm">Sipariş durum güncelleme e-postası</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={email.shipping_notification_enabled}
+                        onChange={(e) => setEmail(prev => ({ ...prev, shipping_notification_enabled: e.target.checked }))}
+                        className="accent-primary"
+                      />
+                      <span className="text-sm">Kargo bildirim e-postası</span>
+                    </label>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => saveMutation.mutate({ key: "email", value: email })}
+                  disabled={saveMutation.isPending}
+                  className="w-full sm:w-auto"
+                >
+                  Kaydet
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Test E-postası</CardTitle>
+                <CardDescription>Resend API bağlantısını test edin</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-3">
+                  <Input
+                    type="email"
+                    placeholder="test@example.com"
+                    value={testEmailTo}
+                    onChange={(e) => setTestEmailTo(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button onClick={sendTestEmail} disabled={isSendingTest}>
+                    {isSendingTest ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Send className="h-4 w-4 mr-2" />
+                    )}
+                    Gönder
+                  </Button>
+                </div>
+                <div className="p-3 bg-muted/50 rounded-lg">
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Not:</strong> E-posta gönderimi için Resend API anahtarının Lovable Cloud ortam değişkenlerinde 
+                    (<code>RESEND_API_KEY</code>) tanımlı olması gerekir.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="legal">
