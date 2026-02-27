@@ -264,6 +264,19 @@ const Checkout = () => {
         }
       }
 
+      // Send order confirmation email
+      try {
+        await supabase.functions.invoke("send-email", {
+          body: {
+            type: "order_confirmation",
+            to: formData.email,
+            orderId: result.order.id,
+          },
+        });
+      } catch (emailErr) {
+        console.error("Order confirmation email failed:", emailErr);
+      }
+
       toast({
         title: "Siparişiniz Alındı!",
         description: `Sipariş numaranız: ${result.orderNumber}`,

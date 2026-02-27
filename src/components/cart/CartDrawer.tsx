@@ -6,10 +6,13 @@ import { useCart } from "@/contexts/CartContext";
 import { formatPrice } from "@/lib/utils";
 import FreeShippingProgress from "./FreeShippingProgress";
 import { useFeaturedProducts } from "@/hooks/useProducts";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const CartDrawer = () => {
   const { cart, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, addToCart } = useCart();
   const { data: featuredProducts } = useFeaturedProducts();
+  const { data: siteSettings } = useSiteSettings();
+  const shippingThreshold = (siteSettings?.shipping as any)?.free_shipping_threshold ?? 300;
   
   // Get suggested products (not already in cart)
   const suggestedProducts = featuredProducts
@@ -151,7 +154,7 @@ const CartDrawer = () => {
 
             <div className="border-t border-border pt-4 space-y-4">
               {/* Free Shipping Progress */}
-              <FreeShippingProgress currentTotal={cart.total} />
+              <FreeShippingProgress currentTotal={cart.total} threshold={shippingThreshold} />
               
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
