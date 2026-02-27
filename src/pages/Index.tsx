@@ -8,11 +8,19 @@ import TrustBadges from "@/components/products/TrustBadges";
 import RecentPurchaseToast from "@/components/products/RecentPurchaseToast";
 import RecentlyViewed from "@/components/products/RecentlyViewed";
 import Campaigns from "@/components/home/Campaigns";
+import FirstOrderBanner from "@/components/home/FirstOrderBanner";
+import SEOHead from "@/components/SEOHead";
 
 const Index = () => {
   return (
     <Layout>
+      <SEOHead
+        title="Medea - Doğal Güzellik & Bakım Ürünleri"
+        description="Medea'da en kaliteli doğal güzellik ve bakım ürünlerini keşfedin. Hızlı kargo, güvenli ödeme ve %100 müşteri memnuniyeti garantisi."
+        canonical="https://medea.lovable.app"
+      />
       <Hero />
+      <FirstOrderBanner />
       <Campaigns />
       <Features />
       <FeaturedProducts />

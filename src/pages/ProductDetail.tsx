@@ -27,6 +27,8 @@ import InstallmentCalculator from "@/components/products/InstallmentCalculator";
 import PurchaseCounter from "@/components/products/PurchaseCounter";
 import ProductSchema from "@/components/products/ProductSchema";
 import ProductAlerts from "@/components/products/ProductAlerts";
+import EstimatedDelivery from "@/components/products/EstimatedDelivery";
+import SEOHead from "@/components/SEOHead";
 import { ProductVariant } from "@/hooks/useProductVariants";
 import { ProductVariantInfo } from "@/types/product";
 import { useRelatedProducts } from "@/hooks/useRelatedProducts";
@@ -146,6 +148,13 @@ const ProductDetail = () => {
 
   return (
     <Layout>
+      <SEOHead
+        title={product.meta_title || product.name}
+        description={product.meta_description || product.short_description || product.description?.slice(0, 160) || ""}
+        canonical={`https://medea.lovable.app/urun/${product.slug}`}
+        ogImage={product.images?.[0]}
+        ogType="product"
+      />
       <ProductSchema product={product} rating={rating} />
       <div className="container-main py-8 lg:py-12">
         {/* Breadcrumb */}
@@ -320,6 +329,9 @@ const ProductDetail = () => {
               stock={selectedVariant?.stock ?? product.stock}
               variantId={selectedVariant?.id}
             />
+
+            {/* Estimated Delivery */}
+            <EstimatedDelivery stock={selectedVariant?.stock ?? product.stock} />
 
             {/* Trust Features */}
             <TrustBadges variant="grid" className="pt-6 border-t border-border" />

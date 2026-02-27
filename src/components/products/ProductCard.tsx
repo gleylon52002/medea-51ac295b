@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingBag, Heart, Scale, Eye } from "lucide-react";
+import { ShoppingBag, Heart, Scale, Eye, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ import { ProductWithCategory } from "@/hooks/useProducts";
 import StockUrgencyBadge from "./StockUrgencyBadge";
 import ProductBadges from "./ProductBadges";
 import QuickView from "./QuickView";
+import { useProductRating } from "@/hooks/useReviews";
 import { toast } from "sonner";
 
 interface ProductCardProps {
@@ -27,6 +28,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const addToComparison = useAddToComparison();
   const removeFromComparison = useRemoveFromComparison();
   
+  const { data: rating } = useProductRating(product.id);
   const existingComparison = comparisons?.find((c) => c.product_id === product.id);
   const isInComparison = !!existingComparison;
   const comparisonCount = comparisons?.length || 0;
@@ -146,9 +148,17 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </h3>
         </Link>
 
-        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-          {product.short_description}
-        </p>
+        {/* Rating */}
+        {rating && rating.count > 0 && (
+          <div className="flex items-center gap-1 mt-1">
+            <div className="flex">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(rating.average) ? "fill-primary text-primary" : "fill-muted text-muted"}`} />
+              ))}
+            </div>
+            <span className="text-xs text-muted-foreground">({rating.count})</span>
+          </div>
+        )}
 
         {/* Price & Add to Cart */}
         <div className="mt-3 flex items-center justify-between">
