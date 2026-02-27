@@ -6,6 +6,22 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// HMAC-SHA256 signature computation
+async function computeHmacSha256(data: string, secret: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
+  return Array.from(new Uint8Array(signature))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 serve(async (req) => {
   // payment-callback is a webhook endpoint called by payment providers
   // Authentication is done via provider-specific signature verification below
@@ -34,7 +50,7 @@ serve(async (req) => {
       body = await req.json();
     }
 
-    console.log(`Payment callback received from ${provider}:`, body);
+    console.log(`Payment callback received from ${provider}`);
 
     let orderId: string | null = null;
     let transactionId: string | null = null;
@@ -43,8 +59,7 @@ serve(async (req) => {
 
     // Process based on provider
     switch (provider) {
-      case "shopier":
-        // Shopier callback format
+      case "shopier": {
         orderId = body.platform_order_id || body.order_id;
         transactionId = body.payment_id;
         status = body.status === "1" || body.status === "success" ? "success" : "failed";
@@ -60,31 +75,126 @@ serve(async (req) => {
         if (shopierConfig?.config) {
           const secret = (shopierConfig.config as Record<string, string>).secret;
           if (secret) {
-            // Shopier sends a signature header - verify it
             const receivedSignature = body.signature || body.hash;
             if (!receivedSignature) {
-              console.warn("Shopier callback missing signature - proceeding with caution");
+              console.error("Shopier callback missing signature");
+              return new Response(JSON.stringify({ error: "Missing signature" }), {
+                status: 401,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
             }
-            // In production, compute HMAC and compare
+            // Compute HMAC from relevant fields
+            const signData = `${body.platform_order_id || ""}${body.product_price || ""}${body.status || ""}`;
+            const expectedSignature = await computeHmacSha256(signData, secret);
+            if (receivedSignature !== expectedSignature) {
+              console.error("Shopier signature mismatch");
+              return new Response(JSON.stringify({ error: "Invalid signature" }), {
+                status: 401,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
+          } else {
+            console.error("Shopier secret not configured - rejecting callback");
+            return new Response(JSON.stringify({ error: "Provider not configured" }), {
+              status: 500,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
           }
+        } else {
+          console.error("Shopier config not found");
+          return new Response(JSON.stringify({ error: "Provider not configured" }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
         break;
+      }
 
-      case "shopinext":
-        // ShopiNext callback format
+      case "shopinext": {
         orderId = body.orderId || body.order_id;
         transactionId = body.transactionId;
         status = body.resultCode === "00" || body.status === "approved" ? "success" : "failed";
         amount = parseFloat(body.amount || "0");
-        break;
 
-      case "payizone":
-        // Payizone callback format
+        // Verify ShopiNext signature
+        const { data: shopinextConfig } = await supabase
+          .from("payment_settings")
+          .select("config")
+          .eq("method", "shopinext")
+          .single();
+
+        if (shopinextConfig?.config) {
+          const token = (shopinextConfig.config as Record<string, string>).token;
+          if (token) {
+            const receivedSignature = body.signature || body.hash;
+            if (!receivedSignature) {
+              console.error("ShopiNext callback missing signature");
+              return new Response(JSON.stringify({ error: "Missing signature" }), {
+                status: 401,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
+            const signData = `${body.orderId || body.order_id || ""}${body.amount || ""}${body.resultCode || body.status || ""}`;
+            const expectedSignature = await computeHmacSha256(signData, token);
+            if (receivedSignature !== expectedSignature) {
+              console.error("ShopiNext signature mismatch");
+              return new Response(JSON.stringify({ error: "Invalid signature" }), {
+                status: 401,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
+          } else {
+            return new Response(JSON.stringify({ error: "Provider not configured" }), {
+              status: 500,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        }
+        break;
+      }
+
+      case "payizone": {
         orderId = body.merchant_order_id || body.order_id;
         transactionId = body.transaction_id;
         status = body.status === "SUCCESS" || body.result === "1" ? "success" : "failed";
         amount = parseFloat(body.amount || "0");
+
+        // Verify Payizone signature
+        const { data: payizoneConfig } = await supabase
+          .from("payment_settings")
+          .select("config")
+          .eq("method", "payizone")
+          .single();
+
+        if (payizoneConfig?.config) {
+          const secretKey = (payizoneConfig.config as Record<string, string>).secret_key;
+          if (secretKey) {
+            const receivedSignature = body.signature || body.hash;
+            if (!receivedSignature) {
+              console.error("Payizone callback missing signature");
+              return new Response(JSON.stringify({ error: "Missing signature" }), {
+                status: 401,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
+            const signData = `${body.merchant_order_id || body.order_id || ""}${body.amount || ""}${body.status || body.result || ""}`;
+            const expectedSignature = await computeHmacSha256(signData, secretKey);
+            if (receivedSignature !== expectedSignature) {
+              console.error("Payizone signature mismatch");
+              return new Response(JSON.stringify({ error: "Invalid signature" }), {
+                status: 401,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
+          } else {
+            return new Response(JSON.stringify({ error: "Provider not configured" }), {
+              status: 500,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        }
         break;
+      }
 
       default:
         return new Response(
