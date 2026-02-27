@@ -28,7 +28,8 @@ import {
   Sliders,
   FileText,
   Star,
-  Ticket
+  Ticket,
+  Activity
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,7 @@ const menuItems = [
   { icon: Palette, label: "Tema", path: "/admin/tema" },
   { icon: Search, label: "SEO", path: "/admin/seo" },
   { icon: Settings, label: "Ayarlar", path: "/admin/ayarlar" },
+  { icon: Activity, label: "Aktivite Logları", path: "/admin/aktivite" },
 ];
 
 const SidebarContent = ({ onItemClick }: { onItemClick?: () => void }) => {

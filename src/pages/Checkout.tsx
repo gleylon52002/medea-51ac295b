@@ -82,6 +82,7 @@ const Checkout = () => {
   const walletAmount = useWalletBalance && wallet ? Math.min(wallet.balance, total - (appliedCoupon?.discount || 0)) : 0;
   const finalTotal = Math.max(0, total - (appliedCoupon?.discount || 0) - walletAmount + computedShipping);
 
+  const [identityNumber, setIdentityNumber] = useState("");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -532,6 +533,34 @@ const Checkout = () => {
                   </RadioGroup>
                 )}
 
+                {paymentMethod === "cash-on-delivery" && (
+                  <div className="space-y-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="flex items-center gap-2 text-amber-800 font-medium">
+                      <Truck className="h-5 w-5" />
+                      <span>Kapıda Ödeme - Kimlik Doğrulama Gerekli</span>
+                    </div>
+                    <p className="text-sm text-amber-700">
+                      Kapıda ödeme seçeneğini kullanabilmek için T.C. kimlik numaranızı girmeniz gerekmektedir. Bu bilgi güvenliğiniz için doğrulama amacıyla kullanılır.
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="identityNumber">T.C. Kimlik Numarası <span className="text-destructive">*</span></Label>
+                      <Input
+                        id="identityNumber"
+                        value={identityNumber}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "").slice(0, 11);
+                          setIdentityNumber(val);
+                        }}
+                        placeholder="11 haneli T.C. kimlik numaranız"
+                        maxLength={11}
+                      />
+                      {identityNumber && identityNumber.length !== 11 && (
+                        <p className="text-xs text-destructive">T.C. kimlik numarası 11 haneli olmalıdır</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {paymentMethod === "credit-card" && (
                   <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
                     <div className="space-y-2">
@@ -581,6 +610,14 @@ const Checkout = () => {
                       toast({
                         title: "Ödeme Yöntemi Yok",
                         description: "Aktif bir ödeme yöntemi bulunmuyor.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    if (paymentMethod === "cash-on-delivery" && identityNumber.length !== 11) {
+                      toast({
+                        title: "Kimlik Doğrulama Gerekli",
+                        description: "Kapıda ödeme için geçerli bir T.C. kimlik numarası girmelisiniz.",
                         variant: "destructive",
                       });
                       return;
