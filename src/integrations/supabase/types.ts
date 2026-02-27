@@ -1128,6 +1128,13 @@ export type Database = {
             referencedRelation: "sellers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "products_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -1370,6 +1377,13 @@ export type Database = {
             referencedRelation: "sellers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "seller_notifications_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       seller_point_packages: {
@@ -1456,6 +1470,13 @@ export type Database = {
             columns: ["seller_id"]
             isOneToOne: false
             referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_points_history_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1557,6 +1578,13 @@ export type Database = {
             columns: ["seller_id"]
             isOneToOne: false
             referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_transactions_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1886,6 +1914,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "user_carts_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "user_carts_variant_id_fkey"
             columns: ["variant_id"]
             isOneToOne: false
@@ -2010,6 +2045,57 @@ export type Database = {
           is_active?: boolean | null
           method?: Database["public"]["Enums"]["payment_method"] | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      sellers_public: {
+        Row: {
+          banner_url: string | null
+          city: string | null
+          company_name: string | null
+          created_at: string | null
+          description: string | null
+          district: string | null
+          id: string | null
+          is_featured: boolean | null
+          logo_url: string | null
+          reputation_points: number | null
+          slug: string | null
+          status: string | null
+          total_orders: number | null
+          total_sales: number | null
+        }
+        Insert: {
+          banner_url?: string | null
+          city?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          district?: string | null
+          id?: string | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          reputation_points?: number | null
+          slug?: string | null
+          status?: string | null
+          total_orders?: number | null
+          total_sales?: number | null
+        }
+        Update: {
+          banner_url?: string | null
+          city?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          district?: string | null
+          id?: string | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          reputation_points?: number | null
+          slug?: string | null
+          status?: string | null
+          total_orders?: number | null
+          total_sales?: number | null
         }
         Relationships: []
       }
