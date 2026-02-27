@@ -44,7 +44,8 @@ serve(async (req) => {
 
     const emailSettings = (emailSettingsRow?.value as Record<string, any>) || {};
     const senderName = emailSettings.sender_name || "MEDEA";
-    const senderEmail = emailSettings.sender_email || "noreply@medea.lovable.app";
+    // Use Resend's default sender unless a verified custom domain is configured
+    const senderEmail = emailSettings.sender_email || "onboarding@resend.dev";
 
     // Check if this email type is enabled
     if (type === "order_confirmation" && emailSettings.order_confirmation_enabled === false) {
