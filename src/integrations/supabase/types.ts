@@ -1137,6 +1137,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          identity_number: string | null
           phone: string | null
           updated_at: string
           user_id: string
@@ -1147,6 +1148,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id?: string
+          identity_number?: string | null
           phone?: string | null
           updated_at?: string
           user_id: string
@@ -1157,6 +1159,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          identity_number?: string | null
           phone?: string | null
           updated_at?: string
           user_id?: string
@@ -1210,6 +1213,7 @@ export type Database = {
           comment: string | null
           created_at: string
           id: string
+          images: string[] | null
           is_approved: boolean
           order_id: string | null
           product_id: string
@@ -1221,6 +1225,7 @@ export type Database = {
           comment?: string | null
           created_at?: string
           id?: string
+          images?: string[] | null
           is_approved?: boolean
           order_id?: string | null
           product_id: string
@@ -1232,6 +1237,7 @@ export type Database = {
           comment?: string | null
           created_at?: string
           id?: string
+          images?: string[] | null
           is_approved?: boolean
           order_id?: string | null
           product_id?: string
@@ -1674,6 +1680,51 @@ export type Database = {
           is_active?: boolean
           name?: string
           tracking_url?: string | null
+        }
+        Relationships: []
+      }
+      site_activity_logs: {
+        Row: {
+          action_detail: Json | null
+          action_type: string
+          created_at: string
+          device_type: string | null
+          id: string
+          ip_address: string | null
+          page_path: string
+          page_title: string | null
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_detail?: Json | null
+          action_type?: string
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          ip_address?: string | null
+          page_path: string
+          page_title?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_detail?: Json | null
+          action_type?: string
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          ip_address?: string | null
+          page_path?: string
+          page_title?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

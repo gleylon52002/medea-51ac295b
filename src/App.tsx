@@ -38,6 +38,7 @@ import SalesAgreement from "./pages/legal/SalesAgreement";
 import ReturnPolicy from "./pages/legal/ReturnPolicy";
 import CookiePolicy from "./pages/legal/CookiePolicy";
 import FAQ from "./pages/FAQ";
+import SellerRules from "./pages/legal/SellerRules";
 import Compare from "./pages/Compare";
 
 // Admin Pages
@@ -68,6 +69,7 @@ import AdminSellerSettings from "./pages/admin/AdminSellerSettings";
 import AdminPayouts from "./pages/admin/AdminPayouts";
 import AdminInvoices from "./pages/admin/AdminInvoices";
 import AdminUserCarts from "./pages/admin/AdminUserCarts";
+import AdminActivityLogs from "./pages/admin/AdminActivityLogs";
 // Seller Pages
 import SellerGuard from "./components/seller/SellerGuard";
 import SellerLayout from "./components/seller/SellerLayout";
@@ -153,6 +155,7 @@ const App = () => (
               <Route path="/iade-ve-iptal" element={<ReturnPolicy />} />
               <Route path="/cerez-politikasi" element={<CookiePolicy />} />
               <Route path="/sss" element={<FAQ />} />
+              <Route path="/satici-kurallari" element={<SellerRules />} />
               <Route path="/karsilastir" element={<Compare />} />
               <Route path="/magaza/:slug" element={<SellerStore />} />
 
@@ -183,6 +186,7 @@ const App = () => (
                 <Route path="satici-ayarlari" element={<AdminSellerSettings />} />
                 <Route path="ayarlar" element={<AdminSettings />} />
                 <Route path="sepetler" element={<AdminUserCarts />} />
+                <Route path="aktivite" element={<AdminActivityLogs />} />
               </Route>
 
               {/* Seller Routes */}
