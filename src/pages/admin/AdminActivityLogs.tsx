@@ -50,7 +50,7 @@ const AdminActivityLogs = () => {
     queryKey: ["admin", "activity-logs", actionFilter, dateRange],
     queryFn: async () => {
       let query = supabase
-        .from("site_activity_logs" as any)
+        .from("site_activity_logs")
         .select("*")
         .gte("created_at", getDateFilter())
         .order("created_at", { ascending: false })
@@ -71,7 +71,7 @@ const AdminActivityLogs = () => {
     queryFn: async () => {
       const since = getDateFilter();
       const { data, error } = await supabase
-        .from("site_activity_logs" as any)
+        .from("site_activity_logs")
         .select("action_type, device_type, session_id")
         .gte("created_at", since);
 

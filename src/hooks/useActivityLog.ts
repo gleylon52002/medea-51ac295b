@@ -30,7 +30,7 @@ export const useActivityLogger = () => {
     detail?: Record<string, any>
   ) => {
     try {
-      await supabase.from("site_activity_logs" as any).insert({
+      await supabase.from("site_activity_logs").insert({
         user_id: user?.id || null,
         session_id: getSessionId(),
         page_path: pagePath,
@@ -58,7 +58,7 @@ export const useActivityLogger = () => {
 
 export const logProductView = async (productId: string, productName: string, userId?: string) => {
   try {
-    await supabase.from("site_activity_logs" as any).insert({
+    await supabase.from("site_activity_logs").insert({
       user_id: userId || null,
       session_id: getSessionId(),
       page_path: `/urun/${productId}`,
@@ -72,7 +72,7 @@ export const logProductView = async (productId: string, productName: string, use
 
 export const logAddToCart = async (productId: string, productName: string, userId?: string) => {
   try {
-    await supabase.from("site_activity_logs" as any).insert({
+    await supabase.from("site_activity_logs").insert({
       user_id: userId || null,
       session_id: getSessionId(),
       page_path: window.location.pathname,
@@ -86,7 +86,7 @@ export const logAddToCart = async (productId: string, productName: string, userI
 
 export const logPurchase = async (orderId: string, total: number, userId?: string) => {
   try {
-    await supabase.from("site_activity_logs" as any).insert({
+    await supabase.from("site_activity_logs").insert({
       user_id: userId || null,
       session_id: getSessionId(),
       page_path: "/odeme",
@@ -100,7 +100,7 @@ export const logPurchase = async (orderId: string, total: number, userId?: strin
 
 export const logSellerLogin = async (sellerId: string, userId?: string) => {
   try {
-    await supabase.from("site_activity_logs" as any).insert({
+    await supabase.from("site_activity_logs").insert({
       user_id: userId || null,
       session_id: getSessionId(),
       page_path: "/satici",
