@@ -182,24 +182,18 @@ Android Studio açıldıktan sonra:
 
 ---
 
-## 🔴 Adım 7: Hot-Reload ile Geliştirme
+## 🔴 Adım 7: Geliştirme Notları
 
-Proje zaten hot-reload için yapılandırılmıştır. `capacitor.config.json` dosyasında:
+Proje artık **production modda** çalışacak şekilde yapılandırılmıştır. `capacitor.config.json` dosyasında `server` bloğu **yoktur**, yani uygulama kendi `dist/` klasöründeki dosyalardan çalışır.
 
-```json
-{
-  "server": {
-    "url": "https://f9703bb8-4ab1-4aab-97d5-be5278009ddc.lovableproject.com?forceHideBadge=true",
-    "cleartext": true
-  }
-}
-```
-
-Bu sayede:
-- Lovable'da yaptığınız her değişiklik **anında** telefonunuza/emülatörünüze yansır
-- `npm run build` veya `npx cap sync` yapmanıza **gerek yoktur** (geliştirme sırasında)
-
-> ⚠️ **Production build için** `server` bloğunu `capacitor.config.json`'dan kaldırın veya yorum satırına alın.
+> ⚠️ **Geliştirme sırasında hot-reload** istiyorsanız, `capacitor.config.json`'a geçici olarak şunu ekleyin:
+> ```json
+> "server": {
+>   "url": "http://BILGISAYAR_IP:5173",
+>   "cleartext": true
+> }
+> ```
+> Production build için bu bloğu **mutlaka kaldırın**.
 
 ---
 
