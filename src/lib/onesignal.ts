@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // OneSignal App ID - this is a public/publishable key
-const ONESIGNAL_APP_ID = "YOUR_ONESIGNAL_APP_ID"; // Will be replaced after setup
+const ONESIGNAL_APP_ID = "71232970-9f80-4457-87ae-4a7c23dfe535";
 
 /**
  * Initialize OneSignal for push notifications in Capacitor app.
