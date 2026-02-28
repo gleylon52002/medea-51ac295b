@@ -31,7 +31,10 @@ import EstimatedDelivery from "@/components/products/EstimatedDelivery";
 import VerifiedSellerBadge from "@/components/products/VerifiedSellerBadge";
 import PriceHistory from "@/components/products/PriceHistory";
 import BundleOffers from "@/components/products/BundleOffers";
+import AIRecommendations from "@/components/products/AIRecommendations";
+import SubscriptionButton from "@/components/products/SubscriptionButton";
 import SEOHead from "@/components/SEOHead";
+import { trackInteraction } from "@/hooks/useInteraction";
 import { ProductVariant } from "@/hooks/useProductVariants";
 import { ProductVariantInfo } from "@/types/product";
 import { useRelatedProducts } from "@/hooks/useRelatedProducts";
@@ -63,6 +66,7 @@ const ProductDetail = () => {
   useEffect(() => {
     if (product?.id) {
       addToRecentlyViewed(product.id);
+      trackInteraction(product.id, "view");
       trackViewItem({ id: product.id, name: product.name, price: product.sale_price || product.price, category: product.categories?.name });
     }
   }, [product?.id]);
@@ -325,6 +329,13 @@ const ProductDetail = () => {
               <CompareButton productId={product.id} variant="icon" />
             </div>
 
+            {/* Subscription Button */}
+            <SubscriptionButton
+              productId={product.id}
+              productName={product.name}
+              variantId={selectedVariant?.id}
+            />
+
             {/* Price & Stock Alerts */}
             <ProductAlerts
               productId={product.id}
@@ -430,6 +441,9 @@ const ProductDetail = () => {
             </div>
           </section>
         )}
+
+        {/* AI Recommendations */}
+        <AIRecommendations currentProductId={product.id} />
 
         {/* Recently Viewed */}
         <RecentlyViewed currentProductId={product.id} />

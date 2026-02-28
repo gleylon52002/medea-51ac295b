@@ -3,6 +3,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
+const getSessionId = () => {
+  let sid = sessionStorage.getItem("medea_session_id");
+  if (!sid) {
+    sid = crypto.randomUUID();
+    sessionStorage.setItem("medea_session_id", sid);
+  }
+  return sid;
+};
+
+export const trackInteraction = async (
+  productId: string,
+  type: "view" | "cart" | "purchase" | "favorite" | "click"
+) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    await supabase.from("user_interactions").insert({
+      user_id: user?.id || null,
+      product_id: productId,
+      interaction_type: type,
+      session_id: getSessionId(),
+    });
+  } catch (e) {
+    // Silent fail for tracking
+  }
+};
+
 export interface ProductQuestion {
     id: string;
     product_id: string;
