@@ -1369,6 +1369,78 @@ export type Database = {
         }
         Relationships: []
       }
+      push_device_tokens: {
+        Row: {
+          created_at: string
+          device_type: string
+          id: string
+          is_active: boolean
+          player_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_type?: string
+          id?: string
+          is_active?: boolean
+          player_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_type?: string
+          id?: string
+          is_active?: boolean
+          player_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          metadata: Json | null
+          sent_at: string | null
+          sent_by: string | null
+          sent_count: number
+          status: string
+          target_type: string
+          target_user_ids: string[] | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          sent_at?: string | null
+          sent_by?: string | null
+          sent_count?: number
+          status?: string
+          target_type?: string
+          target_user_ids?: string[] | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          sent_at?: string | null
+          sent_by?: string | null
+          sent_count?: number
+          status?: string
+          target_type?: string
+          target_user_ids?: string[] | null
+          title?: string
+        }
+        Relationships: []
+      }
       related_products: {
         Row: {
           created_at: string | null
