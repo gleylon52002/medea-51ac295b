@@ -70,6 +70,7 @@ import AdminPayouts from "./pages/admin/AdminPayouts";
 import AdminInvoices from "./pages/admin/AdminInvoices";
 import AdminUserCarts from "./pages/admin/AdminUserCarts";
 import AdminActivityLogs from "./pages/admin/AdminActivityLogs";
+import AdminSMS from "./pages/admin/AdminSMS";
 // Seller Pages
 import SellerGuard from "./components/seller/SellerGuard";
 import SellerLayout from "./components/seller/SellerLayout";
@@ -187,6 +188,7 @@ const App = () => (
                 <Route path="ayarlar" element={<AdminSettings />} />
                 <Route path="sepetler" element={<AdminUserCarts />} />
                 <Route path="aktivite" element={<AdminActivityLogs />} />
+                <Route path="sms" element={<AdminSMS />} />
               </Route>
 
               {/* Seller Routes */}

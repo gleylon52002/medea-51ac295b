@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      ab_tests: {
+        Row: {
+          conversions_a: number
+          conversions_b: number
+          created_at: string
+          description: string | null
+          ends_at: string | null
+          id: string
+          impressions_a: number
+          impressions_b: number
+          is_active: boolean
+          name: string
+          starts_at: string
+          test_type: string
+          traffic_split: number
+          updated_at: string
+          variant_a: Json
+          variant_b: Json
+        }
+        Insert: {
+          conversions_a?: number
+          conversions_b?: number
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          impressions_a?: number
+          impressions_b?: number
+          is_active?: boolean
+          name: string
+          starts_at?: string
+          test_type?: string
+          traffic_split?: number
+          updated_at?: string
+          variant_a?: Json
+          variant_b?: Json
+        }
+        Update: {
+          conversions_a?: number
+          conversions_b?: number
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          impressions_a?: number
+          impressions_b?: number
+          is_active?: boolean
+          name?: string
+          starts_at?: string
+          test_type?: string
+          traffic_split?: number
+          updated_at?: string
+          variant_a?: Json
+          variant_b?: Json
+        }
+        Relationships: []
+      }
+      abandoned_cart_reminders: {
+        Row: {
+          cart_snapshot: Json
+          created_at: string
+          email_sent: boolean
+          id: string
+          last_reminder_at: string | null
+          recovered: boolean
+          recovered_at: string | null
+          reminder_count: number
+          sms_sent: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cart_snapshot?: Json
+          created_at?: string
+          email_sent?: boolean
+          id?: string
+          last_reminder_at?: string | null
+          recovered?: boolean
+          recovered_at?: string | null
+          reminder_count?: number
+          sms_sent?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cart_snapshot?: Json
+          created_at?: string
+          email_sent?: boolean
+          id?: string
+          last_reminder_at?: string | null
+          recovered?: boolean
+          recovered_at?: string | null
+          reminder_count?: number
+          sms_sent?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       addresses: {
         Row: {
           address: string
@@ -1777,6 +1876,113 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: Json
+        }
+        Relationships: []
+      }
+      sms_logs: {
+        Row: {
+          content: string
+          created_at: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          phone: string
+          provider: string
+          sent_at: string | null
+          status: string
+          template_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          phone: string
+          provider: string
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          phone?: string
+          provider?: string
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_logs_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "sms_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_settings: {
+        Row: {
+          config: Json | null
+          created_at: string
+          id: string
+          is_active: boolean
+          provider: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          provider: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          provider?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sms_templates: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          template_type: string
+          updated_at: string
+          variables: string[] | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          template_type?: string
+          updated_at?: string
+          variables?: string[] | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          template_type?: string
+          updated_at?: string
+          variables?: string[] | null
         }
         Relationships: []
       }
