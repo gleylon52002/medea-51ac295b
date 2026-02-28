@@ -30,6 +30,7 @@ import ProductAlerts from "@/components/products/ProductAlerts";
 import EstimatedDelivery from "@/components/products/EstimatedDelivery";
 import VerifiedSellerBadge from "@/components/products/VerifiedSellerBadge";
 import PriceHistory from "@/components/products/PriceHistory";
+import BundleOffers from "@/components/products/BundleOffers";
 import SEOHead from "@/components/SEOHead";
 import { ProductVariant } from "@/hooks/useProductVariants";
 import { ProductVariantInfo } from "@/types/product";
@@ -345,6 +346,13 @@ const ProductDetail = () => {
               currentPrice={finalPrice}
               originalPrice={hasDiscount ? Number(product.price) : undefined}
               productId={product.id}
+            />
+
+            {/* Bundle Offers */}
+            <BundleOffers
+              productId={product.id}
+              currentProductName={product.name}
+              currentPrice={finalPrice}
             />
 
             {/* Trust Features */}

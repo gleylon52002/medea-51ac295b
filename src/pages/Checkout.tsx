@@ -17,6 +17,7 @@ import { useAddresses } from "@/hooks/useAddresses";
 import { useProfile } from "@/hooks/useProfile";
 import CouponInput from "@/components/checkout/CouponInput";
 import CheckoutSecurityBadges from "@/components/checkout/CheckoutSecurityBadges";
+import { trackCheckoutStep, resetCheckoutSession } from "@/hooks/useCheckoutEvents";
 import { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -59,6 +60,7 @@ const Checkout = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const createOrder = useCreateOrder();
+  const [isGuestCheckout, setIsGuestCheckout] = useState(false);
   const incrementCouponUsage = useIncrementCouponUsage();
   const [step, setStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("credit-card");
@@ -191,6 +193,7 @@ const Checkout = () => {
     setIsSubmitting(true);
 
     try {
+      trackCheckoutStep("order_confirmed");
       const result = await createOrder.mutateAsync({
         items,
         shippingAddress: {
@@ -210,7 +213,8 @@ const Checkout = () => {
         couponCode: appliedCoupon?.coupon.code,
         discountAmount: (appliedCoupon?.discount || 0) + walletAmount,
         referralCode,
-        walletAmount
+        walletAmount,
+        guestEmail: isGuestCheckout ? formData.email : undefined,
       });
 
       // If coupon was used, record it
@@ -283,6 +287,8 @@ const Checkout = () => {
         description: `Sipariş numaranız: ${result.orderNumber}`,
       });
 
+      trackCheckoutStep("order_completed");
+      resetCheckoutSession();
       clearCart();
       setAppliedCoupon(null);
       navigate(`/siparis-basarili?order=${result.orderNumber}`);
@@ -324,6 +330,31 @@ const Checkout = () => {
           <span className="text-foreground">Ödeme</span>
         </nav>
 
+        {/* Guest Checkout Banner */}
+        {!user && !isGuestCheckout && (
+          <div className="mb-6 p-4 bg-muted/50 rounded-xl border flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <p className="font-medium">Hesabınız var mı?</p>
+              <p className="text-sm text-muted-foreground">Giriş yaparak siparişlerinizi takip edebilirsiniz veya misafir olarak devam edin.</p>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/giris">Giriş Yap</Link>
+              </Button>
+              <Button size="sm" onClick={() => { setIsGuestCheckout(true); trackCheckoutStep("begin_checkout", { guest: true }); }}>
+                Misafir Olarak Devam Et
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {!user && !isGuestCheckout && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground mb-4">Devam etmek için giriş yapın veya misafir ödeme seçeneğini kullanın.</p>
+          </div>
+        )}
+
+        {(user || isGuestCheckout) && <>
         {/* Steps */}
         <div className="flex items-center justify-center gap-2 sm:gap-4 mb-8 lg:mb-12">
           {[
@@ -360,7 +391,7 @@ const Checkout = () => {
                   <h2 className="font-serif text-lg sm:text-xl font-medium">Teslimat Bilgileri</h2>
                 </div>
 
-                {user && userAddresses && userAddresses.length > 0 && (
+                {user && !isGuestCheckout && userAddresses && userAddresses.length > 0 && (
                   <div className="mb-8">
                     <Label className="text-sm font-medium mb-3 block">Kayıtlı Adresleriniz</Label>
                     <div className="grid sm:grid-cols-2 gap-3">
@@ -503,6 +534,7 @@ const Checkout = () => {
                     });
                     return;
                   }
+                  trackCheckoutStep("shipping_info");
                   setStep(2);
                 }} className="w-full sm:w-auto">
                   Ödemeye Geç
@@ -629,6 +661,7 @@ const Checkout = () => {
                       });
                       return;
                     }
+                    trackCheckoutStep("payment_method", { method: paymentMethod });
                     setStep(3);
                   }} className="order-1 sm:order-2">
                     Siparişi Onayla
@@ -808,6 +841,7 @@ const Checkout = () => {
             </div>
           </div>
         </div>
+        </>}
       </div>
     </Layout>
   );

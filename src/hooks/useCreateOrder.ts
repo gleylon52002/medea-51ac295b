@@ -26,6 +26,7 @@ interface CreateOrderParams {
   discountAmount?: number;
   referralCode?: string | null;
   walletAmount?: number;
+  guestEmail?: string;
 }
 
 export const useCreateOrder = () => {
@@ -34,7 +35,6 @@ export const useCreateOrder = () => {
 
   return useMutation({
     mutationFn: async (params: CreateOrderParams) => {
-      // PHASE 4: Use secure RPC for all operations
       // @ts-ignore - RPC types might not be updated yet
       const { data, error: rpcError } = await (supabase.rpc as any)("create_order_secure", {
         p_items: params.items as any,
@@ -44,7 +44,8 @@ export const useCreateOrder = () => {
         p_notes: params.notes || null,
         p_coupon_code: params.couponCode || null,
         p_referral_code: params.referralCode || null,
-        p_wallet_amount: params.walletAmount || 0
+        p_wallet_amount: params.walletAmount || 0,
+        p_guest_email: params.guestEmail || null,
       });
 
       if (rpcError) throw rpcError;
@@ -62,7 +63,7 @@ export const useCreateOrder = () => {
       queryClient.invalidateQueries({ queryKey: ["product-variants"] });
       queryClient.invalidateQueries({ queryKey: ["seller-transactions"] });
       queryClient.invalidateQueries({ queryKey: ["seller-notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["wallet-balance"] }); // FIX: Refresh wallet after use
+      queryClient.invalidateQueries({ queryKey: ["wallet-balance"] });
     },
   });
 };

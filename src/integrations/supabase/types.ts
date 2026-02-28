@@ -297,6 +297,33 @@ export type Database = {
           },
         ]
       }
+      checkout_events: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          session_id: string | null
+          step: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          step: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          step?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           created_at: string
@@ -1607,6 +1634,60 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_sla: {
+        Row: {
+          created_at: string
+          id: string
+          last_violation_at: string | null
+          max_response_hours: number
+          max_shipping_days: number
+          penalty_applied: number
+          response_violations: number
+          seller_id: string
+          shipping_violations: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_violation_at?: string | null
+          max_response_hours?: number
+          max_shipping_days?: number
+          penalty_applied?: number
+          response_violations?: number
+          seller_id: string
+          shipping_violations?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_violation_at?: string | null
+          max_response_hours?: number
+          max_shipping_days?: number
+          penalty_applied?: number
+          response_violations?: number
+          seller_id?: string
+          shipping_violations?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_sla_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: true
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_sla_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: true
+            referencedRelation: "sellers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seller_transactions: {
         Row: {
           commission_amount: number
@@ -2307,19 +2388,34 @@ export type Database = {
       }
     }
     Functions: {
-      create_order_secure: {
-        Args: {
-          p_coupon_code?: string
-          p_items: Json
-          p_notes?: string
-          p_payment_method: Database["public"]["Enums"]["payment_method"]
-          p_referral_code?: string
-          p_shipping_address: Json
-          p_shipping_cost: number
-          p_wallet_amount?: number
-        }
-        Returns: Json
-      }
+      create_order_secure:
+        | {
+            Args: {
+              p_coupon_code?: string
+              p_items: Json
+              p_notes?: string
+              p_payment_method: Database["public"]["Enums"]["payment_method"]
+              p_referral_code?: string
+              p_shipping_address: Json
+              p_shipping_cost: number
+              p_wallet_amount?: number
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_coupon_code?: string
+              p_guest_email?: string
+              p_items: Json
+              p_notes?: string
+              p_payment_method: Database["public"]["Enums"]["payment_method"]
+              p_referral_code?: string
+              p_shipping_address: Json
+              p_shipping_cost: number
+              p_wallet_amount?: number
+            }
+            Returns: Json
+          }
       get_seller_id: { Args: never; Returns: string }
       has_purchased_product: {
         Args: { p_product_id: string; p_user_id: string }
