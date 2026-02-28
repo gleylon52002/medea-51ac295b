@@ -1,0 +1,9 @@
+{
+  "appId": "app.lovable.f9703bb84ab14aab97d5be5278009ddc",
+  "appName": "medea",
+  "webDir": "dist",
+  "server": {
+    "url": "https://f9703bb8-4ab1-4aab-97d5-be5278009ddc.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  }
+}

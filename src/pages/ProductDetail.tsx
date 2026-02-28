@@ -28,6 +28,8 @@ import PurchaseCounter from "@/components/products/PurchaseCounter";
 import ProductSchema from "@/components/products/ProductSchema";
 import ProductAlerts from "@/components/products/ProductAlerts";
 import EstimatedDelivery from "@/components/products/EstimatedDelivery";
+import VerifiedSellerBadge from "@/components/products/VerifiedSellerBadge";
+import PriceHistory from "@/components/products/PriceHistory";
 import SEOHead from "@/components/SEOHead";
 import { ProductVariant } from "@/hooks/useProductVariants";
 import { ProductVariantInfo } from "@/types/product";
@@ -332,6 +334,18 @@ const ProductDetail = () => {
 
             {/* Estimated Delivery */}
             <EstimatedDelivery stock={selectedVariant?.stock ?? product.stock} />
+
+            {/* Verified Seller Badge */}
+            {product.seller_id && (
+              <VerifiedSellerBadge sellerId={product.seller_id} variant="full" />
+            )}
+
+            {/* Price History */}
+            <PriceHistory
+              currentPrice={finalPrice}
+              originalPrice={hasDiscount ? Number(product.price) : undefined}
+              productId={product.id}
+            />
 
             {/* Trust Features */}
             <TrustBadges variant="grid" className="pt-6 border-t border-border" />

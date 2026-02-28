@@ -12,6 +12,7 @@ import StockUrgencyBadge from "./StockUrgencyBadge";
 import ProductBadges from "./ProductBadges";
 import QuickView from "./QuickView";
 import { useProductRating } from "@/hooks/useReviews";
+import VerifiedSellerBadge from "./VerifiedSellerBadge";
 import { toast } from "sonner";
 
 interface ProductCardProps {
@@ -141,6 +142,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
             {product.categories?.name}
           </span>
         </Link>
+        
+        {product.seller_id && (
+          <VerifiedSellerBadge sellerId={product.seller_id} variant="compact" />
+        )}
         
         <Link to={`/urun/${product.slug}`}>
           <h3 className="mt-1 font-serif text-lg font-medium text-foreground line-clamp-2 hover:text-primary transition-colors">

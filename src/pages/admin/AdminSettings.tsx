@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { Database } from "@/integrations/supabase/types";
 import LogoUpload from "@/components/admin/LogoUpload";
+import FaviconUpload from "@/components/admin/FaviconUpload";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, AlertCircle, Send, Loader2 } from "lucide-react";
@@ -249,6 +250,14 @@ const AdminSettings = () => {
                 <LogoUpload
                   currentLogo={general.logo_url || null}
                   onLogoChange={(url) => setGeneral(prev => ({ ...prev, logo_url: url || "" }))}
+                />
+              </div>
+
+              <div>
+                <Label className="mb-2 block">Favicon</Label>
+                <FaviconUpload
+                  currentFavicon={general.favicon_url || null}
+                  onFaviconChange={(url) => setGeneral(prev => ({ ...prev, favicon_url: url || "" }))}
                 />
               </div>
               
