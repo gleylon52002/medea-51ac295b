@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { initNativeApp } from "./lib/capacitorNative";
 
 // Global unhandled promise rejection handler
 window.addEventListener("unhandledrejection", (event) => {
@@ -22,6 +23,9 @@ if ("serviceWorker" in navigator) {
     });
   });
 }
+
+// Initialize native app features (Capacitor)
+initNativeApp();
 
 const rootElement = document.getElementById("root");
 if (rootElement) {

@@ -2,8 +2,20 @@
   "appId": "app.lovable.f9703bb84ab14aab97d5be5278009ddc",
   "appName": "medea",
   "webDir": "dist",
-  "server": {
-    "url": "https://f9703bb8-4ab1-4aab-97d5-be5278009ddc.lovableproject.com?forceHideBadge=true",
-    "cleartext": true
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#2d4a3e",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_CROP",
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#2d4a3e",
+      "overlaysWebView": false
+    }
   }
 }
