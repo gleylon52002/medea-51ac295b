@@ -32,6 +32,7 @@ import {
   Activity,
   Smartphone,
   FlaskConical,
+  TrendingDown,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,7 @@ const menuItems = [
   { icon: Activity, label: "Aktivite Logları", path: "/admin/aktivite" },
   { icon: Smartphone, label: "SMS Yönetimi", path: "/admin/sms" },
   { icon: FlaskConical, label: "A/B Testler", path: "/admin/ab-testler" },
+  { icon: TrendingDown, label: "Dönüşüm Hunisi", path: "/admin/donusum-hunisi" },
 ];
 
 const SidebarContent = ({ onItemClick }: { onItemClick?: () => void }) => {

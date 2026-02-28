@@ -72,6 +72,7 @@ import AdminUserCarts from "./pages/admin/AdminUserCarts";
 import AdminActivityLogs from "./pages/admin/AdminActivityLogs";
 import AdminSMS from "./pages/admin/AdminSMS";
 import AdminABTests from "./pages/admin/AdminABTests";
+import AdminConversionFunnel from "./pages/admin/AdminConversionFunnel";
 // Seller Pages
 import SellerGuard from "./components/seller/SellerGuard";
 import SellerLayout from "./components/seller/SellerLayout";
@@ -191,6 +192,7 @@ const App = () => (
                 <Route path="aktivite" element={<AdminActivityLogs />} />
                 <Route path="sms" element={<AdminSMS />} />
                 <Route path="ab-testler" element={<AdminABTests />} />
+                <Route path="donusum-hunisi" element={<AdminConversionFunnel />} />
               </Route>
 
               {/* Seller Routes */}
