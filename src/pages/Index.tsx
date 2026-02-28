@@ -9,6 +9,7 @@ import RecentPurchaseToast from "@/components/products/RecentPurchaseToast";
 import { useAbandonedCartTracker } from "@/hooks/useAbandonedCart";
 import RecentlyViewed from "@/components/products/RecentlyViewed";
 import Campaigns from "@/components/home/Campaigns";
+import CampaignPopup from "@/components/home/CampaignPopup";
 import FirstOrderBanner from "@/components/home/FirstOrderBanner";
 import AIRecommendations from "@/components/products/AIRecommendations";
 import SEOHead from "@/components/SEOHead";
@@ -40,6 +41,7 @@ const Index = () => {
       </div>
       <Newsletter />
       <RecentPurchaseToast />
+      <CampaignPopup />
     </Layout>
   );
 };
