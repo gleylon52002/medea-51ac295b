@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useProfile } from "@/hooks/useProfile";
 import CouponInput from "@/components/checkout/CouponInput";
+import CheckoutSecurityBadges from "@/components/checkout/CheckoutSecurityBadges";
 import { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -802,6 +803,8 @@ const Checkout = () => {
                   {formatPrice(freeShippingThreshold - total)} daha ekleyin, ücretsiz kargo kazanın!
                 </p>
               )}
+
+              <CheckoutSecurityBadges />
             </div>
           </div>
         </div>

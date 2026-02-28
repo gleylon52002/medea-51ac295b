@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Shield, Lock } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Phone, MapPin, Instagram, Facebook, Twitter, Youtube, Music2, Linkedin, MessageCircle, Send } from "lucide-react";
@@ -240,8 +241,14 @@ const Footer = () => {
               {footer.copyright}
             </p>
             <div className="flex items-center gap-4">
-              <img src="/placeholder.svg" alt="Visa" className="h-6 opacity-60" />
-              <img src="/placeholder.svg" alt="Mastercard" className="h-6 opacity-60" />
+              <div className="flex items-center gap-1.5 text-primary-foreground/60">
+                <Lock className="h-4 w-4" />
+                <span className="text-xs">SSL Güvenli</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-primary-foreground/60">
+                <Shield className="h-4 w-4" />
+                <span className="text-xs">256-bit Şifreleme</span>
+              </div>
             </div>
           </div>
         </div>

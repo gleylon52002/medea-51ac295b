@@ -31,6 +31,7 @@ import {
   Ticket,
   Activity,
   Smartphone,
+  FlaskConical,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,7 @@ const menuItems = [
   { icon: Settings, label: "Ayarlar", path: "/admin/ayarlar" },
   { icon: Activity, label: "Aktivite Logları", path: "/admin/aktivite" },
   { icon: Smartphone, label: "SMS Yönetimi", path: "/admin/sms" },
+  { icon: FlaskConical, label: "A/B Testler", path: "/admin/ab-testler" },
 ];
 
 const SidebarContent = ({ onItemClick }: { onItemClick?: () => void }) => {
