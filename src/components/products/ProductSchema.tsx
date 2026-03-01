@@ -10,6 +10,7 @@ interface ProductSchemaProps {
     slug: string;
     stock: number;
     categories?: { name: string } | null;
+    keywords?: string[] | null;
   };
   rating?: { average: number; count: number } | null;
   siteUrl?: string;
@@ -25,6 +26,9 @@ const ProductSchema = ({ product, rating, siteUrl = "https://medea.lovable.app" 
       image: product.images?.[0] || "",
       url: `${siteUrl}/urun/${product.slug}`,
       category: product.categories?.name || "",
+      ...(product.keywords && product.keywords.length > 0 && {
+        keywords: product.keywords.join(", "),
+      }),
       offers: {
         "@type": "Offer",
         price: product.sale_price || product.price,

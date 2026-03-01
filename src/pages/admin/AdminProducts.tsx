@@ -58,6 +58,7 @@ const AdminProducts = () => {
     usage_instructions: "",
     meta_title: "",
     meta_description: "",
+    keywords: "",
   });
   const queryClient = useQueryClient();
 
@@ -157,6 +158,7 @@ const AdminProducts = () => {
         usage_instructions: product.usage_instructions || "",
         meta_title: product.meta_title || "",
         meta_description: product.meta_description || "",
+        keywords: ((product as any).keywords || []).join(", "),
       });
     } else {
       setEditingProduct(null);
@@ -175,6 +177,7 @@ const AdminProducts = () => {
         usage_instructions: "",
         meta_title: "",
         meta_description: "",
+        keywords: "",
       });
     }
     setIsDialogOpen(true);
@@ -202,7 +205,12 @@ const AdminProducts = () => {
       return;
     }
 
-    const product: Partial<Product> = {
+    const keywordsArray = formData.keywords
+      .split(",")
+      .map((k) => k.trim())
+      .filter(Boolean);
+
+    const product: any = {
       name: formData.name.trim(),
       slug: generateSlug(formData.name),
       description: formData.description.trim() || null,
@@ -218,6 +226,7 @@ const AdminProducts = () => {
       meta_title: formData.meta_title.trim() || null,
       meta_description: formData.meta_description.trim() || null,
       images: productImages,
+      keywords: keywordsArray,
     };
 
     saveMutation.mutate(product);
@@ -415,9 +424,29 @@ const AdminProducts = () => {
                       id="description"
                       rows={4}
                       value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Ürün detay sayfasında gösterilecek açıklama"
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val.endsWith("@") && formData.keywords.trim()) {
+                          const keywordsText = formData.keywords
+                            .split(",")
+                            .map((k) => k.trim())
+                            .filter(Boolean)
+                            .join(", ");
+                          setFormData({
+                            ...formData,
+                            description: val.slice(0, -1) + keywordsText,
+                          });
+                        } else {
+                          setFormData({ ...formData, description: val });
+                        }
+                      }}
+                      placeholder="Ürün detay sayfasında gösterilecek açıklama. @ yazarak anahtar kelimeleri ekleyin."
                     />
+                    {formData.keywords.trim() && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        💡 Açıklamaya @ yazarak anahtar kelimeleri otomatik ekleyebilirsiniz
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -542,6 +571,19 @@ const AdminProducts = () => {
               </TabsContent>
 
               <TabsContent value="seo" className="space-y-4">
+                <div>
+                  <Label htmlFor="keywords">Anahtar Kelimeler</Label>
+                  <Input
+                    id="keywords"
+                    value={formData.keywords}
+                    onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}
+                    placeholder="doğal sabun, el yapımı, organik, vegan (virgülle ayırın)"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Virgülle ayırarak birden fazla anahtar kelime girin. Açıklamada @ yazarak otomatik ekleyebilirsiniz.
+                  </p>
+                </div>
+
                 <div>
                   <Label htmlFor="meta_title">SEO Başlık</Label>
                   <Input

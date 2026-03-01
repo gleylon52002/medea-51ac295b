@@ -7,9 +7,10 @@ interface SEOHeadProps {
   ogImage?: string;
   ogType?: string;
   noIndex?: boolean;
+  keywords?: string[];
 }
 
-const SEOHead = ({ title, description, canonical, ogImage, ogType = "website", noIndex }: SEOHeadProps) => {
+const SEOHead = ({ title, description, canonical, ogImage, ogType = "website", noIndex, keywords }: SEOHeadProps) => {
   useEffect(() => {
     // Set title
     document.title = title.includes("Medea") ? title : `${title} | Medea`;
@@ -35,6 +36,10 @@ const SEOHead = ({ title, description, canonical, ogImage, ogType = "website", n
 
     if (ogImage) setMeta("og:image", ogImage, "property");
 
+    if (keywords && keywords.length > 0) {
+      setMeta("keywords", keywords.join(", "));
+    }
+
     if (canonical) {
       let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
       if (!link) {
@@ -54,7 +59,7 @@ const SEOHead = ({ title, description, canonical, ogImage, ogType = "website", n
       const canonicalLink = document.querySelector('link[rel="canonical"]');
       if (canonicalLink) canonicalLink.remove();
     };
-  }, [title, description, canonical, ogImage, ogType, noIndex]);
+  }, [title, description, canonical, ogImage, ogType, noIndex, keywords]);
 
   return null;
 };
