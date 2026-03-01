@@ -1255,6 +1255,7 @@ export type Database = {
           ingredients: string | null
           is_active: boolean
           is_featured: boolean
+          keywords: string[] | null
           meta_description: string | null
           meta_title: string | null
           name: string
@@ -1276,6 +1277,7 @@ export type Database = {
           ingredients?: string | null
           is_active?: boolean
           is_featured?: boolean
+          keywords?: string[] | null
           meta_description?: string | null
           meta_title?: string | null
           name: string
@@ -1297,6 +1299,7 @@ export type Database = {
           ingredients?: string | null
           is_active?: boolean
           is_featured?: boolean
+          keywords?: string[] | null
           meta_description?: string | null
           meta_title?: string | null
           name?: string

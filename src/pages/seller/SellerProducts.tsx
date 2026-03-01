@@ -57,6 +57,7 @@ const SellerProducts = () => {
     images: [] as string[],
     ingredients: "",
     usage_instructions: "",
+    keywords: "",
   });
 
   const resetForm = () => {
@@ -71,6 +72,7 @@ const SellerProducts = () => {
       images: [],
       ingredients: "",
       usage_instructions: "",
+      keywords: "",
     });
     setEditingProduct(null);
   };
@@ -89,6 +91,7 @@ const SellerProducts = () => {
         images: product.images || [],
         ingredients: product.ingredients || "",
         usage_instructions: product.usage_instructions || "",
+        keywords: (product.keywords || []).join(", "),
       });
     } else {
       resetForm();
@@ -97,7 +100,12 @@ const SellerProducts = () => {
   };
 
   const handleSubmit = () => {
-    const data = {
+    const keywordsArray = formData.keywords
+      .split(",")
+      .map((k) => k.trim())
+      .filter(Boolean);
+
+    const data: any = {
       name: formData.name,
       description: formData.description,
       short_description: formData.short_description,
@@ -108,6 +116,7 @@ const SellerProducts = () => {
       images: formData.images,
       ingredients: formData.ingredients,
       usage_instructions: formData.usage_instructions,
+      keywords: keywordsArray,
     };
 
     if (editingProduct) {
@@ -192,10 +201,30 @@ const SellerProducts = () => {
                 <Label>Açıklama</Label>
                 <Textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Detaylı açıklama"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val.endsWith("@") && formData.keywords.trim()) {
+                      const keywordsText = formData.keywords
+                        .split(",")
+                        .map((k) => k.trim())
+                        .filter(Boolean)
+                        .join(", ");
+                      setFormData({
+                        ...formData,
+                        description: val.slice(0, -1) + keywordsText,
+                      });
+                    } else {
+                      setFormData({ ...formData, description: val });
+                    }
+                  }}
+                  placeholder="Detaylı açıklama. @ yazarak anahtar kelimeleri ekleyin."
                   rows={4}
                 />
+                {formData.keywords.trim() && (
+                  <p className="text-xs text-muted-foreground">
+                    💡 @ yazarak anahtar kelimeleri otomatik ekleyebilirsiniz
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -278,6 +307,18 @@ const SellerProducts = () => {
                   placeholder="Kullanım bilgileri"
                   rows={2}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Anahtar Kelimeler</Label>
+                <Input
+                  value={formData.keywords}
+                  onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}
+                  placeholder="doğal sabun, el yapımı, organik (virgülle ayırın)"
+                />
+                <p className="text-xs text-muted-foreground">
+                  SEO için anahtar kelimeler. Açıklamada @ ile otomatik eklenebilir.
+                </p>
               </div>
 
               <div className="flex justify-end gap-2 pt-4">

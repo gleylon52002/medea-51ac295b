@@ -161,6 +161,7 @@ const ProductDetail = () => {
         canonical={`https://medea.lovable.app/urun/${product.slug}`}
         ogImage={product.images?.[0]}
         ogType="product"
+        keywords={(product as any).keywords || []}
       />
       <ProductSchema product={product} rating={rating} />
       <div className="container-main py-8 lg:py-12">
