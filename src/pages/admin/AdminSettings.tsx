@@ -13,7 +13,9 @@ import LogoUpload from "@/components/admin/LogoUpload";
 import FaviconUpload from "@/components/admin/FaviconUpload";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, AlertCircle, Send, Loader2 } from "lucide-react";
+import { CheckCircle, AlertCircle, Send, Loader2, Smartphone } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 type SiteSetting = Database["public"]["Tables"]["site_settings"]["Row"];
 
@@ -50,6 +52,14 @@ interface EmailSettings {
   order_status_enabled: boolean;
   shipping_notification_enabled: boolean;
   contact_form_notification_email: string;
+}
+
+interface AppPromotionSettings {
+  enabled: boolean;
+  android_url: string;
+  ios_url: string;
+  android_logo: string;
+  ios_logo: string;
 }
 
 const AdminSettings = () => {
@@ -92,6 +102,17 @@ const AdminSettings = () => {
 
   const [testEmailTo, setTestEmailTo] = useState("");
   const [isSendingTest, setIsSendingTest] = useState(false);
+  const [appPromotion, setAppPromotion] = useState<AppPromotionSettings>({
+    enabled: false,
+    android_url: "",
+    ios_url: "",
+    android_logo: "",
+    ios_logo: "",
+  });
+  const [appLogoImages, setAppLogoImages] = useState<{ android: string[]; ios: string[] }>({
+    android: [],
+    ios: [],
+  });
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["admin", "site-settings"],
@@ -123,6 +144,13 @@ const AdminSettings = () => {
             break;
           case "email":
             setEmail(prev => ({ ...prev, ...value }));
+            break;
+          case "app_promotion":
+            setAppPromotion(prev => ({ ...prev, ...value }));
+            setAppLogoImages({
+              android: (value as any).android_logo ? [(value as any).android_logo] : [],
+              ios: (value as any).ios_logo ? [(value as any).ios_logo] : [],
+            });
             break;
         }
       });
@@ -215,6 +243,7 @@ const AdminSettings = () => {
             <TabsTrigger value="shipping">Kargo</TabsTrigger>
             <TabsTrigger value="email">E-posta</TabsTrigger>
             <TabsTrigger value="legal">Hukuki</TabsTrigger>
+            <TabsTrigger value="app">Mobil Uygulama</TabsTrigger>
           </TabsList>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
@@ -538,6 +567,87 @@ const AdminSettings = () => {
               </div>
               <Button 
                 onClick={() => saveMutation.mutate({ key: "legal_pages", value: legal })}
+                disabled={saveMutation.isPending}
+                className="w-full sm:w-auto"
+              >
+                Kaydet
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="app">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Smartphone className="h-5 w-5" />
+                Mobil Uygulama Tanıtımı
+              </CardTitle>
+              <CardDescription>
+                Android ve iOS uygulama indirme linkleri. Sadece bilgisayardan görünen küçük bir popup olarak gösterilir.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={appPromotion.enabled}
+                  onCheckedChange={(checked) => setAppPromotion(prev => ({ ...prev, enabled: checked }))}
+                />
+                <Label>Popup Aktif</Label>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-medium text-sm">Android (Google Play)</h3>
+                <div>
+                  <Label htmlFor="android_url">Google Play Linki</Label>
+                  <Input
+                    id="android_url"
+                    value={appPromotion.android_url}
+                    onChange={(e) => setAppPromotion(prev => ({ ...prev, android_url: e.target.value }))}
+                    placeholder="https://play.google.com/store/apps/details?id=..."
+                  />
+                </div>
+                <div>
+                  <Label className="mb-2 block">Android Logo / Badge</Label>
+                  <ImageUpload
+                    images={appLogoImages.android}
+                    onImagesChange={(imgs) => {
+                      setAppLogoImages(prev => ({ ...prev, android: imgs }));
+                      setAppPromotion(prev => ({ ...prev, android_logo: imgs[0] || "" }));
+                    }}
+                    bucket="site-assets"
+                    maxImages={1}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-medium text-sm">iOS (App Store)</h3>
+                <div>
+                  <Label htmlFor="ios_url">App Store Linki</Label>
+                  <Input
+                    id="ios_url"
+                    value={appPromotion.ios_url}
+                    onChange={(e) => setAppPromotion(prev => ({ ...prev, ios_url: e.target.value }))}
+                    placeholder="https://apps.apple.com/app/..."
+                  />
+                </div>
+                <div>
+                  <Label className="mb-2 block">iOS Logo / Badge</Label>
+                  <ImageUpload
+                    images={appLogoImages.ios}
+                    onImagesChange={(imgs) => {
+                      setAppLogoImages(prev => ({ ...prev, ios: imgs }));
+                      setAppPromotion(prev => ({ ...prev, ios_logo: imgs[0] || "" }));
+                    }}
+                    bucket="site-assets"
+                    maxImages={1}
+                  />
+                </div>
+              </div>
+
+              <Button
+                onClick={() => saveMutation.mutate({ key: "app_promotion", value: appPromotion })}
                 disabled={saveMutation.isPending}
                 className="w-full sm:w-auto"
               >

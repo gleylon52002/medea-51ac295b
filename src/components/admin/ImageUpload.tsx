@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 interface ImageUploadProps {
   images: string[];
   onImagesChange: (images: string[]) => void;
-  bucket: "product-images" | "category-images";
+  bucket: "product-images" | "category-images" | "site-assets";
   maxImages?: number;
   className?: string;
 }
