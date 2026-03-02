@@ -5,7 +5,7 @@ import {
   useComparisonProducts,
   useRemoveFromComparison,
 } from "@/hooks/useProductComparison";
-import { cn } from "@/lib/utils";
+
 
 const ComparisonFloat = () => {
   const { data: comparisons } = useComparisonProducts();
@@ -16,7 +16,7 @@ const ComparisonFloat = () => {
   }
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-card border rounded-lg shadow-lg p-4 max-w-md w-full mx-4">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-card border rounded-lg shadow-lg p-4 max-w-md w-[calc(100%-2rem)]">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Scale className="h-5 w-5 text-primary" />

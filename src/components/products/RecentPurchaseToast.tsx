@@ -86,7 +86,7 @@ const RecentPurchaseToast = () => {
   if (!isVisible || !purchase || dismissed) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 max-w-sm animate-in slide-in-from-left-full duration-300">
+    <div className="fixed bottom-4 left-2 right-2 sm:left-4 sm:right-auto z-50 w-auto sm:max-w-sm animate-in slide-in-from-left-full duration-300">
       <div className="bg-card border border-border rounded-lg shadow-lg p-4 flex items-start gap-3">
         <div className="p-2 bg-primary/10 rounded-full">
           <ShoppingBag className="h-5 w-5 text-primary" />
