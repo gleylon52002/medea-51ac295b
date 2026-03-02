@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -37,10 +38,33 @@ export const useSiteSettings = () => {
 
 export const useGeneralSettings = () => {
   const { data: settings, ...rest } = useSiteSettings();
-  
+  const general = settings?.general as GeneralSettings | undefined;
+
+  // Dynamically apply favicon from database
+  useEffect(() => {
+    if (general?.favicon_url) {
+      let link = document.querySelector("link[rel='icon']") as HTMLLinkElement | null;
+      if (!link) {
+        link = document.createElement("link");
+        link.rel = "icon";
+        document.head.appendChild(link);
+      }
+      link.href = general.favicon_url;
+      link.type = "image/png";
+
+      let shortcut = document.querySelector("link[rel='shortcut icon']") as HTMLLinkElement | null;
+      if (!shortcut) {
+        shortcut = document.createElement("link");
+        shortcut.rel = "shortcut icon";
+        document.head.appendChild(shortcut);
+      }
+      shortcut.href = general.favicon_url;
+    }
+  }, [general?.favicon_url]);
+
   return {
     ...rest,
-    data: settings?.general as GeneralSettings | undefined,
+    data: general,
   };
 };
 
