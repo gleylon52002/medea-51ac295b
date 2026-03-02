@@ -24,11 +24,11 @@ const Index = () => {
         description="Medea'da en kaliteli doğal güzellik ve bakım ürünlerini keşfedin. Hızlı kargo, güvenli ödeme ve %100 müşteri memnuniyeti garantisi."
         canonical="https://medea.lovable.app"
       />
-      <Hero />
+      <FeaturedProducts />
       <FirstOrderBanner />
       <Campaigns />
       <Features />
-      <FeaturedProducts />
+      <Hero />
       <div className="container-main py-12">
         <TrustBadges variant="horizontal" />
       </div>
