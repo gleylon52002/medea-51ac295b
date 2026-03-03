@@ -209,6 +209,185 @@ export type Database = {
         }
         Relationships: []
       }
+      badge_definitions: {
+        Row: {
+          condition_type: string
+          condition_value: number
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          points_reward: number
+          slug: string
+        }
+        Insert: {
+          condition_type: string
+          condition_value?: number
+          created_at?: string
+          description: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          points_reward?: number
+          slug: string
+        }
+        Update: {
+          condition_type?: string
+          condition_value?: number
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          points_reward?: number
+          slug?: string
+        }
+        Relationships: []
+      }
+      birthday_reminders: {
+        Row: {
+          birthday: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_gift_product_ids: string[] | null
+          last_notified_at: string | null
+          notes: string | null
+          person_name: string
+          user_id: string
+        }
+        Insert: {
+          birthday: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_gift_product_ids?: string[] | null
+          last_notified_at?: string | null
+          notes?: string | null
+          person_name: string
+          user_id: string
+        }
+        Update: {
+          birthday?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_gift_product_ids?: string[] | null
+          last_notified_at?: string | null
+          notes?: string | null
+          person_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      blog_posts: {
+        Row: {
+          author_id: string | null
+          content: string
+          cover_image: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          is_published: boolean
+          meta_description: string | null
+          meta_title: string | null
+          product_ids: string[] | null
+          slug: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          views_count: number
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          cover_image?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          is_published?: boolean
+          meta_description?: string | null
+          meta_title?: string | null
+          product_ids?: string[] | null
+          slug: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          views_count?: number
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          cover_image?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          is_published?: boolean
+          meta_description?: string | null
+          meta_title?: string | null
+          product_ids?: string[] | null
+          slug?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          views_count?: number
+        }
+        Relationships: []
+      }
+      bulk_discount_rules: {
+        Row: {
+          applies_to: string
+          buy_quantity: number
+          category_id: string | null
+          created_at: string
+          discount_percent: number | null
+          id: string
+          is_active: boolean
+          name: string
+          pay_quantity: number | null
+          product_ids: string[] | null
+          rule_type: string
+        }
+        Insert: {
+          applies_to?: string
+          buy_quantity?: number
+          category_id?: string | null
+          created_at?: string
+          discount_percent?: number | null
+          id?: string
+          is_active?: boolean
+          name: string
+          pay_quantity?: number | null
+          product_ids?: string[] | null
+          rule_type?: string
+        }
+        Update: {
+          applies_to?: string
+          buy_quantity?: number
+          category_id?: string | null
+          created_at?: string
+          discount_percent?: number | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          pay_quantity?: number | null
+          product_ids?: string[] | null
+          rule_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_discount_rules_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           applies_to: string
@@ -498,6 +677,78 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_product_orders: {
+        Row: {
+          additional_notes: string | null
+          created_at: string
+          id: string
+          ingredient_allergies: string | null
+          price: number | null
+          product_id: string | null
+          scent_preference: string | null
+          seller_id: string | null
+          skin_type: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          additional_notes?: string | null
+          created_at?: string
+          id?: string
+          ingredient_allergies?: string | null
+          price?: number | null
+          product_id?: string | null
+          scent_preference?: string | null
+          seller_id?: string | null
+          skin_type: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          additional_notes?: string | null
+          created_at?: string
+          id?: string
+          ingredient_allergies?: string | null
+          price?: number | null
+          product_id?: string | null
+          scent_preference?: string | null
+          seller_id?: string | null
+          skin_type?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_checkins: {
+        Row: {
+          checkin_date: string
+          created_at: string
+          id: string
+          points_earned: number
+          streak_days: number
+          user_id: string
+        }
+        Insert: {
+          checkin_date?: string
+          created_at?: string
+          id?: string
+          points_earned?: number
+          streak_days?: number
+          user_id: string
+        }
+        Update: {
+          checkin_date?: string
+          created_at?: string
+          id?: string
+          points_earned?: number
+          streak_days?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_logs: {
         Row: {
           created_at: string | null
@@ -606,6 +857,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gift_packages: {
+        Row: {
+          box_style: string
+          created_at: string
+          gift_link_token: string | null
+          gift_note: string | null
+          id: string
+          order_id: string | null
+          product_ids: string[]
+          recipient_address: Json | null
+          recipient_email: string | null
+          recipient_name: string
+          sender_id: string | null
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          box_style?: string
+          created_at?: string
+          gift_link_token?: string | null
+          gift_note?: string | null
+          id?: string
+          order_id?: string | null
+          product_ids?: string[]
+          recipient_address?: Json | null
+          recipient_email?: string | null
+          recipient_name: string
+          sender_id?: string | null
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          box_style?: string
+          created_at?: string
+          gift_link_token?: string | null
+          gift_note?: string | null
+          id?: string
+          order_id?: string | null
+          product_ids?: string[]
+          recipient_address?: Json | null
+          recipient_email?: string | null
+          recipient_name?: string
+          sender_id?: string | null
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       invoices: {
         Row: {
@@ -1309,6 +1611,7 @@ export type Database = {
           category_id: string | null
           created_at: string
           description: string | null
+          guide_pdf_url: string | null
           id: string
           images: string[] | null
           ingredients: string | null
@@ -1332,6 +1635,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           description?: string | null
+          guide_pdf_url?: string | null
           id?: string
           images?: string[] | null
           ingredients?: string | null
@@ -1355,6 +1659,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           description?: string | null
+          guide_pdf_url?: string | null
           id?: string
           images?: string[] | null
           ingredients?: string | null
@@ -1503,6 +1808,77 @@ export type Database = {
           target_type?: string
           target_user_ids?: string[] | null
           title?: string
+        }
+        Relationships: []
+      }
+      raffle_entries: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string | null
+          raffle_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          raffle_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          raffle_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffle_entries_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      raffles: {
+        Row: {
+          created_at: string
+          description: string | null
+          ends_at: string
+          id: string
+          is_active: boolean
+          min_order_amount: number
+          prize: string
+          starts_at: string
+          title: string
+          winner_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          ends_at: string
+          id?: string
+          is_active?: boolean
+          min_order_amount?: number
+          prize: string
+          starts_at?: string
+          title: string
+          winner_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          ends_at?: string
+          id?: string
+          is_active?: boolean
+          min_order_amount?: number
+          prize?: string
+          starts_at?: string
+          title?: string
+          winner_user_id?: string | null
         }
         Relationships: []
       }
@@ -2406,6 +2782,35 @@ export type Database = {
           },
         ]
       }
+      user_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badge_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_carts: {
         Row: {
           created_at: string
@@ -2532,6 +2937,42 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_routines: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          images: string[] | null
+          is_approved: boolean
+          likes_count: number
+          product_ids: string[] | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          images?: string[] | null
+          is_approved?: boolean
+          likes_count?: number
+          product_ids?: string[] | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          images?: string[] | null
+          is_approved?: boolean
+          likes_count?: number
+          product_ids?: string[] | null
+          title?: string
           user_id?: string
         }
         Relationships: []
