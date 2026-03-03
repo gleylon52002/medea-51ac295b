@@ -13,6 +13,8 @@ import ProductBadges from "./ProductBadges";
 import QuickView from "./QuickView";
 import { useProductRating } from "@/hooks/useReviews";
 import VerifiedSellerBadge from "./VerifiedSellerBadge";
+import SustainabilityBadges from "./SustainabilityBadges";
+import { useAllProductTags } from "@/hooks/useProductTags";
 import { toast } from "sonner";
 
 interface ProductCardProps {
@@ -30,6 +32,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const removeFromComparison = useRemoveFromComparison();
   
   const { data: rating } = useProductRating(product.id);
+  const { data: allTags } = useAllProductTags();
+  const productTags = allTags?.filter(t => t.product_id === product.id).map(t => t.tag) || [];
   const existingComparison = comparisons?.find((c) => c.product_id === product.id);
   const isInComparison = !!existingComparison;
   const comparisonCount = comparisons?.length || 0;
@@ -162,6 +166,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
               ))}
             </div>
             <span className="text-xs text-muted-foreground">({rating.count})</span>
+          </div>
+        )}
+
+        {/* Sustainability Badges */}
+        {productTags.length > 0 && (
+          <div className="mt-1.5">
+            <SustainabilityBadges tags={productTags} size="sm" maxShow={3} />
           </div>
         )}
 
