@@ -5,6 +5,7 @@ import CartDrawer from "@/components/cart/CartDrawer";
 import ComparisonFloat from "@/components/products/ComparisonFloat";
 import FlashSaleBanner from "@/components/home/FlashSaleBanner";
 import AppPromotionPopup from "@/components/home/AppPromotionPopup";
+import AIChatWidget from "@/components/chat/AIChatWidget";
 import { useTheme } from "@/hooks/useTheme";
 import { useCartSync } from "@/hooks/useUserCart";
 
@@ -25,6 +26,7 @@ const Layout = ({ children }: LayoutProps) => {
       <CartDrawer />
       <ComparisonFloat />
       <AppPromotionPopup />
+      <AIChatWidget />
     </div>
   );
 };

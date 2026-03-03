@@ -182,6 +182,33 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_chat_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          messages: Json
+          session_type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          messages?: Json
+          session_type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          messages?: Json
+          session_type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           applies_to: string
@@ -1186,6 +1213,38 @@ export type Database = {
           },
         ]
       }
+      product_tags: {
+        Row: {
+          created_at: string
+          id: string
+          is_auto: boolean
+          product_id: string
+          tag: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_auto?: boolean
+          product_id: string
+          tag: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_auto?: boolean
+          product_id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_tags_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_variants: {
         Row: {
           color_code: string | null
@@ -1265,6 +1324,7 @@ export type Database = {
           short_description: string | null
           slug: string
           stock: number
+          sustainability_score: number | null
           updated_at: string
           usage_instructions: string | null
         }
@@ -1287,6 +1347,7 @@ export type Database = {
           short_description?: string | null
           slug: string
           stock?: number
+          sustainability_score?: number | null
           updated_at?: string
           usage_instructions?: string | null
         }
@@ -1309,6 +1370,7 @@ export type Database = {
           short_description?: string | null
           slug?: string
           stock?: number
+          sustainability_score?: number | null
           updated_at?: string
           usage_instructions?: string | null
         }
@@ -1608,6 +1670,63 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      seller_certificates: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          certificate_type: string
+          created_at: string
+          expires_at: string | null
+          file_url: string
+          id: string
+          name: string
+          seller_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          certificate_type?: string
+          created_at?: string
+          expires_at?: string | null
+          file_url: string
+          id?: string
+          name: string
+          seller_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          certificate_type?: string
+          created_at?: string
+          expires_at?: string | null
+          file_url?: string
+          id?: string
+          name?: string
+          seller_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_certificates_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_certificates_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       seller_notifications: {
         Row: {
