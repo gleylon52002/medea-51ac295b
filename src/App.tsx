@@ -93,6 +93,14 @@ import SellerQuestions from "./pages/seller/SellerQuestions";
 import SellerBuyPoints from "./pages/seller/SellerBuyPoints";
 
 import SellerStore from "./pages/SellerStore";
+import Blog from "./pages/Blog";
+import BlogDetail from "./pages/BlogDetail";
+import GiftPackage from "./pages/GiftPackage";
+import GiftReceive from "./pages/GiftReceive";
+import Badges from "./pages/Badges";
+import Community from "./pages/Community";
+import BirthdayReminders from "./pages/BirthdayReminders";
+import CustomProductOrder from "./pages/CustomProductOrder";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -162,6 +170,14 @@ const App = () => (
               <Route path="/satici-kurallari" element={<SellerRules />} />
               <Route path="/karsilastir" element={<Compare />} />
               <Route path="/magaza/:slug" element={<SellerStore />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogDetail />} />
+              <Route path="/hediye-paketi" element={<GiftPackage />} />
+              <Route path="/hediye/:token" element={<GiftReceive />} />
+              <Route path="/rozetler" element={<Badges />} />
+              <Route path="/topluluk" element={<Community />} />
+              <Route path="/dogum-gunu" element={<BirthdayReminders />} />
+              <Route path="/ozel-urun" element={<CustomProductOrder />} />
 
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>

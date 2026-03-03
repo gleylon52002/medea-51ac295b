@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.auto-tag-products]
 verify_jwt = false
+
+[functions.google-shopping-feed]
+verify_jwt = false
+
+[functions.sitemap]
+verify_jwt = false

@@ -8,6 +8,7 @@ import AppPromotionPopup from "@/components/home/AppPromotionPopup";
 import AIChatWidget from "@/components/chat/AIChatWidget";
 import { useTheme } from "@/hooks/useTheme";
 import { useCartSync } from "@/hooks/useUserCart";
+import { useActivityLogger } from "@/hooks/useActivityLog";
 
 interface LayoutProps {
   children: ReactNode;
@@ -16,6 +17,7 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   useTheme();
   useCartSync();
+  useActivityLogger();
   
   return (
     <div className="flex min-h-screen flex-col">
