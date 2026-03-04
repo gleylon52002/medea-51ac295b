@@ -35,7 +35,7 @@ import { Database } from "@/integrations/supabase/types";
 import ImageUpload from "@/components/admin/ImageUpload";
 import ProductVariantsManager from "@/components/admin/ProductVariantsManager";
 import RelatedProductsManager from "@/components/admin/RelatedProductsManager";
-
+import InstagramShareButton from "@/components/admin/InstagramShareButton";
 type Product = Database["public"]["Tables"]["products"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 
@@ -352,6 +352,12 @@ const AdminProducts = () => {
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
+                      <InstagramShareButton
+                        productName={product.name}
+                        productPrice={Number(product.sale_price || product.price)}
+                        productImage={product.images?.[0]}
+                        productSlug={product.slug}
+                      />
                     </div>
                   </TableCell>
                 </TableRow>

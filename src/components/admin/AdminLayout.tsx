@@ -72,6 +72,9 @@ const menuItems = [
   { icon: FlaskConical, label: "A/B Testler", path: "/admin/ab-testler" },
   { icon: TrendingDown, label: "Dönüşüm Hunisi", path: "/admin/donusum-hunisi" },
   { icon: Bell, label: "Push Bildirimler", path: "/admin/push-bildirimler" },
+  { icon: Newspaper, label: "Blog", path: "/admin/blog" },
+  { icon: UserCheck, label: "Sertifikalar", path: "/admin/sertifikalar" },
+  { icon: Users, label: "Cohort Analizi", path: "/admin/cohort" },
 ];
 
 const SidebarContent = ({ onItemClick }: { onItemClick?: () => void }) => {
