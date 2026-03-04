@@ -6,9 +6,11 @@ import ComparisonFloat from "@/components/products/ComparisonFloat";
 import FlashSaleBanner from "@/components/home/FlashSaleBanner";
 import AppPromotionPopup from "@/components/home/AppPromotionPopup";
 import AIChatWidget from "@/components/chat/AIChatWidget";
+import SpinWheelTrigger from "@/components/gamification/SpinWheelTrigger";
 import { useTheme } from "@/hooks/useTheme";
 import { useCartSync } from "@/hooks/useUserCart";
 import { useActivityLogger } from "@/hooks/useActivityLog";
+import { useHeatmapTracking } from "@/hooks/useHeatmap";
 
 interface LayoutProps {
   children: ReactNode;
@@ -18,6 +20,7 @@ const Layout = ({ children }: LayoutProps) => {
   useTheme();
   useCartSync();
   useActivityLogger();
+  useHeatmapTracking();
   
   return (
     <div className="flex min-h-screen flex-col">
@@ -29,6 +32,7 @@ const Layout = ({ children }: LayoutProps) => {
       <ComparisonFloat />
       <AppPromotionPopup />
       <AIChatWidget />
+      <SpinWheelTrigger />
     </div>
   );
 };

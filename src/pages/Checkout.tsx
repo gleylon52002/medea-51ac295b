@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useWallet } from "@/hooks/useAffiliate";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useBulkDiscounts, calculateBulkDiscount } from "@/hooks/useBulkDiscounts";
 
 type PaymentMethodType = "credit-card" | "bank-transfer" | "cash-on-delivery" | "shopier" | "shopinext" | "payizone";
 type DbPaymentMethod = Database["public"]["Enums"]["payment_method"];
@@ -85,8 +86,10 @@ const Checkout = () => {
   const freeShippingThreshold = shippingSettings?.free_shipping_threshold ?? 300;
   const defaultShippingCost = shippingSettings?.default_shipping_cost ?? 29.90;
   const computedShipping = total >= freeShippingThreshold ? 0 : defaultShippingCost;
-  const walletAmount = useWalletBalance && wallet ? Math.min(wallet.balance, total - (appliedCoupon?.discount || 0)) : 0;
-  const finalTotal = Math.max(0, total - (appliedCoupon?.discount || 0) - walletAmount + computedShipping);
+  const { data: bulkRules } = useBulkDiscounts();
+  const bulkResult = bulkRules ? calculateBulkDiscount(items, bulkRules) : { discount: 0, appliedRule: null };
+  const walletAmount = useWalletBalance && wallet ? Math.min(wallet.balance, total - (appliedCoupon?.discount || 0) - bulkResult.discount) : 0;
+  const finalTotal = Math.max(0, total - (appliedCoupon?.discount || 0) - bulkResult.discount - walletAmount + computedShipping);
 
   const [identityNumber, setIdentityNumber] = useState("");
   const [formData, setFormData] = useState({
@@ -808,6 +811,12 @@ const Checkout = () => {
                   <div className="flex justify-between text-green-600 font-medium">
                     <span>Kupon İndirimi ({appliedCoupon.coupon.code})</span>
                     <span>-{formatPrice(appliedCoupon.discount)}</span>
+                  </div>
+                )}
+                {bulkResult.discount > 0 && (
+                  <div className="flex justify-between text-green-600 font-medium">
+                    <span>Toplu Alım İndirimi{bulkResult.appliedRule ? ` (${bulkResult.appliedRule})` : ""}</span>
+                    <span>-{formatPrice(bulkResult.discount)}</span>
                   </div>
                 )}
                 {useWalletBalance && walletAmount > 0 && (

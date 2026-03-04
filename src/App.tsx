@@ -74,6 +74,9 @@ import AdminSMS from "./pages/admin/AdminSMS";
 import AdminABTests from "./pages/admin/AdminABTests";
 import AdminConversionFunnel from "./pages/admin/AdminConversionFunnel";
 import AdminPushNotifications from "./pages/admin/AdminPushNotifications";
+import AdminBlog from "./pages/admin/AdminBlog";
+import AdminCertificates from "./pages/admin/AdminCertificates";
+import AdminCohort from "./pages/admin/AdminCohort";
 // Seller Pages
 import SellerGuard from "./components/seller/SellerGuard";
 import SellerLayout from "./components/seller/SellerLayout";
@@ -91,6 +94,7 @@ import SellerInvoices from "./pages/seller/SellerInvoices";
 import SellerAnalytics from "./pages/seller/SellerAnalytics";
 import SellerQuestions from "./pages/seller/SellerQuestions";
 import SellerBuyPoints from "./pages/seller/SellerBuyPoints";
+import SellerStockForecast from "./pages/seller/SellerStockForecast";
 
 import SellerStore from "./pages/SellerStore";
 import Blog from "./pages/Blog";
@@ -211,6 +215,9 @@ const App = () => (
                 <Route path="ab-testler" element={<AdminABTests />} />
                 <Route path="donusum-hunisi" element={<AdminConversionFunnel />} />
                 <Route path="push-bildirimler" element={<AdminPushNotifications />} />
+                <Route path="blog" element={<AdminBlog />} />
+                <Route path="sertifikalar" element={<AdminCertificates />} />
+                <Route path="cohort" element={<AdminCohort />} />
               </Route>
 
               {/* Seller Routes */}
@@ -228,6 +235,7 @@ const App = () => (
                 <Route path="mesajlar" element={<SellerMessages />} />
                 <Route path="sorular" element={<SellerQuestions />} />
                 <Route path="kargo" element={<SellerCargo />} />
+                <Route path="stok-tahmini" element={<SellerStockForecast />} />
                 <Route path="ayarlar" element={<SellerSettings />} />
               </Route>
 

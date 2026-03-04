@@ -38,6 +38,7 @@ import { trackInteraction } from "@/hooks/useInteraction";
 import { ProductVariant } from "@/hooks/useProductVariants";
 import { ProductVariantInfo } from "@/types/product";
 import { useRelatedProducts } from "@/hooks/useRelatedProducts";
+import BarcodeScanner from "@/components/products/BarcodeScanner";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -328,6 +329,7 @@ const ProductDetail = () => {
                 </Button>
               )}
               <CompareButton productId={product.id} variant="icon" />
+              <BarcodeScanner />
             </div>
 
             {/* Subscription Button */}
