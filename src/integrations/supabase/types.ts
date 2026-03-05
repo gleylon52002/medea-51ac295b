@@ -2737,6 +2737,152 @@ export type Database = {
         }
         Relationships: []
       }
+      spin_results: {
+        Row: {
+          coupon_code: string | null
+          coupon_id: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          is_winner: boolean
+          slice_id: string | null
+          user_id: string
+        }
+        Insert: {
+          coupon_code?: string | null
+          coupon_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          is_winner?: boolean
+          slice_id?: string | null
+          user_id: string
+        }
+        Update: {
+          coupon_code?: string | null
+          coupon_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          is_winner?: boolean
+          slice_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spin_results_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spin_results_slice_id_fkey"
+            columns: ["slice_id"]
+            isOneToOne: false
+            referencedRelation: "spin_wheel_slices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spin_wheel_config: {
+        Row: {
+          border_color: string
+          center_color: string
+          cooldown_hours: number
+          coupon_expiry_hours: number
+          coupon_prefix: string
+          created_at: string
+          id: string
+          is_active: boolean
+          trigger_delay_seconds: number
+          trigger_scroll_percent: number
+          trigger_type: string
+          updated_at: string
+          wheel_colors: Json
+        }
+        Insert: {
+          border_color?: string
+          center_color?: string
+          cooldown_hours?: number
+          coupon_expiry_hours?: number
+          coupon_prefix?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          trigger_delay_seconds?: number
+          trigger_scroll_percent?: number
+          trigger_type?: string
+          updated_at?: string
+          wheel_colors?: Json
+        }
+        Update: {
+          border_color?: string
+          center_color?: string
+          cooldown_hours?: number
+          coupon_expiry_hours?: number
+          coupon_prefix?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          trigger_delay_seconds?: number
+          trigger_scroll_percent?: number
+          trigger_type?: string
+          updated_at?: string
+          wheel_colors?: Json
+        }
+        Relationships: []
+      }
+      spin_wheel_slices: {
+        Row: {
+          color: string | null
+          config_id: string
+          created_at: string
+          discount_value: number
+          id: string
+          is_active: boolean
+          label: string
+          min_cart_amount: number
+          prize_type: string
+          probability: number
+          sort_order: number
+        }
+        Insert: {
+          color?: string | null
+          config_id: string
+          created_at?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          label: string
+          min_cart_amount?: number
+          prize_type?: string
+          probability?: number
+          sort_order?: number
+        }
+        Update: {
+          color?: string | null
+          config_id?: string
+          created_at?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          label?: string
+          min_cart_amount?: number
+          prize_type?: string
+          probability?: number
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spin_wheel_slices_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "spin_wheel_config"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_alerts: {
         Row: {
           created_at: string
