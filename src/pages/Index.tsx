@@ -13,6 +13,7 @@ import CampaignPopup from "@/components/home/CampaignPopup";
 import FirstOrderBanner from "@/components/home/FirstOrderBanner";
 import AIRecommendations from "@/components/products/AIRecommendations";
 import SEOHead from "@/components/SEOHead";
+import BlogPreview from "@/components/home/BlogPreview";
 
 const Index = () => {
   useAbandonedCartTracker();
@@ -36,6 +37,7 @@ const Index = () => {
       <div className="container-main">
         <AIRecommendations title="Size Özel Öneriler" />
       </div>
+      <BlogPreview />
       <div className="container-main">
         <RecentlyViewed />
       </div>

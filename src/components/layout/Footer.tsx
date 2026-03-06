@@ -3,7 +3,6 @@ import { Shield, Lock } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Phone, MapPin, Instagram, Facebook, Twitter, Youtube, Music2, Linkedin, MessageCircle, Send } from "lucide-react";
-import * as LucideIcons from "lucide-react";
 
 interface SocialMediaLink {
   id: string;
@@ -123,20 +122,10 @@ const Footer = () => {
               })}
               {!socialLinks?.length && (
                 <>
-                  <a
-                    href="https://instagram.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 rounded-full bg-primary-foreground/10 hover:bg-primary-foreground/20 transition-colors"
-                  >
+                  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-primary-foreground/10 hover:bg-primary-foreground/20 transition-colors">
                     <Instagram className="h-5 w-5" />
                   </a>
-                  <a
-                    href="https://facebook.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 rounded-full bg-primary-foreground/10 hover:bg-primary-foreground/20 transition-colors"
-                  >
+                  <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-primary-foreground/10 hover:bg-primary-foreground/20 transition-colors">
                     <Facebook className="h-5 w-5" />
                   </a>
                 </>
@@ -153,6 +142,11 @@ const Footer = () => {
               <li>
                 <Link to="/urunler" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
                   Tüm Ürünler
+                </Link>
+              </li>
+              <li>
+                <Link to="/blog" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+                  Blog
                 </Link>
               </li>
               <li>
@@ -215,9 +209,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 flex-shrink-0 mt-0.5 text-primary-foreground/60" />
-                <span className="text-sm text-primary-foreground/80">
-                  {contact.address}
-                </span>
+                <span className="text-sm text-primary-foreground/80">{contact.address}</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5 flex-shrink-0 text-primary-foreground/60" />
@@ -237,9 +229,7 @@ const Footer = () => {
 
         <div className="mt-12 pt-8 border-t border-primary-foreground/20">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-primary-foreground/60">
-              {footer.copyright}
-            </p>
+            <p className="text-sm text-primary-foreground/60">{footer.copyright}</p>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5 text-primary-foreground/60">
                 <Lock className="h-4 w-4" />
