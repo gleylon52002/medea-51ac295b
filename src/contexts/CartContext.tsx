@@ -56,12 +56,37 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     variant?: ProductVariantInfo | null,
     priceAdjustment = 0
   ) => {
+    // Stock validation
+    const availableStock = product.stock;
+    if (availableStock <= 0) {
+      toast.error("Bu ürün stokta yok");
+      return;
+    }
+
     setItems((prev) => {
       const itemKey = getCartItemKey(product.id, variant?.id);
       const existing = prev.find(
         (item) => getCartItemKey(item.product.id, item.variant?.id) === itemKey
       );
       
+      const currentQty = existing ? existing.quantity : 0;
+      const newQty = currentQty + quantity;
+
+      if (newQty > availableStock) {
+        toast.error(`Bu üründen en fazla ${availableStock} adet ekleyebilirsiniz`);
+        if (currentQty >= availableStock) return prev;
+        // Add only up to the stock limit
+        const addableQty = availableStock - currentQty;
+        if (existing) {
+          return prev.map((item) =>
+            getCartItemKey(item.product.id, item.variant?.id) === itemKey
+              ? { ...item, quantity: availableStock }
+              : item
+          );
+        }
+        return [...prev, { product, quantity: addableQty, variant, priceAdjustment }];
+      }
+
       if (existing) {
         return prev.map((item) =>
           getCartItemKey(item.product.id, item.variant?.id) === itemKey
@@ -97,11 +122,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
     const itemKey = getCartItemKey(productId, variantId);
     setItems((prev) =>
-      prev.map((item) =>
-        getCartItemKey(item.product.id, item.variant?.id) === itemKey
-          ? { ...item, quantity }
-          : item
-      )
+      prev.map((item) => {
+        if (getCartItemKey(item.product.id, item.variant?.id) === itemKey) {
+          // Stock validation on quantity update
+          const maxStock = item.product.stock;
+          if (quantity > maxStock) {
+            toast.error(`Bu üründen en fazla ${maxStock} adet ekleyebilirsiniz`);
+            return { ...item, quantity: maxStock };
+          }
+          return { ...item, quantity };
+        }
+        return item;
+      })
     );
   };
 

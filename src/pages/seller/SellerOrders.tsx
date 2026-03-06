@@ -5,25 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ShoppingCart, Package, Clock, CheckCircle, Truck, XCircle, MapPin, Phone } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPrice, safeJsonParse } from "@/lib/utils";
 import { useSellerTransactions, useUpdateOrderShipping } from "@/hooks/useSeller";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const statusMap = {
   pending: { label: "Bekliyor", icon: Clock, color: "bg-yellow-100 text-yellow-700" },
@@ -36,21 +29,39 @@ const statusMap = {
 };
 
 const SellerOrders = () => {
+  const queryClient = useQueryClient();
   const { data: transactions, isLoading } = useSellerTransactions();
   const updateShipping = useUpdateOrderShipping();
 
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState("");
   const [shippingCompany, setShippingCompany] = useState("");
+  const [newStatus, setNewStatus] = useState("");
 
-  // Fetch shipping companies
   const { data: shippingCompanies } = useQuery({
     queryKey: ["shipping-companies"],
     queryFn: async () => {
       const { data } = await supabase.from("shipping_companies").select("*").eq("is_active", true);
       return data || [];
     },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ orderId, status }: { orderId: string; status: string }) => {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: status as any })
+        .eq("id", orderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["seller-transactions"] });
+      toast.success("Sipariş durumu güncellendi");
+      setIsStatusModalOpen(false);
+    },
+    onError: () => toast.error("Durum güncellenemedi"),
   });
 
   if (isLoading) {
@@ -62,7 +73,6 @@ const SellerOrders = () => {
     );
   }
 
-  // Group transactions by order
   const orders = transactions?.reduce((acc: any[], transaction: any) => {
     const existingOrder = acc.find(o => o.order_id === transaction.order_id);
     if (existingOrder) {
@@ -76,8 +86,6 @@ const SellerOrders = () => {
         items: [transaction],
         totalAmount: transaction.sale_amount,
         netAmount: transaction.net_amount,
-        // Use the transaction status as a fallback if order status is generic, 
-        // but prefer order status for shipping flow
         displayStatus: transaction.order?.status || transaction.status
       });
     }
@@ -91,16 +99,20 @@ const SellerOrders = () => {
     setIsShippingModalOpen(true);
   };
 
+  const handleOpenStatusModal = (order: any) => {
+    setSelectedOrder(order);
+    setNewStatus(order.displayStatus || "pending");
+    setIsStatusModalOpen(true);
+  };
+
   const handleSubmitShipping = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedOrder) return;
-
     await updateShipping.mutateAsync({
       orderId: selectedOrder.order_id,
       trackingNumber,
       shippingCompany
     });
-
     setIsShippingModalOpen(false);
   };
 
@@ -123,8 +135,6 @@ const SellerOrders = () => {
           orders.map((order: any) => {
             const status = statusMap[order.displayStatus as keyof typeof statusMap] || statusMap.pending;
             const StatusIcon = status.icon;
-
-            // Parse shipping address
             const address = safeJsonParse(order.shipping_address, null as any);
 
             return (
@@ -140,11 +150,14 @@ const SellerOrders = () => {
                         {new Date(order.created_at).toLocaleString("tr-TR")}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant="secondary" className={status.color}>
                         <StatusIcon className="h-3 w-3 mr-1" />
                         {status.label}
                       </Badge>
+                      <Button size="sm" variant="outline" onClick={() => handleOpenStatusModal(order)}>
+                        Durum Güncelle
+                      </Button>
                       {(order.displayStatus === 'pending' || order.displayStatus === 'confirmed' || order.displayStatus === 'preparing') && (
                         <Button size="sm" onClick={() => handleOpenShippingModal(order)}>
                           <Truck className="h-4 w-4 mr-2" />
@@ -162,7 +175,6 @@ const SellerOrders = () => {
                 </CardHeader>
                 <CardContent className="pt-6">
                   <div className="grid md:grid-cols-2 gap-6">
-                    {/* Items */}
                     <div className="space-y-4">
                       {order.items.map((item: any) => (
                         <div key={item.id} className="flex gap-4">
@@ -174,9 +186,7 @@ const SellerOrders = () => {
                           <div>
                             <p className="font-medium text-sm line-clamp-2">{item.product?.name}</p>
                             {item.order_item?.variant_info && (
-                              <p className="text-xs text-muted-foreground">
-                                {item.order_item.variant_info.name}
-                              </p>
+                              <p className="text-xs text-muted-foreground">{item.order_item.variant_info.name}</p>
                             )}
                             <div className="flex gap-4 mt-1 text-sm">
                               <span className="text-muted-foreground">Adet: {item.order_item?.quantity || 1}</span>
@@ -187,7 +197,6 @@ const SellerOrders = () => {
                       ))}
                     </div>
 
-                    {/* Customer Info */}
                     <div className="bg-muted/20 p-4 rounded-lg space-y-3 h-fit">
                       <h4 className="font-medium flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
@@ -197,10 +206,7 @@ const SellerOrders = () => {
                         <div className="text-sm space-y-1 text-muted-foreground">
                           <p className="font-medium text-foreground">{address.full_name || 'İsimsiz'}</p>
                           <p>{address.address || 'Adres bilgisi yok'}</p>
-                          <p>
-                            {address.district || ''}
-                            {address.city ? `, ${address.city}` : ''}
-                          </p>
+                          <p>{address.district || ''}{address.city ? `, ${address.city}` : ''}</p>
                           <div className="flex items-center gap-2 mt-2 pt-2 border-t">
                             <Phone className="h-3 w-3" />
                             {address.phone || 'Telefon yok'}
@@ -210,23 +216,11 @@ const SellerOrders = () => {
                         <p className="text-sm text-muted-foreground">Adres bilgisi bulunamadı</p>
                       )}
 
-                      {order.notes && (
-                        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-100 rounded text-sm group">
-                          <p className="font-medium text-yellow-800 flex items-center gap-2 mb-1">
-                            <Clock className="h-3 w-3" />
-                            Müşteri Notu:
-                          </p>
-                          <p className="text-yellow-700 italic">"{order.notes}"</p>
-                        </div>
-                      )}
-
                       {order.tracking_number && (
                         <div className="mt-4 pt-4 border-t">
                           <p className="text-xs font-medium text-muted-foreground mb-1">Kargo Takip</p>
                           <p className="text-sm font-medium">{order.shipping_company}</p>
-                          <p className="text-sm font-mono bg-background p-1 rounded border inline-block mt-1">
-                            {order.tracking_number}
-                          </p>
+                          <p className="text-sm font-mono bg-background p-1 rounded border inline-block mt-1">{order.tracking_number}</p>
                         </div>
                       )}
                     </div>
@@ -238,23 +232,18 @@ const SellerOrders = () => {
         )}
       </div>
 
+      {/* Shipping Modal */}
       <Dialog open={isShippingModalOpen} onOpenChange={setIsShippingModalOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Kargo Bilgileri Gir</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Kargo Bilgileri Gir</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmitShipping} className="space-y-4">
             <div className="space-y-2">
               <Label>Kargo Firması</Label>
               <Select value={shippingCompany} onValueChange={setShippingCompany} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Firma Seçin" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Firma Seçin" /></SelectTrigger>
                 <SelectContent>
                   {shippingCompanies?.map((company: any) => (
-                    <SelectItem key={company.id} value={company.name}>
-                      {company.name}
-                    </SelectItem>
+                    <SelectItem key={company.id} value={company.name}>{company.name}</SelectItem>
                   ))}
                   {(!shippingCompanies || shippingCompanies.length === 0) && (
                     <SelectItem value="other">Diğer</SelectItem>
@@ -264,22 +253,47 @@ const SellerOrders = () => {
             </div>
             <div className="space-y-2">
               <Label>Takip Numarası</Label>
-              <Input
-                value={trackingNumber}
-                onChange={(e) => setTrackingNumber(e.target.value)}
-                placeholder="Takip numarasını giriniz"
-                required
-              />
+              <Input value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} placeholder="Takip numarasını giriniz" required />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsShippingModalOpen(false)}>
-                İptal
-              </Button>
+              <Button type="button" variant="outline" onClick={() => setIsShippingModalOpen(false)}>İptal</Button>
               <Button type="submit" disabled={updateShipping.isPending}>
                 {updateShipping.isPending ? "Kaydediliyor..." : "Kaydet"}
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Status Update Modal */}
+      <Dialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Sipariş Durumu Güncelle</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Yeni Durum</Label>
+              <Select value={newStatus} onValueChange={setNewStatus}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Bekliyor</SelectItem>
+                  <SelectItem value="confirmed">Onaylandı</SelectItem>
+                  <SelectItem value="preparing">Hazırlanıyor</SelectItem>
+                  <SelectItem value="shipped">Kargoda</SelectItem>
+                  <SelectItem value="delivered">Teslim Edildi</SelectItem>
+                  <SelectItem value="cancelled">İptal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsStatusModalOpen(false)}>İptal</Button>
+              <Button
+                onClick={() => selectedOrder && updateStatusMutation.mutate({ orderId: selectedOrder.order_id, status: newStatus })}
+                disabled={updateStatusMutation.isPending}
+              >
+                {updateStatusMutation.isPending ? "Güncelleniyor..." : "Güncelle"}
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

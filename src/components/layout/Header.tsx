@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingBag, Menu, X, Search, User, LogOut, Settings, Store } from "lucide-react";
+import { ShoppingBag, Menu, X, Search, User, LogOut, Settings, Store, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -63,10 +63,7 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-8">
-            <Link
-              to="/urunler"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <Link to="/urunler" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Tüm Ürünler
             </Link>
             {categories?.slice(0, 4).map((category) => (
@@ -78,6 +75,9 @@ const Header = () => {
                 {category.name}
               </Link>
             ))}
+            <Link to="/blog" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              Blog
+            </Link>
           </nav>
 
           {/* Right side icons */}
@@ -160,11 +160,7 @@ const Header = () => {
       {isMenuOpen && (
         <div className="lg:hidden border-t border-border bg-background animate-fade-in">
           <nav className="container-main py-4 space-y-1">
-            <Link
-              to="/urunler"
-              className="block py-3 text-base font-medium text-foreground"
-              onClick={() => setIsMenuOpen(false)}
-            >
+            <Link to="/urunler" className="block py-3 text-base font-medium text-foreground" onClick={() => setIsMenuOpen(false)}>
               Tüm Ürünler
             </Link>
             {categories?.map((category) => (
@@ -178,26 +174,17 @@ const Header = () => {
               </Link>
             ))}
             <div className="pt-4 border-t border-border">
-              <Link
-                to="/hakkimizda"
-                className="block py-3 text-base text-muted-foreground hover:text-foreground"
-                onClick={() => setIsMenuOpen(false)}
-              >
+              <Link to="/blog" className="block py-3 text-base text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>
+                Blog
+              </Link>
+              <Link to="/hakkimizda" className="block py-3 text-base text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>
                 Hakkımızda
               </Link>
-              <Link
-                to="/iletisim"
-                className="block py-3 text-base text-muted-foreground hover:text-foreground"
-                onClick={() => setIsMenuOpen(false)}
-              >
+              <Link to="/iletisim" className="block py-3 text-base text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>
                 İletişim
               </Link>
               {isAdmin && (
-                <Link
-                  to="/admin"
-                  className="block py-3 text-base text-primary font-medium"
-                  onClick={() => setIsMenuOpen(false)}
-                >
+                <Link to="/admin" className="block py-3 text-base text-primary font-medium" onClick={() => setIsMenuOpen(false)}>
                   Admin Paneli
                 </Link>
               )}
