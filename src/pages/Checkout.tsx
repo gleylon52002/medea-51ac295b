@@ -231,7 +231,6 @@ const Checkout = () => {
 
       // Handle external payment providers
       if (["shopier", "shopinext", "payizone"].includes(paymentMethod)) {
-        // Call create-payment edge function to get payment URL
         try {
           const { data, error } = await supabase.functions.invoke("create-payment", {
             body: {
@@ -248,18 +247,46 @@ const Checkout = () => {
 
           if (error) throw error;
 
-          // For demo purposes, show success message
-          // In production, this would redirect to payment provider
-          toast({
-            title: "Ödeme Sayfasına Yönlendiriliyorsunuz",
-            description: "Lütfen bekleyin...",
-          });
-
-          // Simulate payment redirect (in production, use actual URL)
-          clearCart();
-          setAppliedCoupon(null);
-          navigate(`/siparis-basarili?order=${result.orderNumber}&payment=pending`);
-          return;
+          if (data?.redirect && data?.paymentUrl) {
+            // Direct redirect to payment page
+            toast({
+              title: "Ödeme Sayfasına Yönlendiriliyorsunuz",
+              description: "Lütfen bekleyin...",
+            });
+            clearCart();
+            setAppliedCoupon(null);
+            window.location.href = data.paymentUrl;
+            return;
+          } else if (data?.formPost && data?.paymentUrl && data?.paymentData) {
+            // Form-based POST redirect (e.g., Shopier)
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = data.paymentUrl;
+            form.style.display = "none";
+            
+            Object.entries(data.paymentData).forEach(([key, value]) => {
+              const input = document.createElement("input");
+              input.type = "hidden";
+              input.name = key;
+              input.value = String(value);
+              form.appendChild(input);
+            });
+            
+            document.body.appendChild(form);
+            clearCart();
+            setAppliedCoupon(null);
+            form.submit();
+            return;
+          } else {
+            // Fallback: no redirect URL available from provider
+            toast({
+              title: "Ödeme Başlatılamadı",
+              description: "Ödeme sağlayıcısından yanıt alınamadı. Lütfen farklı bir yöntem deneyin.",
+              variant: "destructive",
+            });
+            setIsSubmitting(false);
+            return;
+          }
         } catch (paymentError) {
           console.error("Payment creation error:", paymentError);
           toast({

@@ -31,8 +31,8 @@ import {
   Ticket,
   Activity,
   Smartphone,
-  FlaskConical,
   TrendingDown,
+  Rss,
   Bell,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -69,13 +69,14 @@ const menuItems = [
   { icon: Settings, label: "Ayarlar", path: "/admin/ayarlar" },
   { icon: Activity, label: "Aktivite Logları", path: "/admin/aktivite" },
   { icon: Smartphone, label: "SMS Yönetimi", path: "/admin/sms" },
-  { icon: FlaskConical, label: "A/B Testler", path: "/admin/ab-testler" },
+  
   { icon: TrendingDown, label: "Dönüşüm Hunisi", path: "/admin/donusum-hunisi" },
   { icon: Bell, label: "Push Bildirimler", path: "/admin/push-bildirimler" },
   { icon: Newspaper, label: "Blog", path: "/admin/blog" },
   { icon: UserCheck, label: "Sertifikalar", path: "/admin/sertifikalar" },
   { icon: Users, label: "Cohort Analizi", path: "/admin/cohort" },
   { icon: Settings, label: "Çark Yönetimi", path: "/admin/cark" },
+  { icon: Rss, label: "RSS Beslemesi", path: "/admin/rss" },
 ];
 
 const SidebarContent = ({ onItemClick }: { onItemClick?: () => void }) => {

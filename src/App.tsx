@@ -78,6 +78,7 @@ import AdminBlog from "./pages/admin/AdminBlog";
 import AdminCertificates from "./pages/admin/AdminCertificates";
 import AdminCohort from "./pages/admin/AdminCohort";
 import AdminSpinWheel from "./pages/admin/AdminSpinWheel";
+import AdminRSS from "./pages/admin/AdminRSS";
 // Seller Pages
 import SellerGuard from "./components/seller/SellerGuard";
 import SellerLayout from "./components/seller/SellerLayout";
@@ -220,6 +221,7 @@ const App = () => (
                 <Route path="sertifikalar" element={<AdminCertificates />} />
                 <Route path="cohort" element={<AdminCohort />} />
                 <Route path="cark" element={<AdminSpinWheel />} />
+                <Route path="rss" element={<AdminRSS />} />
               </Route>
 
               {/* Seller Routes */}
