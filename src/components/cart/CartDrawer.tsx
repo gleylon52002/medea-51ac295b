@@ -156,22 +156,31 @@ const CartDrawer = () => {
               {/* Free Shipping Progress */}
               <FreeShippingProgress currentTotal={cart.total} threshold={shippingThreshold} />
               
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Ara Toplam</span>
-                  <span>{formatPrice(cart.total)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Kargo</span>
-                  <span className={cart.total >= 300 ? "text-green-600 font-medium" : ""}>
-                    {cart.total >= 300 ? "Ücretsiz" : formatPrice(29.90)}
-                  </span>
-                </div>
-                <div className="flex justify-between font-medium text-lg pt-2 border-t border-border">
-                  <span>Toplam</span>
-                  <span>{formatPrice(cart.total >= 300 ? cart.total : cart.total + 29.90)}</span>
-                </div>
-              </div>
+              {(() => {
+                const shippingSettings = siteSettings?.shipping as { free_shipping_threshold?: number; default_shipping_cost?: number } | undefined;
+                const defaultShipping = shippingSettings?.default_shipping_cost ?? 29.90;
+                const threshold = shippingSettings?.free_shipping_threshold ?? 300;
+                const isFreeShipping = cart.total >= threshold;
+                const shippingCost = isFreeShipping ? 0 : defaultShipping;
+                return (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Ara Toplam</span>
+                      <span>{formatPrice(cart.total)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Kargo</span>
+                      <span className={isFreeShipping ? "text-green-600 font-medium" : ""}>
+                        {isFreeShipping ? "Ücretsiz" : formatPrice(shippingCost)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between font-medium text-lg pt-2 border-t border-border">
+                      <span>Toplam</span>
+                      <span>{formatPrice(cart.total + shippingCost)}</span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <Button className="w-full" size="lg" asChild>
                 <Link to="/odeme" onClick={() => setIsCartOpen(false)}>
