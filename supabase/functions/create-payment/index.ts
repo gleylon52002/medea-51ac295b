@@ -27,7 +27,7 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // --- Authentication: verify the caller owns the order ---
+    // --- Authentication: verify the caller ---
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -40,15 +40,14 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: userData, error: userError } = await userClient.auth.getUser();
+    if (userError || !userData?.user) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = claimsData.claims.sub;
+    const userId = userData.user.id;
 
     // Service client for privileged operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -100,12 +99,16 @@ serve(async (req) => {
       case "shopier": {
         const shopierApiKey = providerConfig.api_key;
         const shopierSecret = providerConfig.secret;
-        if (!shopierApiKey) {
+        const shopierApiUser = providerConfig.api_user;
+        if (!shopierApiKey || !shopierSecret) {
           return new Response(JSON.stringify({ error: "Shopier API credentials not configured" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
+        
+        // Build Shopier payment form data
+        const randomNr = Math.random().toString(36).substring(2, 15);
         paymentData = {
-          API_key: shopierApiKey,
+          API_key: shopierApiUser || shopierApiKey,
           API_secret: shopierSecret,
           platform_order_id: orderNumber,
           product_name: `Sipariş #${orderNumber}`,
@@ -115,13 +118,14 @@ serve(async (req) => {
           buyer_surname: customerName.split(" ").slice(1).join(" ") || customerName,
           buyer_email: customerEmail,
           buyer_phone: customerPhone.replace(/\s/g, ""),
-          buyer_id_nr: "", buyer_ip: "",
+          buyer_id_nr: "",
+          buyer_ip: "",
           module_version: "1.0",
-          website_index: "https://medea.lovable.app",
-          random_nr: Math.random().toString(36).substring(2, 15),
+          website_index: returnUrl.split("/siparis")[0] || "https://medea.lovable.app",
+          random_nr: randomNr,
           callback: callbackUrl,
-          success_url: `${returnUrl}?status=success`,
-          fail_url: `${returnUrl}?status=failed`,
+          success_url: `${returnUrl}?status=success&order=${orderNumber}`,
+          fail_url: `${returnUrl}?status=failed&order=${orderNumber}`,
         };
         paymentUrl = "https://www.shopier.com/ShowProduct/api_pay3.php";
         break;
@@ -134,10 +138,17 @@ serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
         paymentData = {
-          merchantId: shopinextMerchantId, token: shopinextToken,
-          orderId: orderNumber, amount, currency: "TRY",
-          customerName, customerEmail, customerPhone,
-          callbackUrl, returnUrl: `${returnUrl}?status=success`, failUrl: `${returnUrl}?status=failed`,
+          merchantId: shopinextMerchantId,
+          token: shopinextToken,
+          orderId: orderNumber,
+          amount,
+          currency: "TRY",
+          customerName,
+          customerEmail,
+          customerPhone,
+          callbackUrl,
+          returnUrl: `${returnUrl}?status=success&order=${orderNumber}`,
+          failUrl: `${returnUrl}?status=failed&order=${orderNumber}`,
         };
         paymentUrl = "https://api.shopinext.com/payment/create";
         break;
@@ -150,11 +161,16 @@ serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
         paymentData = {
-          api_key: payizoneApiKey, merchant_order_id: orderNumber,
-          amount, currency: "TRY", customer_name: customerName,
-          customer_email: customerEmail, customer_phone: customerPhone,
+          api_key: payizoneApiKey,
+          merchant_order_id: orderNumber,
+          amount,
+          currency: "TRY",
+          customer_name: customerName,
+          customer_email: customerEmail,
+          customer_phone: customerPhone,
           callback_url: callbackUrl,
-          success_url: `${returnUrl}?status=success`, fail_url: `${returnUrl}?status=failed`,
+          success_url: `${returnUrl}?status=success&order=${orderNumber}`,
+          fail_url: `${returnUrl}?status=failed&order=${orderNumber}`,
         };
         paymentUrl = "https://api.payizone.com/v1/payment/init";
         break;
@@ -163,11 +179,49 @@ serve(async (req) => {
 
     // Record initial transaction
     await supabase.from("payment_transactions").insert({
-      order_id: orderId, payment_method: provider, amount, status: "pending",
+      order_id: orderId,
+      payment_method: provider,
+      amount,
+      status: "pending",
     });
 
+    // For providers that have a direct API, try to call it and get a redirect URL
+    if (provider === "payizone" || provider === "shopinext") {
+      try {
+        const apiResponse = await fetch(paymentUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(paymentData),
+        });
+        
+        if (apiResponse.ok) {
+          const apiResult = await apiResponse.json();
+          // Most payment APIs return a redirect URL
+          const redirectUrl = apiResult.payment_url || apiResult.redirect_url || apiResult.url || apiResult.paymentUrl;
+          if (redirectUrl) {
+            return new Response(
+              JSON.stringify({ success: true, paymentUrl: redirectUrl, provider, redirect: true }),
+              { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+        }
+        
+        console.log(`${provider} API response status: ${apiResponse.status}`);
+      } catch (apiErr) {
+        console.error(`${provider} API call failed:`, apiErr);
+      }
+    }
+
+    // Return payment URL and data for form-based submission (Shopier) or fallback
     return new Response(
-      JSON.stringify({ success: true, paymentUrl, paymentData, provider }),
+      JSON.stringify({ 
+        success: true, 
+        paymentUrl, 
+        paymentData, 
+        provider,
+        redirect: provider !== "shopier", // Shopier uses form POST
+        formPost: provider === "shopier", // Shopier requires form POST
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
