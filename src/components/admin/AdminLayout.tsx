@@ -76,6 +76,7 @@ const menuItems = [
   { icon: UserCheck, label: "Sertifikalar", path: "/admin/sertifikalar" },
   { icon: Users, label: "Cohort Analizi", path: "/admin/cohort" },
   { icon: Settings, label: "Çark Yönetimi", path: "/admin/cark" },
+  { icon: Rss, label: "RSS Beslemesi", path: "/admin/rss" },
 ];
 
 const SidebarContent = ({ onItemClick }: { onItemClick?: () => void }) => {
