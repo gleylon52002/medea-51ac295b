@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { CheckCircle, Package, Mail, ArrowRight, Loader2 } from "lucide-react";
+import { CheckCircle, Package, Mail, ArrowRight, Loader2, AlertCircle, Clock } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useOrderByNumber } from "@/hooks/useOrders";
@@ -8,22 +8,45 @@ import { formatPrice } from "@/lib/utils";
 const OrderSuccess = () => {
   const [searchParams] = useSearchParams();
   const orderNumber = searchParams.get("order") || "";
+  const paymentStatus = searchParams.get("payment");
+  const status = searchParams.get("status"); // from payment provider redirect
   const { data: order, isLoading } = useOrderByNumber(orderNumber);
+
+  const isPending = paymentStatus === "pending" || status === "pending";
+  const isFailed = status === "failed";
 
   return (
     <Layout>
       <div className="container-main py-16 lg:py-24">
         <div className="max-w-lg mx-auto text-center">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="h-10 w-10 text-green-600" />
+          <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
+            isFailed ? "bg-red-100" : isPending ? "bg-amber-100" : "bg-green-100"
+          }`}>
+            {isFailed ? (
+              <AlertCircle className="h-10 w-10 text-red-600" />
+            ) : isPending ? (
+              <Clock className="h-10 w-10 text-amber-600" />
+            ) : (
+              <CheckCircle className="h-10 w-10 text-green-600" />
+            )}
           </div>
 
           <h1 className="font-serif text-3xl lg:text-4xl font-medium text-foreground mb-4">
-            Siparişiniz Alındı!
+            {isFailed 
+              ? "Ödeme Başarısız" 
+              : isPending 
+                ? "Ödeme Bekleniyor" 
+                : "Siparişiniz Alındı!"
+            }
           </h1>
 
           <p className="text-muted-foreground mb-8">
-            Siparişiniz başarıyla oluşturuldu. Sipariş detaylarını e-posta adresinize gönderdik.
+            {isFailed
+              ? "Ödeme işlemi başarısız oldu. Lütfen tekrar deneyin veya farklı bir ödeme yöntemi seçin."
+              : isPending
+                ? "Siparişiniz oluşturuldu, ödeme onayı bekleniyor. Onay sonrası siparişiniz hazırlanacaktır."
+                : "Siparişiniz başarıyla oluşturuldu. Sipariş detaylarını e-posta adresinize gönderdik."
+            }
           </p>
 
           <div className="bg-muted/30 rounded-xl p-6 mb-8">
@@ -47,6 +70,20 @@ const OrderSuccess = () => {
                   <span>Toplam:</span>
                   <span>{formatPrice(order.total)}</span>
                 </div>
+                {order.payment_status && (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Ödeme Durumu:</span>
+                      <span className={`font-medium ${
+                        order.payment_status === "paid" ? "text-green-600" :
+                        order.payment_status === "failed" ? "text-red-600" : "text-amber-600"
+                      }`}>
+                        {order.payment_status === "paid" ? "Ödendi" :
+                         order.payment_status === "failed" ? "Başarısız" : "Beklemede"}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
