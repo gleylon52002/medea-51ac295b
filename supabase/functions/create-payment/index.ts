@@ -216,7 +216,7 @@ serve(async (req) => {
     });
 
     // For providers that have a direct API, try to call it and get a redirect URL
-    if (provider === "payizone" || provider === "shopinext") {
+    if (effectiveProvider === "payizone" || effectiveProvider === "shopinext") {
       try {
         const apiResponse = await fetch(paymentUrl, {
           method: "POST",
@@ -226,19 +226,18 @@ serve(async (req) => {
         
         if (apiResponse.ok) {
           const apiResult = await apiResponse.json();
-          // Most payment APIs return a redirect URL
           const redirectUrl = apiResult.payment_url || apiResult.redirect_url || apiResult.url || apiResult.paymentUrl;
           if (redirectUrl) {
             return new Response(
-              JSON.stringify({ success: true, paymentUrl: redirectUrl, provider, redirect: true }),
+              JSON.stringify({ success: true, paymentUrl: redirectUrl, provider: effectiveProvider, redirect: true }),
               { headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
           }
         }
         
-        console.log(`${provider} API response status: ${apiResponse.status}`);
+        console.log(`${effectiveProvider} API response status: ${apiResponse.status}`);
       } catch (apiErr) {
-        console.error(`${provider} API call failed:`, apiErr);
+        console.error(`${effectiveProvider} API call failed:`, apiErr);
       }
     }
 
@@ -248,9 +247,9 @@ serve(async (req) => {
         success: true, 
         paymentUrl, 
         paymentData, 
-        provider,
-        redirect: provider !== "shopier", // Shopier uses form POST
-        formPost: provider === "shopier", // Shopier requires form POST
+        provider: effectiveProvider,
+        redirect: effectiveProvider !== "shopier",
+        formPost: effectiveProvider === "shopier",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
