@@ -91,18 +91,18 @@ const SharedWishlist = () => {
             {data.title}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            {products.length} ürün · {wishlist.view_count} kez görüntülendi
+            {data.products.length} ürün · {data.view_count} kez görüntülendi
           </p>
         </div>
 
-        {products.length === 0 ? (
+        {data.products.length === 0 ? (
           <div className="text-center py-12">
             <ShoppingBag className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">Bu listede henüz ürün bulunmuyor.</p>
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product: any) => (
+            {data.products.map((product: any) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
