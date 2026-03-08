@@ -315,6 +315,8 @@ const MessagingPage = ({ role }: { role: "admin" | "seller" }) => {
               conversationId={selectedId}
               title={selectedConversation ? getConversationTitle(selectedConversation) : "Görüşme"}
               participantProfiles={profileMap || {}}
+              contextType={selectedConversation?.context_type}
+              contextId={selectedConversation?.context_id}
             />
           ) : (
             <Card className="h-full flex flex-col items-center justify-center text-muted-foreground bg-muted/5 p-12 text-center">
