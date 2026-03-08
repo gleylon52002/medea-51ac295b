@@ -16,7 +16,7 @@ interface ProductSchemaProps {
   siteUrl?: string;
 }
 
-const ProductSchema = ({ product, rating, siteUrl = "https://medea.lovable.app" }: ProductSchemaProps) => {
+const ProductSchema = ({ product, rating, siteUrl = "https://medea.tr" }: ProductSchemaProps) => {
   useEffect(() => {
     const schema = {
       "@context": "https://schema.org",
