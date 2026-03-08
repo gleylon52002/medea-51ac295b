@@ -56,7 +56,7 @@ const About = () => {
         .select("value")
         .eq("key", "about_page")
         .maybeSingle();
-      return (data?.value as AboutContent) || null;
+      return (data?.value as unknown as AboutContent) || null;
     },
     staleTime: 1000 * 60 * 5,
   });

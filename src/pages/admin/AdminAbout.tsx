@@ -61,7 +61,7 @@ const AdminAbout = () => {
         .select("value")
         .eq("key", "about_page")
         .maybeSingle();
-      return data?.value as AboutContent | null;
+      return (data?.value as unknown as AboutContent) || null;
     },
   });
 
