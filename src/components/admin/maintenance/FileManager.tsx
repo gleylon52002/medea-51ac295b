@@ -36,8 +36,6 @@ interface TreeNode {
   created_at?: string;
 }
 
-const PROJECT_ROOT_PATH = "project";
-
 // ── Helpers ────────────────────────────────────────────
 const getFileIcon = (name: string) => {
   const ext = name.split(".").pop()?.toLowerCase() || "";
