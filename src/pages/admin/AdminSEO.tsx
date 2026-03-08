@@ -399,10 +399,10 @@ Allow: /`;
                   Otomatik Oluştur
                 </Button>
               </div>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-sm text-green-800">
-                  <strong>Otomatik Oluştur:</strong> Butona tıkladığınızda <code>robots.txt</code> dosyası 
-                  ana dizinde otomatik olarak oluşturulur ve güncellenir.
+              <div className="bg-accent/30 border border-accent rounded-lg p-4">
+                <p className="text-sm text-foreground">
+                  <strong>💡 Otomatik Oluştur:</strong> Butona tıkladığınızda <code>robots.txt</code> dosyası 
+                  storage'a yüklenir ve herkese açık URL üzerinden erişilebilir olur.
                 </p>
               </div>
             </CardContent>

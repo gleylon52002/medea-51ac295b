@@ -160,9 +160,23 @@ const AdminAIAssistant = () => {
                     <button
                       key={q}
                       onClick={() => {
-                        setInput(q);
-                        setTimeout(() => sendMessage(), 0);
-                        setInput(q);
+                        const userMsg: Message = { role: "user", content: q };
+                        setMessages([userMsg]);
+                        setIsLoading(true);
+                        supabase.functions.invoke("admin-ai-assistant", {
+                          body: {
+                            messages: [{ role: "user", content: q }],
+                            pageContext: currentPageContext,
+                            currentPath: location.pathname,
+                          },
+                        }).then(({ data, error }) => {
+                          if (error || data?.error) {
+                            setMessages(prev => [...prev, { role: "assistant", content: "Hata oluştu." }]);
+                          } else {
+                            setMessages(prev => [...prev, { role: "assistant", content: data.content || "Yanıt alınamadı." }]);
+                          }
+                          setIsLoading(false);
+                        });
                       }}
                       className="text-xs text-left px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground transition-colors"
                     >
