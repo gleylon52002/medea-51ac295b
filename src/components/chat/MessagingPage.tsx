@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
-import { useConversations, useGetOrCreateConversation, Conversation } from "@/hooks/useMessages";
+import { useConversations, useGetOrCreateConversation, useDeleteConversation, Conversation } from "@/hooks/useMessages";
 import ChatWindow from "@/components/chat/ChatWindow";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Loader2, Search, Plus, User, Shield, Store } from "lucide-react";
+import { MessageSquare, Loader2, Search, Plus, Shield, Store, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +16,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAllSellers } from "@/hooks/useAdminSellers";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,17 +40,25 @@ const MessagingPage = ({ role }: { role: "admin" | "seller" }) => {
   const { data: conversations, isLoading } = useConversations();
   const { data: sellers } = useAllSellers();
   const getOrCreateConversation = useGetOrCreateConversation();
+  const deleteConversation = useDeleteConversation();
 
   const [selectedId, setSelectedId] = useState<string | null>(initialId);
   const [searchTerm, setSearchTerm] = useState("");
   const [sellerSearch, setSellerSearch] = useState("");
   const [isNewMsgOpen, setIsNewMsgOpen] = useState(false);
+  const [deleteConvId, setDeleteConvId] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialId) setSelectedId(initialId);
   }, [initialId]);
 
-  // Collect all unique participant IDs across conversations
+  // When a conversation is deleted, deselect it
+  useEffect(() => {
+    if (selectedId && conversations && !conversations.find((c) => c.id === selectedId)) {
+      setSelectedId(null);
+    }
+  }, [conversations, selectedId]);
+
   const allParticipantIds = useMemo(() => {
     if (!conversations || !user) return [];
     const ids = new Set<string>();
@@ -75,10 +93,7 @@ const MessagingPage = ({ role }: { role: "admin" | "seller" }) => {
 
   const handleStartConversation = async (participantId: string) => {
     try {
-      const convId = await getOrCreateConversation.mutateAsync({
-        participantId,
-        contextType: "direct",
-      });
+      const convId = await getOrCreateConversation.mutateAsync({ participantId, contextType: "direct" });
       setSelectedId(convId);
       setIsNewMsgOpen(false);
       toast.success("Görüşme başlatıldı");
@@ -101,8 +116,16 @@ const MessagingPage = ({ role }: { role: "admin" | "seller" }) => {
       } else {
         toast.error("Ulaşılabilecek bir yetkili bulunamadı.");
       }
-    } catch (error: any) {
+    } catch {
       toast.error("Destek görüşmesi başlatılamadı");
+    }
+  };
+
+  const handleDeleteConversation = () => {
+    if (deleteConvId) {
+      deleteConversation.mutate(deleteConvId);
+      if (selectedId === deleteConvId) setSelectedId(null);
+      setDeleteConvId(null);
     }
   };
 
@@ -124,9 +147,7 @@ const MessagingPage = ({ role }: { role: "admin" | "seller" }) => {
             Mesajlar
           </h1>
           <p className="text-sm text-muted-foreground">
-            {role === "admin"
-              ? "Satıcılarla olan görüşmelerinizi yönetin"
-              : "Admin ve müşterilerle iletişim kurun"}
+            {role === "admin" ? "Satıcılarla olan görüşmelerinizi yönetin" : "Admin ve müşterilerle iletişim kurun"}
           </p>
         </div>
         <Dialog open={isNewMsgOpen} onOpenChange={setIsNewMsgOpen}>
@@ -145,19 +166,12 @@ const MessagingPage = ({ role }: { role: "admin" | "seller" }) => {
                 <div className="space-y-4">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Satıcı ara..."
-                      className="pl-9"
-                      value={sellerSearch}
-                      onChange={(e) => setSellerSearch(e.target.value)}
-                    />
+                    <Input placeholder="Satıcı ara..." className="pl-9" value={sellerSearch} onChange={(e) => setSellerSearch(e.target.value)} />
                   </div>
                   <ScrollArea className="max-h-[300px]">
                     <div className="space-y-1">
                       {sellers
-                        ?.filter((s) =>
-                          s.company_name.toLowerCase().includes(sellerSearch.toLowerCase())
-                        )
+                        ?.filter((s) => s.company_name.toLowerCase().includes(sellerSearch.toLowerCase()))
                         .map((seller) => (
                           <button
                             key={seller.id}
@@ -184,17 +198,9 @@ const MessagingPage = ({ role }: { role: "admin" | "seller" }) => {
                   <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
                     <Shield className="h-8 w-8 text-primary" />
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Destek ekibimizle iletişime geçmek için butona tıklayın.
-                  </p>
-                  <Button
-                    className="w-full"
-                    disabled={getOrCreateConversation.isPending}
-                    onClick={handleStartAdminChat}
-                  >
-                    {getOrCreateConversation.isPending && (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    )}
+                  <p className="text-sm text-muted-foreground">Destek ekibimizle iletişime geçmek için butona tıklayın.</p>
+                  <Button className="w-full" disabled={getOrCreateConversation.isPending} onClick={handleStartAdminChat}>
+                    {getOrCreateConversation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                     Admin'e Mesaj Gönder
                   </Button>
                 </div>
@@ -210,12 +216,7 @@ const MessagingPage = ({ role }: { role: "admin" | "seller" }) => {
           <div className="p-3 border-b">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Konuşma veya kişi ara..."
-                className="pl-9 h-9"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+              <Input placeholder="Konuşma veya kişi ara..." className="pl-9 h-9" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
           </div>
           <ScrollArea className="flex-1">
@@ -228,18 +229,18 @@ const MessagingPage = ({ role }: { role: "admin" | "seller" }) => {
               ) : (
                 filteredConversations.map((conv) => {
                   const other = getOtherParticipant(conv);
-                  const title = getConversationTitle(conv);
+                  const convTitle = getConversationTitle(conv);
                   const hasUnread = (conv.unread_count ?? 0) > 0;
 
                   return (
-                    <button
+                    <div
                       key={conv.id}
-                      onClick={() => setSelectedId(conv.id)}
                       className={cn(
-                        "w-full p-3 flex gap-3 text-left hover:bg-muted/50 transition-colors",
+                        "group relative w-full p-3 flex gap-3 text-left hover:bg-muted/50 transition-colors cursor-pointer",
                         selectedId === conv.id && "bg-primary/5 border-l-2 border-l-primary",
                         hasUnread && "bg-primary/[0.03]"
                       )}
+                      onClick={() => setSelectedId(conv.id)}
                     >
                       <div className="relative shrink-0">
                         <Avatar className="h-11 w-11">
@@ -254,10 +255,9 @@ const MessagingPage = ({ role }: { role: "admin" | "seller" }) => {
                                 : "bg-muted text-muted-foreground"
                             )}
                           >
-                            {title[0]?.toUpperCase() || "?"}
+                            {convTitle[0]?.toUpperCase() || "?"}
                           </AvatarFallback>
                         </Avatar>
-                        {/* Role badge */}
                         {(other as any)?.is_admin && (
                           <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-destructive flex items-center justify-center">
                             <Shield className="h-2.5 w-2.5 text-destructive-foreground" />
@@ -272,38 +272,35 @@ const MessagingPage = ({ role }: { role: "admin" | "seller" }) => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <span className={cn("text-sm truncate", hasUnread ? "font-bold" : "font-medium")}>
-                            {title}
+                            {convTitle}
                           </span>
                           <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                             {formatTimeAgo(conv.last_message_at)}
                           </span>
                         </div>
-                        <p className={cn(
-                          "text-xs truncate mt-0.5",
-                          hasUnread ? "text-foreground font-medium" : "text-muted-foreground"
-                        )}>
+                        <p className={cn("text-xs truncate mt-0.5", hasUnread ? "text-foreground font-medium" : "text-muted-foreground")}>
                           {conv.last_message || "Henüz mesaj yok"}
                         </p>
                         <div className="flex items-center gap-1.5 mt-1">
                           {conv.context_type !== "direct" && (
                             <Badge variant="outline" className="text-[9px] px-1 h-4 font-normal">
-                              {conv.context_type === "order"
-                                ? "Sipariş"
-                                : conv.context_type === "product_qa"
-                                ? "Ürün S&C"
-                                : conv.context_type === "complaint"
-                                ? "Şikayet"
-                                : conv.context_type}
+                              {conv.context_type === "order" ? "Sipariş" : conv.context_type === "product_qa" ? "Ürün S&C" : conv.context_type === "complaint" ? "Şikayet" : conv.context_type}
                             </Badge>
                           )}
                           {hasUnread && (
-                            <Badge className="h-5 min-w-5 px-1.5 text-[10px] rounded-full">
-                              {conv.unread_count}
-                            </Badge>
+                            <Badge className="h-5 min-w-5 px-1.5 text-[10px] rounded-full">{conv.unread_count}</Badge>
                           )}
                         </div>
                       </div>
-                    </button>
+
+                      {/* Delete conversation button */}
+                      <button
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                        onClick={(e) => { e.stopPropagation(); setDeleteConvId(conv.id); }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   );
                 })
               )}
@@ -312,7 +309,7 @@ const MessagingPage = ({ role }: { role: "admin" | "seller" }) => {
         </Card>
 
         {/* Chat Window */}
-        <div className="lg:col-span-8 overflow-hidden h-full">
+        <div className="lg:col-span-8 overflow-hidden h-full relative">
           {selectedId ? (
             <ChatWindow
               conversationId={selectedId}
@@ -332,6 +329,24 @@ const MessagingPage = ({ role }: { role: "admin" | "seller" }) => {
           )}
         </div>
       </div>
+
+      {/* Delete conversation confirmation */}
+      <AlertDialog open={!!deleteConvId} onOpenChange={() => setDeleteConvId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Görüşmeyi sil</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bu görüşme ve tüm mesajları kalıcı olarak silinecektir. Bu işlem geri alınamaz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={handleDeleteConversation}>
+              Görüşmeyi Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
