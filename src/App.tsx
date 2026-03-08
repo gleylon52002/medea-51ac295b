@@ -214,7 +214,7 @@ const App = () => (
                 <Route path="sepetler" element={<AdminUserCarts />} />
                 <Route path="aktivite" element={<AdminActivityLogs />} />
                 <Route path="sms" element={<AdminSMS />} />
-                <Route path="ab-testler" element={<AdminABTests />} />
+                {/* A/B Tests removed */}
                 <Route path="donusum-hunisi" element={<AdminConversionFunnel />} />
                 <Route path="push-bildirimler" element={<AdminPushNotifications />} />
                 <Route path="blog" element={<AdminBlog />} />
