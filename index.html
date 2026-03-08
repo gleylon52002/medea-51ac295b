@@ -4,17 +4,55 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>MEDEA Kozmetik | Doğal & Premium Güzellik Ürünleri</title>
-    <meta name="description" content="MEDEA Kozmetik - Doğal içerikli premium kozmetik ürünleri. Cilt bakımı, makyaj ve daha fazlası." />
+    <meta name="description" content="MEDEA Kozmetik - El yapımı, doğal içerikli premium kozmetik ürünleri. Doğal sabunlar, yüz maskeleri, mumlar ve daha fazlası. Vegan ve sürdürülebilir güzellik." />
     <meta name="author" content="MEDEA Kozmetik" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <link rel="canonical" href="https://medea.tr/" />
 
-    <meta property="og:title" content="MEDEA Kozmetik | Doğal & Premium Güzellik" />
-    <meta property="og:description" content="Doğal içerikli premium kozmetik ürünleri. Cilt bakımı, makyaj ve daha fazlası." />
+    <meta property="og:title" content="MEDEA Kozmetik | Doğal & Premium Güzellik Ürünleri" />
+    <meta property="og:description" content="El yapımı, doğal içerikli premium kozmetik ürünleri. Doğal sabunlar, yüz maskeleri, mumlar ve daha fazlası." />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://medea.tr/" />
+    <meta property="og:site_name" content="MEDEA Kozmetik" />
+    <meta property="og:locale" content="tr_TR" />
     <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@medeakozmetik" />
+    <meta name="twitter:title" content="MEDEA Kozmetik | Doğal & Premium Güzellik Ürünleri" />
+    <meta name="twitter:description" content="El yapımı, doğal içerikli premium kozmetik ürünleri." />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <!-- Structured Data - Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "MEDEA Kozmetik",
+      "url": "https://medea.tr",
+      "logo": "https://medea.tr/favicon.ico",
+      "description": "El yapımı, doğal içerikli premium kozmetik ürünleri",
+      "sameAs": []
+    }
+    </script>
+
+    <!-- Structured Data - WebSite with SearchAction -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "MEDEA Kozmetik",
+      "url": "https://medea.tr",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://medea.tr/urunler?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
@@ -29,6 +67,38 @@
 
   <body>
     <div id="root"></div>
+
+    <!-- SEO: Fallback content for crawlers that don't execute JavaScript -->
+    <noscript>
+      <div style="max-width:800px;margin:0 auto;padding:40px 20px;font-family:system-ui,sans-serif;">
+        <h1>MEDEA Kozmetik - Doğal & Premium Güzellik Ürünleri</h1>
+        <p>MEDEA Kozmetik, el yapımı ve doğal içerikli premium kozmetik ürünleri sunar. Doğal sabunlar, yüz maskeleri, mumlar ve daha fazlasını keşfedin.</p>
+        <h2>Ürün Kategorileri</h2>
+        <ul>
+          <li><a href="/kategori/dogal-sabunlar">Doğal Sabunlar</a></li>
+          <li><a href="/kategori/yuz-maskeleri">Yüz Maskeleri</a></li>
+          <li><a href="/kategori/mumlar">Mumlar</a></li>
+        </ul>
+        <h2>Sayfalar</h2>
+        <nav>
+          <ul>
+            <li><a href="/urunler">Tüm Ürünler</a></li>
+            <li><a href="/blog">Blog</a></li>
+            <li><a href="/hakkimizda">Hakkımızda</a></li>
+            <li><a href="/iletisim">İletişim</a></li>
+            <li><a href="/sss">Sıkça Sorulan Sorular</a></li>
+          </ul>
+        </nav>
+        <h2>Popüler Ürünler</h2>
+        <ul>
+          <li><a href="/urun/medea-limon-esansli-seffaf-banyo-sabunu--ferahlatici-dogal-kati-sabun">Limon Esanslı Şeffaf Banyo Sabunu</a></li>
+          <li><a href="/urun/medea-inek-sutlu-seffaf-banyo-sabunu--besleyici-dogal-kati-sabun">İnek Sütlü Şeffaf Banyo Sabunu</a></li>
+          <li><a href="/urun/medea-aktif-karbonlu-seffaf-banyo-sabunu--derin-temizleyici-dogal-kati-sabun">Aktif Karbonlu Şeffaf Banyo Sabunu</a></li>
+        </ul>
+        <p>© 2026 MEDEA Kozmetik. Tüm hakları saklıdır.</p>
+      </div>
+    </noscript>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
