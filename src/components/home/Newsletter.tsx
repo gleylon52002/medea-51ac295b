@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useSubscribeNewsletter } from "@/hooks/useNewsletter";
+import TranslatedText from "@/components/TranslatedText";
 
 const Newsletter = () => {
   const [email, setEmail] = useState("");
@@ -27,10 +28,10 @@ const Newsletter = () => {
       <div className="container-main">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-serif text-3xl lg:text-4xl font-medium mb-4">
-            Bültene Katılın
+            <TranslatedText textKey="newsletter.title" originalText="Bültene Katılın" />
           </h2>
           <p className="text-primary-foreground/80 mb-8">
-            Yeni ürünler, özel indirimler ve doğal bakım ipuçlarından haberdar olun.
+            <TranslatedText textKey="newsletter.subtitle" originalText="Yeni ürünler, özel indirimler ve doğal bakım ipuçlarından haberdar olun." />
           </p>
           
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
@@ -52,12 +53,12 @@ const Newsletter = () => {
               ) : (
                 <Send className="h-4 w-4" />
               )}
-              Abone Ol
+              <TranslatedText textKey="newsletter.subscribe" originalText="Abone Ol" />
             </Button>
           </form>
 
           <p className="mt-4 text-xs text-primary-foreground/60">
-            Abone olarak gizlilik politikamızı kabul etmiş olursunuz.
+            <TranslatedText textKey="newsletter.disclaimer" originalText="Abone olarak gizlilik politikamızı kabul etmiş olursunuz." />
           </p>
         </div>
       </div>

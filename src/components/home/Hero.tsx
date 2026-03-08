@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Leaf, Heart, Sparkles, Play } from "lucide-react";
+import { ArrowRight, Leaf, Heart, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-image.jpg";
+import TranslatedText from "@/components/TranslatedText";
 
 interface HeroSettings {
   type: "image" | "video";
@@ -50,28 +51,28 @@ const Hero = () => {
           <div className="space-y-8 animate-slide-up">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-medium">
               <Leaf className="h-4 w-4" />
-              <span>%100 Doğal İçerikler</span>
+              <TranslatedText textKey="hero.badge" originalText="%100 Doğal İçerikler" />
             </div>
             
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-medium leading-tight text-foreground">
-              {hero.title.split(" ").slice(0, 3).join(" ")}
-              <br />
-              <span className="text-primary">{hero.title.split(" ").slice(3).join(" ")}</span>
+              <TranslatedText textKey="hero.title" originalText={hero.title} as="span" />
             </h1>
             
             <p className="text-lg text-muted-foreground max-w-lg leading-relaxed">
-              {hero.subtitle}
+              <TranslatedText textKey="hero.subtitle" originalText={hero.subtitle} as="span" />
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Button size="lg" className="gap-2" asChild>
                 <Link to={hero.cta_link}>
-                  {hero.cta_text}
+                  <TranslatedText textKey="hero.cta" originalText={hero.cta_text} />
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link to="/hakkimizda">Hikayemiz</Link>
+                <Link to="/hakkimizda">
+                  <TranslatedText textKey="hero.story" originalText="Hikayemiz" />
+                </Link>
               </Button>
             </div>
 
@@ -79,15 +80,15 @@ const Hero = () => {
             <div className="flex flex-wrap gap-6 pt-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Heart className="h-5 w-5 text-terracotta" />
-                <span>Vegan & Cruelty-Free</span>
+                <TranslatedText textKey="hero.vegan" originalText="Vegan & Cruelty-Free" />
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Sparkles className="h-5 w-5 text-terracotta" />
-                <span>El Yapımı</span>
+                <TranslatedText textKey="hero.handmade" originalText="El Yapımı" />
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Leaf className="h-5 w-5 text-terracotta" />
-                <span>Sürdürülebilir</span>
+                <TranslatedText textKey="hero.sustainable" originalText="Sürdürülebilir" />
               </div>
             </div>
           </div>
@@ -125,7 +126,9 @@ const Hero = () => {
             <div className="absolute -bottom-4 -left-4 sm:bottom-8 sm:-left-8 bg-card p-4 sm:p-6 rounded-xl shadow-medium">
               <div className="text-center">
                 <p className="font-serif text-3xl sm:text-4xl font-semibold text-primary">500+</p>
-                <p className="text-sm text-muted-foreground mt-1">Mutlu Müşteri</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  <TranslatedText textKey="hero.happy_customers" originalText="Mutlu Müşteri" />
+                </p>
               </div>
             </div>
           </div>

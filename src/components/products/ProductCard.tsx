@@ -16,6 +16,8 @@ import VerifiedSellerBadge from "./VerifiedSellerBadge";
 import SustainabilityBadges from "./SustainabilityBadges";
 import { useAllProductTags } from "@/hooks/useProductTags";
 import { toast } from "sonner";
+import TranslatedText from "@/components/TranslatedText";
+import { useAITranslation, productKey, categoryKey } from "@/hooks/useTranslation";
 
 interface ProductCardProps {
   product: ProductWithCategory;
@@ -30,6 +32,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const { data: comparisons } = useComparisonProducts();
   const addToComparison = useAddToComparison();
   const removeFromComparison = useRemoveFromComparison();
+  const { t, queueTranslation, isSourceLang } = useAITranslation();
   
   const { data: rating } = useProductRating(product.id);
   const { data: allTags } = useAllProductTags();
@@ -43,11 +46,20 @@ const ProductCard = ({ product }: ProductCardProps) => {
     ? Math.round((1 - Number(product.sale_price) / Number(product.price)) * 100)
     : 0;
   
-  // Check if product is new (created within last 14 days)
   const isNew = new Date(product.created_at) > new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 
+  // Queue translations for product name and category
+  if (!isSourceLang) {
+    queueTranslation(productKey(product.id, "name"), product.name);
+    if (product.categories?.name) {
+      queueTranslation(categoryKey(product.categories.id || "", "name"), product.categories.name);
+    }
+  }
+
+  const translatedName = t(productKey(product.id, "name"), product.name);
+  const translatedCategory = product.categories ? t(categoryKey(product.categories.id || "", "name"), product.categories.name) : "";
+
   const handleAddToCart = () => {
-    // Convert to the format expected by cart
     const cartProduct = {
       id: product.id,
       name: product.name,
@@ -102,14 +114,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
           className={`p-2 backdrop-blur-sm rounded-full hover:bg-background transition-colors ${
             isInComparison ? "bg-primary text-primary-foreground" : "bg-background/80"
           }`}
-          title={isInComparison ? "Karşılaştırmadan çıkar" : "Karşılaştırmaya ekle"}
         >
           <Scale className={`h-4 w-4 ${isInComparison ? "" : "text-muted-foreground"}`} />
         </button>
         <button
           onClick={() => setQuickViewOpen(true)}
           className="p-2 bg-background/80 backdrop-blur-sm rounded-full hover:bg-background transition-colors opacity-0 group-hover:opacity-100"
-          title="Hızlı Önizleme"
         >
           <Eye className="h-4 w-4 text-muted-foreground" />
         </button>
@@ -119,10 +129,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
       <Link to={`/urun/${product.slug}`} className="block relative aspect-square overflow-hidden">
         <img
           src={product.images?.[0] || "/placeholder.svg"}
-          alt={product.name}
+          alt={translatedName}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        {/* Badges */}
         <div className="absolute top-3 left-3 z-10">
           <ProductBadges
             hasDiscount={hasDiscount}
@@ -131,7 +140,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
             isNew={isNew}
           />
         </div>
-        {/* Low Stock Warning */}
         {product.stock <= 10 && product.stock > 0 && (
           <div className="absolute bottom-3 left-3 z-10">
             <StockUrgencyBadge stock={product.stock} size="sm" />
@@ -143,7 +151,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
       <div className="p-4">
         <Link to={`/kategori/${product.categories?.slug}`}>
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide hover:text-foreground transition-colors">
-            {product.categories?.name}
+            {translatedCategory}
           </span>
         </Link>
         
@@ -153,11 +161,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
         
         <Link to={`/urun/${product.slug}`}>
           <h3 className="mt-1 font-serif text-lg font-medium text-foreground line-clamp-2 hover:text-primary transition-colors">
-            {product.name}
+            {translatedName}
           </h3>
         </Link>
 
-        {/* Rating */}
         {rating && rating.count > 0 && (
           <div className="flex items-center gap-1 mt-1">
             <div className="flex">
@@ -169,14 +176,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </div>
         )}
 
-        {/* Sustainability Badges */}
         {productTags.length > 0 && (
           <div className="mt-1.5">
             <SustainabilityBadges tags={productTags} size="sm" maxShow={3} />
           </div>
         )}
 
-        {/* Price & Add to Cart */}
         <div className="mt-3 flex items-center justify-between">
           <div className="flex items-baseline gap-2">
             <span className="text-lg font-semibold text-foreground">
@@ -196,7 +201,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
             className="gap-1.5"
           >
             <ShoppingBag className="h-4 w-4" />
-            <span className="hidden sm:inline">Ekle</span>
+            <span className="hidden sm:inline">
+              <TranslatedText textKey="product.add" originalText="Ekle" />
+            </span>
           </Button>
         </div>
       </div>

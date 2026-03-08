@@ -3,8 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import TranslatedText from "@/components/TranslatedText";
+import { useAITranslation } from "@/hooks/useTranslation";
 
 const BlogPreview = () => {
+  const { t, queueTranslation, isSourceLang } = useAITranslation();
+
   const { data: posts } = useQuery({
     queryKey: ["blog-preview"],
     queryFn: async () => {
@@ -21,16 +25,26 @@ const BlogPreview = () => {
 
   if (!posts || posts.length === 0) return null;
 
+  // Queue blog translations
+  if (!isSourceLang) {
+    posts.forEach(post => {
+      queueTranslation(`blog:${post.id}:title`, post.title);
+      if (post.excerpt) queueTranslation(`blog:${post.id}:excerpt`, post.excerpt);
+    });
+  }
+
   return (
     <section className="container-main py-12">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="font-serif text-2xl lg:text-3xl font-semibold">Blog</h2>
-          <p className="text-muted-foreground mt-1">Doğal bakım hakkında bilgi edinin</p>
+          <p className="text-muted-foreground mt-1">
+            <TranslatedText textKey="blog.subtitle" originalText="Doğal bakım hakkında bilgi edinin" />
+          </p>
         </div>
         <Button variant="outline" asChild>
           <Link to="/blog" className="gap-2">
-            Tümünü Gör <ArrowRight className="h-4 w-4" />
+            <TranslatedText textKey="featured.view_all" originalText="Tümünü Gör" /> <ArrowRight className="h-4 w-4" />
           </Link>
         </Button>
       </div>
@@ -53,10 +67,12 @@ const BlogPreview = () => {
                 {new Date(post.created_at).toLocaleDateString("tr-TR")}
               </p>
               <h3 className="font-serif text-lg font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                {post.title}
+                {t(`blog:${post.id}:title`, post.title)}
               </h3>
               {post.excerpt && (
-                <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{post.excerpt}</p>
+                <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                  {t(`blog:${post.id}:excerpt`, post.excerpt)}
+                </p>
               )}
             </div>
           </Link>

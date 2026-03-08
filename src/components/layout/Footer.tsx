@@ -3,6 +3,7 @@ import { Shield, Lock } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Phone, MapPin, Instagram, Facebook, Twitter, Youtube, Music2, Linkedin, MessageCircle, Send } from "lucide-react";
+import TranslatedText from "@/components/TranslatedText";
 
 interface SocialMediaLink {
   id: string;
@@ -98,7 +99,7 @@ const Footer = () => {
           <div className="lg:col-span-1">
             <h2 className="font-serif text-2xl font-semibold mb-4">MEDEA</h2>
             <p className="text-primary-foreground/80 text-sm leading-relaxed mb-6">
-              {footer.description}
+              <TranslatedText textKey="footer.description" originalText={footer.description} />
             </p>
             <div className="flex flex-wrap gap-3">
               {socialLinks?.map((link) => {
@@ -136,12 +137,12 @@ const Footer = () => {
           {/* Quick Links */}
           <div>
             <h3 className="font-medium text-sm uppercase tracking-wider mb-4">
-              Hızlı Bağlantılar
+              <TranslatedText textKey="footer.quick_links" originalText="Hızlı Bağlantılar" />
             </h3>
             <ul className="space-y-3">
               <li>
                 <Link to="/urunler" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                  Tüm Ürünler
+                  <TranslatedText textKey="nav.all_products" originalText="Tüm Ürünler" />
                 </Link>
               </li>
               <li>
@@ -151,17 +152,17 @@ const Footer = () => {
               </li>
               <li>
                 <Link to="/hakkimizda" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                  Hakkımızda
+                  <TranslatedText textKey="nav.about" originalText="Hakkımızda" />
                 </Link>
               </li>
               <li>
                 <Link to="/iletisim" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                  İletişim
+                  <TranslatedText textKey="nav.contact" originalText="İletişim" />
                 </Link>
               </li>
               <li>
                 <Link to="/sss" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                  Sık Sorulan Sorular
+                  <TranslatedText textKey="nav.faq" originalText="Sık Sorulan Sorular" />
                 </Link>
               </li>
             </ul>
@@ -170,32 +171,32 @@ const Footer = () => {
           {/* Legal */}
           <div>
             <h3 className="font-medium text-sm uppercase tracking-wider mb-4">
-              Yasal
+              <TranslatedText textKey="footer.legal" originalText="Yasal" />
             </h3>
             <ul className="space-y-3">
               <li>
                 <Link to="/kvkk" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                  KVKK Aydınlatma Metni
+                  <TranslatedText textKey="footer.kvkk" originalText="KVKK Aydınlatma Metni" />
                 </Link>
               </li>
               <li>
                 <Link to="/gizlilik-politikasi" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                  Gizlilik Politikası
+                  <TranslatedText textKey="footer.privacy" originalText="Gizlilik Politikası" />
                 </Link>
               </li>
               <li>
                 <Link to="/mesafeli-satis-sozlesmesi" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                  Mesafeli Satış Sözleşmesi
+                  <TranslatedText textKey="footer.sales_agreement" originalText="Mesafeli Satış Sözleşmesi" />
                 </Link>
               </li>
               <li>
                 <Link to="/iade-ve-iptal" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                  İade ve İptal
+                  <TranslatedText textKey="footer.returns" originalText="İade ve İptal" />
                 </Link>
               </li>
               <li>
                 <Link to="/cerez-politikasi" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                  Çerez Politikası
+                  <TranslatedText textKey="footer.cookies" originalText="Çerez Politikası" />
                 </Link>
               </li>
             </ul>
@@ -204,7 +205,7 @@ const Footer = () => {
           {/* Contact */}
           <div>
             <h3 className="font-medium text-sm uppercase tracking-wider mb-4">
-              İletişim
+              <TranslatedText textKey="footer.contact" originalText="İletişim" />
             </h3>
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
@@ -229,15 +230,17 @@ const Footer = () => {
 
         <div className="mt-12 pt-8 border-t border-primary-foreground/20">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-primary-foreground/60">{footer.copyright}</p>
+            <p className="text-sm text-primary-foreground/60">
+              <TranslatedText textKey="footer.copyright" originalText={footer.copyright} />
+            </p>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5 text-primary-foreground/60">
                 <Lock className="h-4 w-4" />
-                <span className="text-xs">SSL Güvenli</span>
+                <TranslatedText textKey="footer.ssl" originalText="SSL Güvenli" className="text-xs" />
               </div>
               <div className="flex items-center gap-1.5 text-primary-foreground/60">
                 <Shield className="h-4 w-4" />
-                <span className="text-xs">256-bit Şifreleme</span>
+                <TranslatedText textKey="footer.encryption" originalText="256-bit Şifreleme" className="text-xs" />
               </div>
             </div>
           </div>
