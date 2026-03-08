@@ -560,7 +560,7 @@ const ChatWindow = ({ conversationId, title, onClose, participantProfiles = {}, 
         {/* Input */}
         {!isMultiSelect && (
           <form onSubmit={handleSend} className="px-3 py-3 border-t flex items-end gap-2 bg-card">
-            <input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" className="hidden" ref={fileInputRef} onChange={handleFileSelect} />
+            <input type="file" multiple accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.txt" className="hidden" ref={fileInputRef} onChange={handleFileSelect} />
 
             <div className="flex items-center gap-0.5 shrink-0">
               <Tooltip>
