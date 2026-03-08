@@ -12,30 +12,54 @@ export const useCartSync = () => {
   const { user } = useAuth();
   const { cart } = useCart();
 
-  // Sync cart items to database
+  // Sync cart items to database (preserves admin-applied personal discounts)
   useEffect(() => {
     if (!user) return;
 
     const syncCart = async () => {
       try {
+        // First, fetch existing rows to preserve personal_discount and discount_note
+        const { data: existingRows } = await supabase
+          .from("user_carts" as any)
+          .select("product_id, variant_id, personal_discount, discount_note")
+          .eq("user_id", user.id);
+
+        const discountMap = new Map<string, { personal_discount: number; discount_note: string | null }>();
+        if (existingRows) {
+          for (const row of existingRows as any[]) {
+            const key = `${row.product_id}_${row.variant_id || ""}`;
+            if (row.personal_discount > 0) {
+              discountMap.set(key, {
+                personal_discount: row.personal_discount,
+                discount_note: row.discount_note,
+              });
+            }
+          }
+        }
+
         // Delete old cart items for this user
         await supabase.from("user_carts" as any).delete().eq("user_id", user.id);
 
         if (cart.items.length === 0) return;
 
-        // Insert current cart items
-        const rows = cart.items.map((item) => ({
-          user_id: user.id,
-          product_id: item.product.id,
-          quantity: item.quantity,
-          variant_id: item.variant?.id || null,
-          variant_info: item.variant ? { name: item.variant.name } : null,
-          price_adjustment: item.priceAdjustment || 0,
-        }));
+        // Insert current cart items, restoring any existing discounts
+        const rows = cart.items.map((item) => {
+          const key = `${item.product.id}_${item.variant?.id || ""}`;
+          const existing = discountMap.get(key);
+          return {
+            user_id: user.id,
+            product_id: item.product.id,
+            quantity: item.quantity,
+            variant_id: item.variant?.id || null,
+            variant_info: item.variant ? { name: item.variant.name } : null,
+            price_adjustment: item.priceAdjustment || 0,
+            personal_discount: existing?.personal_discount || 0,
+            discount_note: existing?.discount_note || null,
+          };
+        });
 
         await supabase.from("user_carts" as any).insert(rows as any);
       } catch (err) {
-        // Silent fail - this is a background sync
         console.error("Cart sync error:", err);
       }
     };
