@@ -641,8 +641,6 @@ const FileManager = () => {
                 {filteredContent.map((item) => {
                   const Icon = item.type === "folder" ? Folder : getFileIcon(item.name);
                   const isChecked = selectedFiles.has(item.path);
-                  const isStorageItem = item.source === "storage";
-
                   return (
                     <tr
                       key={item.path}
@@ -656,20 +654,18 @@ const FileManager = () => {
                       }}
                       onDoubleClick={() => {
                         if (item.type !== "file") { handleToggle(item); handleSelect(item); }
-                        else if (isStorageItem && isEditable(item.name)) openEditor(item);
-                        else if (isStorageItem && isPreviewable(item.name)) openPreview(item);
+                        else if (isEditable(item.name)) openEditor(item);
+                        else if (isPreviewable(item.name)) openPreview(item);
                       }}
                     >
                       <td className="p-1.5 text-center">
-                        {isStorageItem && (
-                          <input type="checkbox" checked={isChecked} onChange={() => toggleSelect(item.path)} className="rounded" />
-                        )}
+                        <input type="checkbox" checked={isChecked} onChange={() => toggleSelect(item.path)} className="rounded" />
                       </td>
                       <td className="p-1.5">
                         <button
                           onClick={() => {
                             if (item.type !== "file") handleSelect(item);
-                            else if (isStorageItem) toggleSelect(item.path);
+                            else toggleSelect(item.path);
                           }}
                           className="flex items-center gap-2 text-left w-full"
                         >
