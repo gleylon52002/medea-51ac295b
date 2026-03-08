@@ -182,6 +182,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_action_logs: {
+        Row: {
+          action_params: Json | null
+          action_type: string
+          created_at: string | null
+          error_message: string | null
+          executed_by: string | null
+          id: string
+          result: Json | null
+          status: string | null
+        }
+        Insert: {
+          action_params?: Json | null
+          action_type: string
+          created_at?: string | null
+          error_message?: string | null
+          executed_by?: string | null
+          id?: string
+          result?: Json | null
+          status?: string | null
+        }
+        Update: {
+          action_params?: Json | null
+          action_type?: string
+          created_at?: string | null
+          error_message?: string | null
+          executed_by?: string | null
+          id?: string
+          result?: Json | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       ai_chat_sessions: {
         Row: {
           created_at: string
@@ -1035,6 +1068,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      maintenance_tasks: {
+        Row: {
+          action_params: Json | null
+          action_type: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          last_result: Json | null
+          last_run_at: string | null
+          next_run_at: string | null
+          run_count: number | null
+          schedule: string | null
+          task_type: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          action_params?: Json | null
+          action_type: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_result?: Json | null
+          last_run_at?: string | null
+          next_run_at?: string | null
+          run_count?: number | null
+          schedule?: string | null
+          task_type?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          action_params?: Json | null
+          action_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_result?: Json | null
+          last_run_at?: string | null
+          next_run_at?: string | null
+          run_count?: number | null
+          schedule?: string | null
+          task_type?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       message_attachments: {
         Row: {
