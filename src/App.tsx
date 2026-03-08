@@ -238,6 +238,9 @@ const App = () => (
                   <Route path="cark" element={<AdminSpinWheel />} />
                   <Route path="rss" element={<AdminRSS />} />
                   <Route path="bakim" element={<AdminMaintenance />} />
+                  <Route path="segmentler" element={<AdminSegments />} />
+                  <Route path="email-otomasyon" element={<AdminEmailAutomation />} />
+                  <Route path="kampanya-takvimi" element={<AdminCampaignCalendar />} />
                 </Route>
 
                 {/* Seller Routes */}
