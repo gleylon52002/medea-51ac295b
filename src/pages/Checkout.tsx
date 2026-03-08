@@ -312,6 +312,49 @@ const Checkout = () => {
         console.error("Order confirmation email failed:", emailErr);
       }
 
+      // Earn loyalty points (10 points per 100₺)
+      if (user) {
+        try {
+          const pointsToEarn = Math.floor(total / 100) * 10;
+          if (pointsToEarn > 0) {
+            const { data: existingLoyalty } = await supabase
+              .from("loyalty_points")
+              .select("id, points, total_earned")
+              .eq("user_id", user.id)
+              .maybeSingle();
+
+            if (existingLoyalty) {
+              const newTotal = existingLoyalty.total_earned + pointsToEarn;
+              const tier = newTotal >= 10000 ? "platinum" : newTotal >= 5000 ? "gold" : newTotal >= 2000 ? "silver" : "bronze";
+              await supabase.from("loyalty_points").update({
+                points: existingLoyalty.points + pointsToEarn,
+                total_earned: newTotal,
+                tier,
+                updated_at: new Date().toISOString(),
+              }).eq("id", existingLoyalty.id);
+            } else {
+              const tier = pointsToEarn >= 10000 ? "platinum" : pointsToEarn >= 5000 ? "gold" : pointsToEarn >= 2000 ? "silver" : "bronze";
+              await supabase.from("loyalty_points").insert({
+                user_id: user.id,
+                points: pointsToEarn,
+                total_earned: pointsToEarn,
+                tier,
+              });
+            }
+
+            await supabase.from("loyalty_transactions").insert({
+              user_id: user.id,
+              points: pointsToEarn,
+              transaction_type: "earn",
+              description: `Sipariş: ${result.orderNumber} — ${pointsToEarn} puan kazanıldı`,
+              order_id: result.order.id,
+            });
+          }
+        } catch (loyaltyErr) {
+          console.error("Loyalty points error:", loyaltyErr);
+        }
+      }
+
       toast({
         title: "Siparişiniz Alındı!",
         description: `Sipariş numaranız: ${result.orderNumber}`,

@@ -289,6 +289,39 @@ serve(async (req) => {
         `;
         break;
 
+      case "newsletter_broadcast":
+        subject = data?.subject as string || `${senderName} Bülten`;
+        html = `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+            <div style="background: #8B7355; padding: 20px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0;">${senderName}</h1>
+            </div>
+            <div style="padding: 30px 20px;">
+              ${(data?.body as string || "").split("\n").map((line: string) => `<p>${line || "&nbsp;"}</p>`).join("")}
+            </div>
+            <div style="background: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+              <p>${senderName} — Bu e-postayı bülten aboneliğiniz nedeniyle aldınız.</p>
+            </div>
+          </div>
+        `;
+        break;
+
+      case "test_email":
+        subject = data?.subject as string || `${senderName} Test E-postası`;
+        html = `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+            <div style="background: #8B7355; padding: 20px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0;">${senderName} — Test</h1>
+            </div>
+            <div style="padding: 30px 20px;">
+              <h2>🧪 Bu bir test e-postasıdır</h2>
+              <p>${data?.body as string || "E-posta sisteminiz düzgün çalışıyor!"}</p>
+              <p style="color: #666; font-size: 12px;">Gönderim zamanı: ${new Date().toLocaleString("tr-TR")}</p>
+            </div>
+          </div>
+        `;
+        break;
+
       default:
         throw new Error(`Unknown email type: ${type}`);
     }
