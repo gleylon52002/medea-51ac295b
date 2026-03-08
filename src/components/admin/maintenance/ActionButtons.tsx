@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle, AlertCircle, Play } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface AIAction {
   id: string;
@@ -41,9 +42,9 @@ const ActionButtons = ({ actions, onActionComplete }: ActionButtonsProps) => {
       // Log the action
       await supabase.from("ai_action_logs").insert([{
         action_type: action.type,
-        action_params: JSON.parse(JSON.stringify(action.params || {})),
-        result: data as Record<string, unknown>,
-        status: "success" as const,
+        action_params: (action.params || {}) as Json,
+        result: (data || {}) as Json,
+        status: "success",
       }]);
 
       setCompleted([...completed, action.id]);
@@ -57,8 +58,8 @@ const ActionButtons = ({ actions, onActionComplete }: ActionButtonsProps) => {
       // Log the failure
       await supabase.from("ai_action_logs").insert([{
         action_type: action.type,
-        action_params: JSON.parse(JSON.stringify(action.params || {})),
-        status: "failed" as const,
+        action_params: (action.params || {}) as Json,
+        status: "failed",
         error_message: errorMessage,
       }]);
     } finally {
