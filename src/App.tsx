@@ -197,7 +197,7 @@ const App = () => (
                 <Route path="kampanyalar" element={<AdminCampaigns />} />
                 <Route path="mesajlar" element={<AdminMessages />} />
                 <Route path="bulten" element={<AdminNewsletter />} />
-                <Route path="bulten-mesajlari" element={<AdminContactMessages />} />
+                <Route path="iletisim-mesajlari" element={<AdminContactMessages />} />
                 <Route path="sss" element={<AdminFAQ />} />
                 <Route path="sosyal-medya" element={<AdminSocialMedia />} />
                 <Route path="kargo" element={<AdminShipping />} />
