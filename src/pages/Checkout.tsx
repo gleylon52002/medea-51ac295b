@@ -312,6 +312,37 @@ const Checkout = () => {
         console.error("Order confirmation email failed:", emailErr);
       }
 
+      // Auto-generate invoice
+      try {
+        const invoiceNumber = `FTR-${result.orderNumber.replace('MDA-', '')}`;
+        await supabase.from("invoices").insert({
+          order_id: result.order.id,
+          invoice_number: invoiceNumber,
+          billing_info: {
+            full_name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email,
+            phone: formData.phone,
+            address: formData.address,
+            city: formData.city,
+            district: formData.district,
+            postal_code: formData.postalCode,
+          },
+          items: items.map(item => ({
+            product_name: item.product.name,
+            quantity: item.quantity,
+            unit_price: (item.product.salePrice || item.product.price) + (item.priceAdjustment || 0),
+            total_price: ((item.product.salePrice || item.product.price) + (item.priceAdjustment || 0)) * item.quantity,
+          })),
+          subtotal: total,
+          tax_amount: total * 0.20,
+          shipping_cost: shippingCost,
+          discount_amount: discountAmount + walletAmount + bulkResult.discount,
+          total: finalTotal,
+        });
+      } catch (invoiceErr) {
+        console.error("Auto invoice creation failed:", invoiceErr);
+      }
+
       // Earn loyalty points (10 points per 100₺)
       if (user) {
         try {
