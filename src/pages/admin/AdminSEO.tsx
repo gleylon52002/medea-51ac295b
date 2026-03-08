@@ -192,17 +192,21 @@ Allow: /`;
 
   const autoGenerateFile = async (content: string, filename: string) => {
     const key = filename.includes("sitemap") ? "sitemap" : "robots";
-
-    if (filename === "sitemap.xml") {
-      toast.success("Dinamik sitemap zaten aktif", {
-        description: "URL: /sitemap.xml (dinamik kaynak: backend sitemap fonksiyonu)",
-      });
-      return;
-    }
-
     setIsAutoGenerating(key);
     try {
-      const blob = new Blob([content], { type: filename.endsWith('.xml') ? 'text/xml' : 'text/plain' });
+      let finalContent = content;
+
+      // For sitemap, fetch the real dynamic content from edge function
+      if (filename === "sitemap.xml") {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "gxzlltmivdlpplunuusi";
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/sitemap`
+        );
+        if (!response.ok) throw new Error("Sitemap fonksiyonu yanıt vermedi");
+        finalContent = await response.text();
+      }
+
+      const blob = new Blob([finalContent], { type: filename.endsWith('.xml') ? 'text/xml' : 'text/plain' });
       const file = new File([blob], filename, { type: blob.type });
 
       const { error } = await supabase.storage
@@ -215,7 +219,7 @@ Allow: /`;
         .from("site-assets")
         .getPublicUrl(filename);
 
-      toast.success(`${filename} başarıyla oluşturuldu ve yayınlandı!`, {
+      toast.success(`${filename} başarıyla oluşturuldu!`, {
         description: `URL: ${publicUrl.publicUrl}`,
       });
     } catch (e: any) {
@@ -371,8 +375,9 @@ Allow: /`;
               </div>
               <div className="bg-accent/30 border border-accent rounded-lg p-4">
                 <p className="text-sm text-foreground">
-                  <strong>💡 Otomatik Oluştur:</strong> <code>/sitemap.xml</code> adresi dinamik olarak backend sitemap fonksiyonuna bağlıdır.
-                  Yeni ürün/kategori/blog içerikleri otomatik yansır; Search Console'a <code>https://medea.tr/sitemap.xml</code> ekleyin.
+                  <strong>💡 Otomatik Oluştur:</strong> Butona tıkladığınızda backend fonksiyonundan güncel sitemap çekilir ve 
+                  Storage'a yüklenir. Google Search Console'a <code>https://medea.tr/sitemap.xml</code> adresini ekleyin.
+                  <br /><strong>Not:</strong> Sitemap, ürün/kategori/blog değişikliklerinde her zaman günceldir.
                 </p>
               </div>
             </CardContent>
