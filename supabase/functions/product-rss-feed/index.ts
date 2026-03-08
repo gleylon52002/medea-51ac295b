@@ -33,7 +33,7 @@ serve(async (req) => {
       .single();
 
     const siteName = (settings?.value as any)?.site_name || "MEDEA";
-    const siteUrl = "https://medea.lovable.app";
+    const siteUrl = "https://medea.tr";
 
     const rssItems = (products || []).map((product: any) => {
       const imageUrl = product.images?.[0] || "";
