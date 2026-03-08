@@ -386,9 +386,8 @@ const FileManager = () => {
 
   // Delete
   const handleDeleteNodes = async (nodes: TreeNode[]) => {
-    const storageNodes = nodes.filter((n) => n.source === "storage");
-    if (!storageNodes.length) { toast.error("Sadece Storage dosyaları silinebilir"); return; }
-    for (const node of storageNodes) {
+    if (!nodes.length) return;
+    for (const node of nodes) {
       const bucket = getStorageBucket(node);
       if (!bucket) continue;
       const path = getStoragePath(node);
