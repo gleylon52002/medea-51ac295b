@@ -10,7 +10,7 @@ interface PaymentRequest {
   orderId: string;
   orderNumber: string;
   amount: number;
-  provider: "shopier" | "shopinext" | "payizone";
+  provider: "credit_card" | "shopier" | "shopinext" | "payizone";
   customerName: string;
   customerEmail: string;
   customerPhone: string;
@@ -76,11 +76,41 @@ serve(async (req) => {
       });
     }
 
+    // For credit_card, determine which provider to use
+    let effectiveProvider = provider;
+    if (provider === "credit_card") {
+      // Check which online payment provider is active (prefer payizone > shopinext > shopier)
+      const { data: allConfigs } = await supabase
+        .from("payment_settings")
+        .select("method, config, is_active")
+        .in("method", ["payizone", "shopinext", "shopier"])
+        .eq("is_active", true);
+
+      if (allConfigs && allConfigs.length > 0) {
+        const preferred = allConfigs.find(c => c.method === "payizone") 
+          || allConfigs.find(c => c.method === "shopinext")
+          || allConfigs.find(c => c.method === "shopier");
+        if (preferred) {
+          effectiveProvider = preferred.method as "shopier" | "shopinext" | "payizone";
+        } else {
+          return new Response(
+            JSON.stringify({ error: "No online payment provider configured" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      } else {
+        return new Response(
+          JSON.stringify({ error: "No online payment provider configured" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Get payment provider config
     const { data: config } = await supabase
       .from("payment_settings")
       .select("config, is_active")
-      .eq("method", provider)
+      .eq("method", effectiveProvider)
       .single();
 
     if (!config?.is_active) {
@@ -93,9 +123,9 @@ serve(async (req) => {
     const providerConfig = config.config as Record<string, string>;
     let paymentUrl = "";
     let paymentData: Record<string, string | number> = {};
-    const callbackUrl = `${supabaseUrl}/functions/v1/payment-callback/${provider}`;
+    const callbackUrl = `${supabaseUrl}/functions/v1/payment-callback/${effectiveProvider}`;
 
-    switch (provider) {
+    switch (effectiveProvider) {
       case "shopier": {
         const shopierApiKey = providerConfig.api_key;
         const shopierSecret = providerConfig.secret;
@@ -121,7 +151,7 @@ serve(async (req) => {
           buyer_id_nr: "",
           buyer_ip: "",
           module_version: "1.0",
-          website_index: returnUrl.split("/siparis")[0] || "https://medea.lovable.app",
+          website_index: returnUrl.split("/siparis")[0] || "https://medea.tr",
           random_nr: randomNr,
           callback: callbackUrl,
           success_url: `${returnUrl}?status=success&order=${orderNumber}`,
@@ -180,13 +210,13 @@ serve(async (req) => {
     // Record initial transaction
     await supabase.from("payment_transactions").insert({
       order_id: orderId,
-      payment_method: provider,
+      payment_method: effectiveProvider,
       amount,
       status: "pending",
     });
 
     // For providers that have a direct API, try to call it and get a redirect URL
-    if (provider === "payizone" || provider === "shopinext") {
+    if (effectiveProvider === "payizone" || effectiveProvider === "shopinext") {
       try {
         const apiResponse = await fetch(paymentUrl, {
           method: "POST",
@@ -196,19 +226,18 @@ serve(async (req) => {
         
         if (apiResponse.ok) {
           const apiResult = await apiResponse.json();
-          // Most payment APIs return a redirect URL
           const redirectUrl = apiResult.payment_url || apiResult.redirect_url || apiResult.url || apiResult.paymentUrl;
           if (redirectUrl) {
             return new Response(
-              JSON.stringify({ success: true, paymentUrl: redirectUrl, provider, redirect: true }),
+              JSON.stringify({ success: true, paymentUrl: redirectUrl, provider: effectiveProvider, redirect: true }),
               { headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
           }
         }
         
-        console.log(`${provider} API response status: ${apiResponse.status}`);
+        console.log(`${effectiveProvider} API response status: ${apiResponse.status}`);
       } catch (apiErr) {
-        console.error(`${provider} API call failed:`, apiErr);
+        console.error(`${effectiveProvider} API call failed:`, apiErr);
       }
     }
 
@@ -218,9 +247,9 @@ serve(async (req) => {
         success: true, 
         paymentUrl, 
         paymentData, 
-        provider,
-        redirect: provider !== "shopier", // Shopier uses form POST
-        formPost: provider === "shopier", // Shopier requires form POST
+        provider: effectiveProvider,
+        redirect: effectiveProvider !== "shopier",
+        formPost: effectiveProvider === "shopier",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

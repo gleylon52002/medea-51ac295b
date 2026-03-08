@@ -71,7 +71,7 @@ import AdminInvoices from "./pages/admin/AdminInvoices";
 import AdminUserCarts from "./pages/admin/AdminUserCarts";
 import AdminActivityLogs from "./pages/admin/AdminActivityLogs";
 import AdminSMS from "./pages/admin/AdminSMS";
-import AdminABTests from "./pages/admin/AdminABTests";
+// AdminABTests removed - not needed for production
 import AdminConversionFunnel from "./pages/admin/AdminConversionFunnel";
 import AdminPushNotifications from "./pages/admin/AdminPushNotifications";
 import AdminBlog from "./pages/admin/AdminBlog";
@@ -197,7 +197,7 @@ const App = () => (
                 <Route path="kampanyalar" element={<AdminCampaigns />} />
                 <Route path="mesajlar" element={<AdminMessages />} />
                 <Route path="bulten" element={<AdminNewsletter />} />
-                <Route path="bulten-mesajlari" element={<AdminContactMessages />} />
+                <Route path="iletisim-mesajlari" element={<AdminContactMessages />} />
                 <Route path="sss" element={<AdminFAQ />} />
                 <Route path="sosyal-medya" element={<AdminSocialMedia />} />
                 <Route path="kargo" element={<AdminShipping />} />
@@ -214,7 +214,7 @@ const App = () => (
                 <Route path="sepetler" element={<AdminUserCarts />} />
                 <Route path="aktivite" element={<AdminActivityLogs />} />
                 <Route path="sms" element={<AdminSMS />} />
-                <Route path="ab-testler" element={<AdminABTests />} />
+                {/* A/B Tests removed */}
                 <Route path="donusum-hunisi" element={<AdminConversionFunnel />} />
                 <Route path="push-bildirimler" element={<AdminPushNotifications />} />
                 <Route path="blog" element={<AdminBlog />} />

@@ -23,13 +23,13 @@ const Index = () => {
       <SEOHead
         title="Medea - Doğal Güzellik & Bakım Ürünleri"
         description="Medea'da en kaliteli doğal güzellik ve bakım ürünlerini keşfedin. Hızlı kargo, güvenli ödeme ve %100 müşteri memnuniyeti garantisi."
-        canonical="https://medea.lovable.app"
+        canonical="https://medea.tr"
       />
+      <Hero />
       <FeaturedProducts />
       <FirstOrderBanner />
       <Campaigns />
       <Features />
-      <Hero />
       <div className="container-main py-12">
         <TrustBadges variant="horizontal" />
       </div>

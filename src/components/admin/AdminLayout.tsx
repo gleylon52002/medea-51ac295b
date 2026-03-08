@@ -22,18 +22,21 @@ import {
   Search,
   Image,
   Menu,
-  X,
   Store,
   UserCheck,
   Sliders,
   FileText,
   Star,
-  Ticket,
+  ShoppingBasket,
   Activity,
   Smartphone,
   TrendingDown,
   Rss,
   Bell,
+  Award,
+  BarChart3,
+  CircleDot,
+  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -41,47 +44,112 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
-  { icon: Package, label: "Ürünler", path: "/admin/urunler" },
-  { icon: FolderTree, label: "Kategoriler", path: "/admin/kategoriler" },
-  { icon: ShoppingCart, label: "Siparişler", path: "/admin/siparisler" },
-  { icon: Users, label: "Kullanıcılar", path: "/admin/kullanicilar" },
-  { icon: Star, label: "Yorumlar", path: "/admin/yorumlar" },
-  { icon: MessageSquare, label: "Mesajlar", path: "/admin/mesajlar" },
-  { icon: Mail, label: "İletişim Mesajları", path: "/admin/bulten-mesajlari" },
-  { icon: Ticket, label: "Kuponlar", path: "/admin/kuponlar" },
-  { icon: Percent, label: "Kampanyalar", path: "/admin/kampanyalar" },
-  { icon: Newspaper, label: "Bülten Aboneleri", path: "/admin/bulten" },
-  { icon: HelpCircle, label: "SSS", path: "/admin/sss" },
-  { icon: Share2, label: "Sosyal Medya", path: "/admin/sosyal-medya" },
-  { icon: Store, label: "Satıcı Başvuruları", path: "/admin/satici-basvurulari" },
-  { icon: UserCheck, label: "Satıcılar", path: "/admin/saticilar" },
-  { icon: Sliders, label: "Satıcı Ayarları", path: "/admin/satici-ayarlari" },
-  { icon: Truck, label: "Kargo", path: "/admin/kargo" },
-  { icon: FileText, label: "Faturalar", path: "/admin/faturalar" },
-  { icon: CreditCard, label: "Ödeme Yöntemleri", path: "/admin/odeme" },
-  { icon: Tag, label: "Satıcı Ödemeleri", path: "/admin/odemeler" },
-  { icon: Tag, label: "Kullanıcı Sepetleri", path: "/admin/sepetler" },
-  { icon: Image, label: "Hero", path: "/admin/hero" },
-  { icon: Palette, label: "Tema", path: "/admin/tema" },
-  { icon: Search, label: "SEO", path: "/admin/seo" },
-  { icon: Settings, label: "Ayarlar", path: "/admin/ayarlar" },
-  { icon: Activity, label: "Aktivite Logları", path: "/admin/aktivite" },
-  { icon: Smartphone, label: "SMS Yönetimi", path: "/admin/sms" },
-  
-  { icon: TrendingDown, label: "Dönüşüm Hunisi", path: "/admin/donusum-hunisi" },
-  { icon: Bell, label: "Push Bildirimler", path: "/admin/push-bildirimler" },
-  { icon: Newspaper, label: "Blog", path: "/admin/blog" },
-  { icon: UserCheck, label: "Sertifikalar", path: "/admin/sertifikalar" },
-  { icon: Users, label: "Cohort Analizi", path: "/admin/cohort" },
-  { icon: Settings, label: "Çark Yönetimi", path: "/admin/cark" },
-  { icon: Rss, label: "RSS Beslemesi", path: "/admin/rss" },
+interface MenuItem {
+  icon: any;
+  label: string;
+  path: string;
+}
+
+interface MenuGroup {
+  title: string;
+  items: MenuItem[];
+}
+
+const menuGroups: MenuGroup[] = [
+  {
+    title: "Genel",
+    items: [
+      { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
+    ],
+  },
+  {
+    title: "Ürün Yönetimi",
+    items: [
+      { icon: Package, label: "Ürünler", path: "/admin/urunler" },
+      { icon: FolderTree, label: "Kategoriler", path: "/admin/kategoriler" },
+      { icon: Star, label: "Yorumlar", path: "/admin/yorumlar" },
+    ],
+  },
+  {
+    title: "Sipariş & Ödeme",
+    items: [
+      { icon: ShoppingCart, label: "Siparişler", path: "/admin/siparisler" },
+      { icon: CreditCard, label: "Ödeme Yöntemleri", path: "/admin/odeme" },
+      { icon: Truck, label: "Kargo", path: "/admin/kargo" },
+      { icon: FileText, label: "Faturalar", path: "/admin/faturalar" },
+    ],
+  },
+  {
+    title: "Pazarlama",
+    items: [
+      { icon: Percent, label: "Kampanyalar", path: "/admin/kampanyalar" },
+      { icon: Tag, label: "Kuponlar", path: "/admin/kuponlar" },
+      { icon: Newspaper, label: "Bülten Aboneleri", path: "/admin/bulten" },
+      { icon: Bell, label: "Push Bildirimler", path: "/admin/push-bildirimler" },
+      { icon: Smartphone, label: "SMS Yönetimi", path: "/admin/sms" },
+      { icon: CircleDot, label: "Çark Yönetimi", path: "/admin/cark" },
+      { icon: Rss, label: "RSS Beslemesi", path: "/admin/rss" },
+    ],
+  },
+  {
+    title: "Pazaryeri",
+    items: [
+      { icon: Store, label: "Satıcı Başvuruları", path: "/admin/satici-basvurulari" },
+      { icon: UserCheck, label: "Satıcılar", path: "/admin/saticilar" },
+      { icon: Sliders, label: "Satıcı Ayarları", path: "/admin/satici-ayarlari" },
+      { icon: CreditCard, label: "Satıcı Ödemeleri", path: "/admin/odemeler" },
+      { icon: Award, label: "Sertifikalar", path: "/admin/sertifikalar" },
+    ],
+  },
+  {
+    title: "Kullanıcılar",
+    items: [
+      { icon: Users, label: "Kullanıcılar", path: "/admin/kullanicilar" },
+      { icon: ShoppingBasket, label: "Kullanıcı Sepetleri", path: "/admin/sepetler" },
+      { icon: MessageSquare, label: "Mesajlar", path: "/admin/mesajlar" },
+      { icon: Mail, label: "İletişim Mesajları", path: "/admin/iletisim-mesajlari" },
+    ],
+  },
+  {
+    title: "İçerik",
+    items: [
+      { icon: Image, label: "Hero", path: "/admin/hero" },
+      { icon: Newspaper, label: "Blog", path: "/admin/blog" },
+      { icon: HelpCircle, label: "SSS", path: "/admin/sss" },
+      { icon: Share2, label: "Sosyal Medya", path: "/admin/sosyal-medya" },
+    ],
+  },
+  {
+    title: "Analitik",
+    items: [
+      { icon: Activity, label: "Aktivite Logları", path: "/admin/aktivite" },
+      { icon: TrendingDown, label: "Dönüşüm Hunisi", path: "/admin/donusum-hunisi" },
+      { icon: BarChart3, label: "Cohort Analizi", path: "/admin/cohort" },
+    ],
+  },
+  {
+    title: "Ayarlar",
+    items: [
+      { icon: Palette, label: "Tema", path: "/admin/tema" },
+      { icon: Search, label: "SEO", path: "/admin/seo" },
+      { icon: Settings, label: "Genel Ayarlar", path: "/admin/ayarlar" },
+    ],
+  },
 ];
 
 const SidebarContent = ({ onItemClick }: { onItemClick?: () => void }) => {
   const location = useLocation();
   const { signOut } = useAuth();
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+
+  const toggleGroup = (title: string) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(title)) next.delete(title);
+      else next.add(title);
+      return next;
+    });
+  };
 
   return (
     <>
@@ -94,24 +162,43 @@ const SidebarContent = ({ onItemClick }: { onItemClick?: () => void }) => {
 
       <ScrollArea className="flex-1">
         <nav className="p-2 lg:p-4 space-y-1">
-          {menuItems.map((item) => {
-            const isActive = location.pathname === item.path ||
-              (item.path !== "/admin" && location.pathname.startsWith(item.path));
+          {menuGroups.map((group) => {
+            const isCollapsed = collapsedGroups.has(group.title);
+            const hasActiveItem = group.items.some(item => 
+              location.pathname === item.path || 
+              (item.path !== "/admin" && location.pathname.startsWith(item.path))
+            );
+
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={onItemClick}
-                className={cn(
-                  "flex items-center gap-3 px-3 lg:px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <item.icon className="h-4 w-4 shrink-0" />
-                <span className="truncate">{item.label}</span>
-              </Link>
+              <div key={group.title} className="mb-1">
+                <button
+                  onClick={() => toggleGroup(group.title)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                >
+                  <span>{group.title}</span>
+                  <ChevronDown className={cn("h-3 w-3 transition-transform", isCollapsed && "-rotate-90")} />
+                </button>
+                {!isCollapsed && group.items.map((item) => {
+                  const isActive = location.pathname === item.path ||
+                    (item.path !== "/admin" && location.pathname.startsWith(item.path));
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={onItemClick}
+                      className={cn(
+                        "flex items-center gap-3 px-3 lg:px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             );
           })}
         </nav>
