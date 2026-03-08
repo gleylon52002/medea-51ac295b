@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { initGA4 } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,109 +8,119 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import "@/i18n";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
-// Pages
+// Eagerly loaded (critical path)
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
-import Category from "./pages/Category";
-import Checkout from "./pages/Checkout";
-import OrderSuccess from "./pages/OrderSuccess";
-import Auth from "./pages/Auth";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-
-// Account Pages
-import Account from "./pages/Account";
-import Profile from "./pages/account/Profile";
-import Orders from "./pages/account/Orders";
-import OrderDetail from "./pages/account/OrderDetail";
-import Favorites from "./pages/account/Favorites";
-import Addresses from "./pages/account/Addresses";
-import Affiliate from "./pages/account/Affiliate";
-import AccountSettings from "./pages/account/AccountSettings";
-import Loyalty from "./pages/account/Loyalty";
-
-// Legal Pages
-import KVKK from "./pages/legal/KVKK";
-import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
-import SalesAgreement from "./pages/legal/SalesAgreement";
-import ReturnPolicy from "./pages/legal/ReturnPolicy";
-import CookiePolicy from "./pages/legal/CookiePolicy";
-import FAQ from "./pages/FAQ";
-import SellerRules from "./pages/legal/SellerRules";
-import Compare from "./pages/Compare";
-
-// Admin Pages
-import AdminGuard from "./components/admin/AdminGuard";
-import AdminLayout from "./components/admin/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminProducts from "./pages/admin/AdminProducts";
-import AdminCategories from "./pages/admin/AdminCategories";
-import AdminOrders from "./pages/admin/AdminOrders";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminReviews from "./pages/admin/AdminReviews";
-import AdminShipping from "./pages/admin/AdminShipping";
-import AdminPayment from "./pages/admin/AdminPayment";
-import AdminSettings from "./pages/admin/AdminSettings";
-import AdminCoupons from "./pages/admin/AdminCoupons";
-import AdminMessages from "./pages/admin/AdminMessages";
-import AdminNewsletter from "./pages/admin/AdminNewsletter";
-import AdminContactMessages from "./pages/admin/AdminContactMessages";
-import AdminCampaigns from "./pages/admin/AdminCampaigns";
-import AdminFAQ from "./pages/admin/AdminFAQ";
-import AdminSocialMedia from "./pages/admin/AdminSocialMedia";
-import AdminTheme from "./pages/admin/AdminTheme";
-import AdminSEO from "./pages/admin/AdminSEO";
-import AdminHero from "./pages/admin/AdminHero";
-import AdminSellerApplications from "./pages/admin/AdminSellerApplications";
-import AdminSellers from "./pages/admin/AdminSellers";
-import AdminSellerSettings from "./pages/admin/AdminSellerSettings";
-import AdminPayouts from "./pages/admin/AdminPayouts";
-import AdminInvoices from "./pages/admin/AdminInvoices";
-import AdminUserCarts from "./pages/admin/AdminUserCarts";
-import AdminActivityLogs from "./pages/admin/AdminActivityLogs";
-import AdminSMS from "./pages/admin/AdminSMS";
-// AdminABTests removed - not needed for production
-import AdminConversionFunnel from "./pages/admin/AdminConversionFunnel";
-import AdminPushNotifications from "./pages/admin/AdminPushNotifications";
-import AdminBlog from "./pages/admin/AdminBlog";
-import AdminCertificates from "./pages/admin/AdminCertificates";
-import AdminCohort from "./pages/admin/AdminCohort";
-import AdminSpinWheel from "./pages/admin/AdminSpinWheel";
-import AdminRSS from "./pages/admin/AdminRSS";
-import AdminMaintenance from "./pages/admin/AdminMaintenance";
-// Seller Pages
-import SellerGuard from "./components/seller/SellerGuard";
-import SellerLayout from "./components/seller/SellerLayout";
-import SellerDashboard from "./pages/seller/SellerDashboard";
-import SellerProducts from "./pages/seller/SellerProducts";
-import SellerOrders from "./pages/seller/SellerOrders";
-import SellerEarnings from "./pages/seller/SellerEarnings";
-import SellerPoints from "./pages/seller/SellerPoints";
-import SellerFeature from "./pages/seller/SellerFeature";
-import SellerNotifications from "./pages/seller/SellerNotifications";
-import SellerMessages from "./pages/seller/SellerMessages";
-import SellerCargo from "./pages/seller/SellerCargo";
-import SellerSettings from "./pages/seller/SellerSettings";
-import SellerInvoices from "./pages/seller/SellerInvoices";
-import SellerAnalytics from "./pages/seller/SellerAnalytics";
-import SellerQuestions from "./pages/seller/SellerQuestions";
-import SellerBuyPoints from "./pages/seller/SellerBuyPoints";
-import SellerStockForecast from "./pages/seller/SellerStockForecast";
-
-import SellerStore from "./pages/SellerStore";
-import Blog from "./pages/Blog";
-import BlogDetail from "./pages/BlogDetail";
-import GiftPackage from "./pages/GiftPackage";
-import GiftReceive from "./pages/GiftReceive";
-import Badges from "./pages/Badges";
-import Community from "./pages/Community";
-import BirthdayReminders from "./pages/BirthdayReminders";
-import CustomProductOrder from "./pages/CustomProductOrder";
 import NotFound from "./pages/NotFound";
 
+// Lazy loaded pages
+const Category = lazy(() => import("./pages/Category"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
+const Auth = lazy(() => import("./pages/Auth"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+
+// Account Pages (lazy)
+const Account = lazy(() => import("./pages/Account"));
+const Profile = lazy(() => import("./pages/account/Profile"));
+const Orders = lazy(() => import("./pages/account/Orders"));
+const OrderDetail = lazy(() => import("./pages/account/OrderDetail"));
+const Favorites = lazy(() => import("./pages/account/Favorites"));
+const Addresses = lazy(() => import("./pages/account/Addresses"));
+const Affiliate = lazy(() => import("./pages/account/Affiliate"));
+const AccountSettings = lazy(() => import("./pages/account/AccountSettings"));
+const Loyalty = lazy(() => import("./pages/account/Loyalty"));
+
+// Legal Pages (lazy)
+const KVKK = lazy(() => import("./pages/legal/KVKK"));
+const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
+const SalesAgreement = lazy(() => import("./pages/legal/SalesAgreement"));
+const ReturnPolicy = lazy(() => import("./pages/legal/ReturnPolicy"));
+const CookiePolicy = lazy(() => import("./pages/legal/CookiePolicy"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const SellerRules = lazy(() => import("./pages/legal/SellerRules"));
+const Compare = lazy(() => import("./pages/Compare"));
+
+// Admin Pages (lazy)
+const AdminGuard = lazy(() => import("./components/admin/AdminGuard"));
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
+const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
+const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
+const AdminShipping = lazy(() => import("./pages/admin/AdminShipping"));
+const AdminPayment = lazy(() => import("./pages/admin/AdminPayment"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
+const AdminMessages = lazy(() => import("./pages/admin/AdminMessages"));
+const AdminNewsletter = lazy(() => import("./pages/admin/AdminNewsletter"));
+const AdminContactMessages = lazy(() => import("./pages/admin/AdminContactMessages"));
+const AdminCampaigns = lazy(() => import("./pages/admin/AdminCampaigns"));
+const AdminFAQ = lazy(() => import("./pages/admin/AdminFAQ"));
+const AdminSocialMedia = lazy(() => import("./pages/admin/AdminSocialMedia"));
+const AdminTheme = lazy(() => import("./pages/admin/AdminTheme"));
+const AdminSEO = lazy(() => import("./pages/admin/AdminSEO"));
+const AdminHero = lazy(() => import("./pages/admin/AdminHero"));
+const AdminSellerApplications = lazy(() => import("./pages/admin/AdminSellerApplications"));
+const AdminSellers = lazy(() => import("./pages/admin/AdminSellers"));
+const AdminSellerSettings = lazy(() => import("./pages/admin/AdminSellerSettings"));
+const AdminPayouts = lazy(() => import("./pages/admin/AdminPayouts"));
+const AdminInvoices = lazy(() => import("./pages/admin/AdminInvoices"));
+const AdminUserCarts = lazy(() => import("./pages/admin/AdminUserCarts"));
+const AdminActivityLogs = lazy(() => import("./pages/admin/AdminActivityLogs"));
+const AdminSMS = lazy(() => import("./pages/admin/AdminSMS"));
+const AdminConversionFunnel = lazy(() => import("./pages/admin/AdminConversionFunnel"));
+const AdminPushNotifications = lazy(() => import("./pages/admin/AdminPushNotifications"));
+const AdminBlog = lazy(() => import("./pages/admin/AdminBlog"));
+const AdminCertificates = lazy(() => import("./pages/admin/AdminCertificates"));
+const AdminCohort = lazy(() => import("./pages/admin/AdminCohort"));
+const AdminSpinWheel = lazy(() => import("./pages/admin/AdminSpinWheel"));
+const AdminRSS = lazy(() => import("./pages/admin/AdminRSS"));
+const AdminMaintenance = lazy(() => import("./pages/admin/AdminMaintenance"));
+
+// Seller Pages (lazy)
+const SellerGuard = lazy(() => import("./components/seller/SellerGuard"));
+const SellerLayout = lazy(() => import("./components/seller/SellerLayout"));
+const SellerDashboard = lazy(() => import("./pages/seller/SellerDashboard"));
+const SellerProducts = lazy(() => import("./pages/seller/SellerProducts"));
+const SellerOrders = lazy(() => import("./pages/seller/SellerOrders"));
+const SellerEarnings = lazy(() => import("./pages/seller/SellerEarnings"));
+const SellerPoints = lazy(() => import("./pages/seller/SellerPoints"));
+const SellerFeature = lazy(() => import("./pages/seller/SellerFeature"));
+const SellerNotifications = lazy(() => import("./pages/seller/SellerNotifications"));
+const SellerMessages = lazy(() => import("./pages/seller/SellerMessages"));
+const SellerCargo = lazy(() => import("./pages/seller/SellerCargo"));
+const SellerSettings = lazy(() => import("./pages/seller/SellerSettings"));
+const SellerInvoices = lazy(() => import("./pages/seller/SellerInvoices"));
+const SellerAnalytics = lazy(() => import("./pages/seller/SellerAnalytics"));
+const SellerQuestions = lazy(() => import("./pages/seller/SellerQuestions"));
+const SellerBuyPoints = lazy(() => import("./pages/seller/SellerBuyPoints"));
+const SellerStockForecast = lazy(() => import("./pages/seller/SellerStockForecast"));
+
+const SellerStore = lazy(() => import("./pages/SellerStore"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogDetail = lazy(() => import("./pages/BlogDetail"));
+const GiftPackage = lazy(() => import("./pages/GiftPackage"));
+const GiftReceive = lazy(() => import("./pages/GiftReceive"));
+const Badges = lazy(() => import("./pages/Badges"));
+const Community = lazy(() => import("./pages/Community"));
+const BirthdayReminders = lazy(() => import("./pages/BirthdayReminders"));
+const CustomProductOrder = lazy(() => import("./pages/CustomProductOrder"));
+
 const queryClient = new QueryClient();
+
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const ReferralTracker = () => {
   useEffect(() => {
@@ -144,110 +154,112 @@ const App = () => (
           <BrowserRouter>
             <ReferralTracker />
             <GA4Init />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/urunler" element={<Products />} />
-              <Route path="/urun/:slug" element={<ProductDetail />} />
-              <Route path="/kategori/:slug" element={<Category />} />
-              <Route path="/odeme" element={<Checkout />} />
-              <Route path="/siparis-basarili" element={<OrderSuccess />} />
-              <Route path="/giris" element={<Auth />} />
-              <Route path="/hakkimizda" element={<About />} />
-              <Route path="/iletisim" element={<Contact />} />
+            <PWAInstallPrompt />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/urunler" element={<Products />} />
+                <Route path="/urun/:slug" element={<ProductDetail />} />
+                <Route path="/kategori/:slug" element={<Category />} />
+                <Route path="/odeme" element={<Checkout />} />
+                <Route path="/siparis-basarili" element={<OrderSuccess />} />
+                <Route path="/giris" element={<Auth />} />
+                <Route path="/hakkimizda" element={<About />} />
+                <Route path="/iletisim" element={<Contact />} />
 
-              {/* Account Routes */}
-              <Route path="/hesabim" element={<Account />}>
-                <Route index element={<Profile />} />
-                <Route path="siparisler" element={<Orders />} />
-                <Route path="siparisler/:orderNumber" element={<OrderDetail />} />
-                <Route path="favoriler" element={<Favorites />} />
-                <Route path="adresler" element={<Addresses />} />
-                <Route path="referans" element={<Affiliate />} />
-                <Route path="sadakat" element={<Loyalty />} />
-                <Route path="ayarlar" element={<AccountSettings />} />
-              </Route>
+                {/* Account Routes */}
+                <Route path="/hesabim" element={<Account />}>
+                  <Route index element={<Profile />} />
+                  <Route path="siparisler" element={<Orders />} />
+                  <Route path="siparisler/:orderNumber" element={<OrderDetail />} />
+                  <Route path="favoriler" element={<Favorites />} />
+                  <Route path="adresler" element={<Addresses />} />
+                  <Route path="referans" element={<Affiliate />} />
+                  <Route path="sadakat" element={<Loyalty />} />
+                  <Route path="ayarlar" element={<AccountSettings />} />
+                </Route>
 
-              {/* Legal Routes */}
-              <Route path="/kvkk" element={<KVKK />} />
-              <Route path="/gizlilik-politikasi" element={<PrivacyPolicy />} />
-              <Route path="/mesafeli-satis-sozlesmesi" element={<SalesAgreement />} />
-              <Route path="/iade-ve-iptal" element={<ReturnPolicy />} />
-              <Route path="/cerez-politikasi" element={<CookiePolicy />} />
-              <Route path="/sss" element={<FAQ />} />
-              <Route path="/satici-kurallari" element={<SellerRules />} />
-              <Route path="/karsilastir" element={<Compare />} />
-              <Route path="/magaza/:slug" element={<SellerStore />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogDetail />} />
-              <Route path="/hediye-paketi" element={<GiftPackage />} />
-              <Route path="/hediye/:token" element={<GiftReceive />} />
-              <Route path="/rozetler" element={<Badges />} />
-              <Route path="/topluluk" element={<Community />} />
-              <Route path="/dogum-gunu" element={<BirthdayReminders />} />
-              <Route path="/ozel-urun" element={<CustomProductOrder />} />
+                {/* Legal Routes */}
+                <Route path="/kvkk" element={<KVKK />} />
+                <Route path="/gizlilik-politikasi" element={<PrivacyPolicy />} />
+                <Route path="/mesafeli-satis-sozlesmesi" element={<SalesAgreement />} />
+                <Route path="/iade-ve-iptal" element={<ReturnPolicy />} />
+                <Route path="/cerez-politikasi" element={<CookiePolicy />} />
+                <Route path="/sss" element={<FAQ />} />
+                <Route path="/satici-kurallari" element={<SellerRules />} />
+                <Route path="/karsilastir" element={<Compare />} />
+                <Route path="/magaza/:slug" element={<SellerStore />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogDetail />} />
+                <Route path="/hediye-paketi" element={<GiftPackage />} />
+                <Route path="/hediye/:token" element={<GiftReceive />} />
+                <Route path="/rozetler" element={<Badges />} />
+                <Route path="/topluluk" element={<Community />} />
+                <Route path="/dogum-gunu" element={<BirthdayReminders />} />
+                <Route path="/ozel-urun" element={<CustomProductOrder />} />
 
-              {/* Admin Routes */}
-              <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="urunler" element={<AdminProducts />} />
-                <Route path="kategoriler" element={<AdminCategories />} />
-                <Route path="siparisler" element={<AdminOrders />} />
-                <Route path="kullanicilar" element={<AdminUsers />} />
-                <Route path="yorumlar" element={<AdminReviews />} />
-                <Route path="kuponlar" element={<AdminCoupons />} />
-                <Route path="kampanyalar" element={<AdminCampaigns />} />
-                <Route path="mesajlar" element={<AdminMessages />} />
-                <Route path="bulten" element={<AdminNewsletter />} />
-                <Route path="iletisim-mesajlari" element={<AdminContactMessages />} />
-                <Route path="sss" element={<AdminFAQ />} />
-                <Route path="sosyal-medya" element={<AdminSocialMedia />} />
-                <Route path="kargo" element={<AdminShipping />} />
-                <Route path="faturalar" element={<AdminInvoices />} />
-                <Route path="odemeler" element={<AdminPayouts />} />
-                <Route path="odeme" element={<AdminPayment />} />
-                <Route path="hero" element={<AdminHero />} />
-                <Route path="tema" element={<AdminTheme />} />
-                <Route path="seo" element={<AdminSEO />} />
-                <Route path="satici-basvurulari" element={<AdminSellerApplications />} />
-                <Route path="saticilar" element={<AdminSellers />} />
-                <Route path="satici-ayarlari" element={<AdminSellerSettings />} />
-                <Route path="ayarlar" element={<AdminSettings />} />
-                <Route path="sepetler" element={<AdminUserCarts />} />
-                <Route path="aktivite" element={<AdminActivityLogs />} />
-                <Route path="sms" element={<AdminSMS />} />
-                {/* A/B Tests removed */}
-                <Route path="donusum-hunisi" element={<AdminConversionFunnel />} />
-                <Route path="push-bildirimler" element={<AdminPushNotifications />} />
-                <Route path="blog" element={<AdminBlog />} />
-                <Route path="sertifikalar" element={<AdminCertificates />} />
-                <Route path="cohort" element={<AdminCohort />} />
-                <Route path="cark" element={<AdminSpinWheel />} />
-                <Route path="rss" element={<AdminRSS />} />
-                <Route path="bakim" element={<AdminMaintenance />} />
-              </Route>
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="urunler" element={<AdminProducts />} />
+                  <Route path="kategoriler" element={<AdminCategories />} />
+                  <Route path="siparisler" element={<AdminOrders />} />
+                  <Route path="kullanicilar" element={<AdminUsers />} />
+                  <Route path="yorumlar" element={<AdminReviews />} />
+                  <Route path="kuponlar" element={<AdminCoupons />} />
+                  <Route path="kampanyalar" element={<AdminCampaigns />} />
+                  <Route path="mesajlar" element={<AdminMessages />} />
+                  <Route path="bulten" element={<AdminNewsletter />} />
+                  <Route path="iletisim-mesajlari" element={<AdminContactMessages />} />
+                  <Route path="sss" element={<AdminFAQ />} />
+                  <Route path="sosyal-medya" element={<AdminSocialMedia />} />
+                  <Route path="kargo" element={<AdminShipping />} />
+                  <Route path="faturalar" element={<AdminInvoices />} />
+                  <Route path="odemeler" element={<AdminPayouts />} />
+                  <Route path="odeme" element={<AdminPayment />} />
+                  <Route path="hero" element={<AdminHero />} />
+                  <Route path="tema" element={<AdminTheme />} />
+                  <Route path="seo" element={<AdminSEO />} />
+                  <Route path="satici-basvurulari" element={<AdminSellerApplications />} />
+                  <Route path="saticilar" element={<AdminSellers />} />
+                  <Route path="satici-ayarlari" element={<AdminSellerSettings />} />
+                  <Route path="ayarlar" element={<AdminSettings />} />
+                  <Route path="sepetler" element={<AdminUserCarts />} />
+                  <Route path="aktivite" element={<AdminActivityLogs />} />
+                  <Route path="sms" element={<AdminSMS />} />
+                  <Route path="donusum-hunisi" element={<AdminConversionFunnel />} />
+                  <Route path="push-bildirimler" element={<AdminPushNotifications />} />
+                  <Route path="blog" element={<AdminBlog />} />
+                  <Route path="sertifikalar" element={<AdminCertificates />} />
+                  <Route path="cohort" element={<AdminCohort />} />
+                  <Route path="cark" element={<AdminSpinWheel />} />
+                  <Route path="rss" element={<AdminRSS />} />
+                  <Route path="bakim" element={<AdminMaintenance />} />
+                </Route>
 
-              {/* Seller Routes */}
-              <Route path="/satici" element={<SellerGuard><SellerLayout /></SellerGuard>}>
-                <Route index element={<SellerDashboard />} />
-                <Route path="urunler" element={<SellerProducts />} />
-                <Route path="siparisler" element={<SellerOrders />} />
-                <Route path="kazanclar" element={<SellerEarnings />} />
-                <Route path="analiz" element={<SellerAnalytics />} />
-                <Route path="faturalar" element={<SellerInvoices />} />
-                <Route path="puanlar" element={<SellerPoints />} />
-                <Route path="puan-satin-al" element={<SellerBuyPoints />} />
-                <Route path="one-cikar" element={<SellerFeature />} />
-                <Route path="bildirimler" element={<SellerNotifications />} />
-                <Route path="mesajlar" element={<SellerMessages />} />
-                <Route path="sorular" element={<SellerQuestions />} />
-                <Route path="kargo" element={<SellerCargo />} />
-                <Route path="stok-tahmini" element={<SellerStockForecast />} />
-                <Route path="ayarlar" element={<SellerSettings />} />
-              </Route>
+                {/* Seller Routes */}
+                <Route path="/satici" element={<SellerGuard><SellerLayout /></SellerGuard>}>
+                  <Route index element={<SellerDashboard />} />
+                  <Route path="urunler" element={<SellerProducts />} />
+                  <Route path="siparisler" element={<SellerOrders />} />
+                  <Route path="kazanclar" element={<SellerEarnings />} />
+                  <Route path="analiz" element={<SellerAnalytics />} />
+                  <Route path="faturalar" element={<SellerInvoices />} />
+                  <Route path="puanlar" element={<SellerPoints />} />
+                  <Route path="puan-satin-al" element={<SellerBuyPoints />} />
+                  <Route path="one-cikar" element={<SellerFeature />} />
+                  <Route path="bildirimler" element={<SellerNotifications />} />
+                  <Route path="mesajlar" element={<SellerMessages />} />
+                  <Route path="sorular" element={<SellerQuestions />} />
+                  <Route path="kargo" element={<SellerCargo />} />
+                  <Route path="stok-tahmini" element={<SellerStockForecast />} />
+                  <Route path="ayarlar" element={<SellerSettings />} />
+                </Route>
 
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </BrowserRouter>
         </CartProvider>
       </AuthProvider>
