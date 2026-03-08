@@ -626,7 +626,7 @@ const FileManager = () => {
                   <th className="w-7 p-1.5 text-center">
                     <input
                       type="checkbox"
-                      checked={filteredContent.filter((f) => f.source === "storage").length > 0 && selectedFiles.size === filteredContent.filter((f) => f.source === "storage").length}
+                      checked={filteredContent.length > 0 && selectedFiles.size === filteredContent.length}
                       onChange={(e) => e.target.checked ? selectAll() : deselectAll()}
                       className="rounded"
                     />
