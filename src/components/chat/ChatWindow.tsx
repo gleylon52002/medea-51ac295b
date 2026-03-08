@@ -148,7 +148,19 @@ const ChatWindow = ({ conversationId, title, onClose, participantProfiles = {}, 
         await editMessage.mutateAsync({ messageId: editingMsg.id, content: content.trim(), conversationId });
         setEditingMsg(null);
       } else {
-        await sendMessage.mutateAsync({ conversationId, content: content.trim(), replyToId: replyToMsg?.id, attachments });
+        // If only attachments, generate a descriptive content
+        let messageContent = content.trim();
+        if (!messageContent && attachments.length > 0) {
+          const imageCount = attachments.filter(a => a.type === "image").length;
+          const docCount = attachments.filter(a => a.type === "document").length;
+          const otherCount = attachments.filter(a => a.type === "other").length;
+          const parts: string[] = [];
+          if (imageCount) parts.push(`📷 ${imageCount} fotoğraf`);
+          if (docCount) parts.push(`📄 ${docCount} dosya`);
+          if (otherCount) parts.push(`📎 ${otherCount} ek`);
+          messageContent = parts.join(", ");
+        }
+        await sendMessage.mutateAsync({ conversationId, content: messageContent, replyToId: replyToMsg?.id, attachments });
         setReplyToMsg(null);
       }
       setContent("");
