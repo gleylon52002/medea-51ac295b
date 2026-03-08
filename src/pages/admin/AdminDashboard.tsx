@@ -24,7 +24,7 @@ const AdminDashboard = () => {
       const lowStockProducts = productsRes.data?.filter(p => p.stock <= 5).length || 0;
       const totalOrders = ordersRes.count || 0;
       const pendingOrders = ordersRes.data?.filter(o => o.status === "pending").length || 0;
-      const totalRevenue = ordersRes.data?.reduce((sum, o) => sum + (Number(o.total) || 0), 0) || 0;
+      const totalRevenue = ordersRes.data?.filter(o => o.status === "delivered").reduce((sum, o) => sum + (Number(o.total) || 0), 0) || 0;
       const totalUsers = usersRes.count || 0;
 
       return {
