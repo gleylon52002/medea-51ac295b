@@ -87,6 +87,7 @@ const AdminMaintenance = lazy(() => import("./pages/admin/AdminMaintenance"));
 const AdminSegments = lazy(() => import("./pages/admin/AdminSegments"));
 const AdminEmailAutomation = lazy(() => import("./pages/admin/AdminEmailAutomation"));
 const AdminCampaignCalendar = lazy(() => import("./pages/admin/AdminCampaignCalendar"));
+const AdminAbout = lazy(() => import("./pages/admin/AdminAbout"));
 
 // Seller Pages (lazy)
 const SellerGuard = lazy(() => import("./components/seller/SellerGuard"));
