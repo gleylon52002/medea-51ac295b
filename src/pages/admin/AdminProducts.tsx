@@ -680,7 +680,7 @@ const AdminProducts = () => {
                     {formData.meta_title || formData.name || "Ürün Başlığı"}
                   </div>
                   <div className="text-green-700 text-sm">
-                    medea.lovable.app/urun/{generateSlug(formData.name) || "urun-slug"}
+                    medea.tr/urun/{generateSlug(formData.name) || "urun-slug"}
                   </div>
                   <div className="text-sm text-muted-foreground line-clamp-2">
                     {formData.meta_description || formData.short_description || "Ürün açıklaması..."}
