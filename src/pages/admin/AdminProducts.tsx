@@ -611,7 +611,15 @@ const AdminProducts = () => {
 
               <TabsContent value="seo" className="space-y-4">
                 <div>
-                  <Label htmlFor="keywords">Anahtar Kelimeler</Label>
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="keywords">Anahtar Kelimeler</Label>
+                    <AIFillButton
+                      field="keywords"
+                      context={`Ürün Adı: ${formData.name}\nKısa Açıklama: ${formData.short_description}\nKategori: ${categories?.find(c => c.id === formData.category_id)?.name || ''}`}
+                      onResult={(val) => setFormData({ ...formData, keywords: val })}
+                      disabled={!formData.name}
+                    />
+                  </div>
                   <Input
                     id="keywords"
                     value={formData.keywords}
