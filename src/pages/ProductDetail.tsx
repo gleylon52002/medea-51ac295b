@@ -41,6 +41,7 @@ import { useRelatedProducts } from "@/hooks/useRelatedProducts";
 import BarcodeScanner from "@/components/products/BarcodeScanner";
 import { useProductTranslation } from "@/hooks/useProductTranslation";
 import { Loader2 as TranslateLoader } from "lucide-react";
+import VideoPlayer, { isVideoUrl } from "@/components/products/VideoPlayer";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
