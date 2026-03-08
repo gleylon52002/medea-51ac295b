@@ -11,7 +11,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { messages, executeAction, actionType, actionParams, imageBase64, imageContext } = body;
+    const { messages, executeAction, actionType, actionParams, imageBase64, imageContext, fileBase64, fileName, fileType } = body;
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -31,6 +31,14 @@ serve(async (req) => {
     // Handle image analysis
     if (imageBase64) {
       const analysisResult = await analyzeImage(LOVABLE_API_KEY, imageBase64, imageContext || "Bu görseli analiz et ve ne olduğunu açıkla.");
+      return new Response(JSON.stringify({ content: analysisResult }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Handle non-image file analysis
+    if (fileBase64 && fileName) {
+      const analysisResult = await analyzeFile(LOVABLE_API_KEY, fileBase64, fileName, fileType || "application/octet-stream", imageContext || `Bu dosyayı analiz et: ${fileName}`);
       return new Response(JSON.stringify({ content: analysisResult }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -109,6 +117,48 @@ async function analyzeImage(apiKey: string, base64: string, context: string): Pr
   if (!response.ok) throw new Error("Görsel analizi başarısız");
   const data = await response.json();
   return data.choices?.[0]?.message?.content?.trim() || "Görsel analiz edilemedi.";
+}
+
+// ==================== FILE ANALYSIS ====================
+
+async function analyzeFile(apiKey: string, base64: string, fileName: string, fileType: string, context: string): Promise<string> {
+  // Decode base64 to text for text-based files
+  const textTypes = ["text/", "application/json", "application/xml", "application/csv", "application/javascript", "text/csv"];
+  const textExtensions = [".txt", ".csv", ".json", ".xml", ".html", ".css", ".js", ".ts", ".tsx", ".jsx", ".md", ".yaml", ".yml", ".toml", ".env", ".log", ".sql", ".py", ".rb", ".go", ".java", ".php", ".sh"];
+  
+  const isText = textTypes.some(t => fileType.startsWith(t)) || textExtensions.some(ext => fileName.toLowerCase().endsWith(ext));
+  
+  let fileContent = "";
+  if (isText) {
+    try {
+      const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+      fileContent = new TextDecoder("utf-8").decode(bytes);
+      // Limit to ~10k chars to avoid token overflow
+      if (fileContent.length > 10000) {
+        fileContent = fileContent.substring(0, 10000) + "\n\n... (dosya kesildi, toplam " + fileContent.length + " karakter)";
+      }
+    } catch { fileContent = "(Dosya içeriği okunamadı)"; }
+  }
+
+  const prompt = isText
+    ? `Sen MEDEA e-ticaret admin AI asistanısın. ${context}\n\nDosya adı: ${fileName}\nDosya tipi: ${fileType}\n\nDosya içeriği:\n\`\`\`\n${fileContent}\n\`\`\`\n\nBu dosyayı analiz et ve Türkçe yanıt ver. İçerikte önemli bilgileri özetle. Eğer ürün verisi, müşteri listesi veya yapılandırma dosyası ise uygun aksiyonlar öner.`
+    : `Sen MEDEA e-ticaret admin AI asistanısın. ${context}\n\nDosya adı: ${fileName}\nDosya tipi: ${fileType}\nDosya boyutu: ~${Math.round(base64.length * 0.75 / 1024)} KB\n\nBu bir ikili (binary) dosya. Dosya adı ve tipine göre ne amaçla kullanılabileceğini açıkla. Eğer ürün verileri içeriyorsa toplu ürün yükleme aksiyonu öner.`;
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+  if (!response.ok) throw new Error("Dosya analizi başarısız");
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content?.trim() || "Dosya analiz edilemedi.";
 }
 
 // ==================== DIAGNOSTICS ====================
@@ -794,6 +844,32 @@ async function executeMaintenanceAction(
 
     case "send_stock_alert": {
       return { success: true, message: "Stok uyarı bildirimi gönderildi" };
+    }
+
+    case "check_stock": {
+      const { data: lowStock } = await supabase.from("products")
+        .select("id, name, stock").lte("stock", 5).gt("stock", 0).eq("is_active", true).order("stock", { ascending: true });
+      const { data: outOfStock } = await supabase.from("products")
+        .select("id, name").eq("stock", 0).eq("is_active", true);
+      return {
+        success: true,
+        message: `Stok kontrolü tamamlandı: ${lowStock?.length || 0} düşük stoklu, ${outOfStock?.length || 0} stoksuz ürün`,
+        details: { lowStock: lowStock || [], outOfStock: outOfStock || [] },
+      };
+    }
+
+    case "send_daily_report": {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const [{ data: todayOrders }, { count: newUsers }] = await Promise.all([
+        supabase.from("orders").select("total, status").gte("created_at", today.toISOString()),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", today.toISOString()),
+      ]);
+      const revenue = todayOrders?.filter((o: any) => o.status !== "cancelled").reduce((sum: number, o: any) => sum + (Number(o.total) || 0), 0) || 0;
+      return {
+        success: true,
+        message: `Günlük rapor: ${todayOrders?.length || 0} sipariş, ₺${revenue.toLocaleString("tr-TR")} gelir, ${newUsers || 0} yeni kullanıcı`,
+        details: { orderCount: todayOrders?.length || 0, revenue, newUsers: newUsers || 0 },
+      };
     }
 
     default:

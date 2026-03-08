@@ -35,15 +35,26 @@ interface Task {
 }
 
 const actionTypes = [
-  { value: "check_stock", label: "Stok Kontrolü", description: "Düşük stoklu ürünleri tespit et" },
-  { value: "deactivate_out_of_stock", label: "Stoksuz Ürünleri Pasifle", description: "Stoku 0 olan ürünleri pasife al" },
-  { value: "generate_seo_report", label: "SEO Raporu", description: "Site SEO durumunu analiz et" },
-  { value: "send_daily_report", label: "Günlük Rapor", description: "Günlük satış ve aktivite raporu" },
-  { value: "cleanup_old_carts", label: "Eski Sepetleri Temizle", description: "30 günden eski terk edilmiş sepetleri sil" },
-  { value: "update_product_tags", label: "Ürün Etiketlerini Güncelle", description: "AI ile ürün etiketlerini güncelle" },
+  // Ürün
+  { value: "check_stock", label: "Stok Kontrolü", description: "Düşük stoklu ürünleri tespit et", group: "Ürün" },
+  { value: "deactivate_out_of_stock", label: "Stoksuz Ürünleri Pasifle", description: "Stoku 0 olan ürünleri pasife al", group: "Ürün" },
+  { value: "activate_in_stock", label: "Stoklu Ürünleri Aktifle", description: "Stoku olan pasif ürünleri aktife al", group: "Ürün" },
+  { value: "generate_product_descriptions", label: "Ürün Açıklamaları Oluştur", description: "Eksik açıklamaları AI ile tamamla", group: "Ürün" },
+  { value: "update_product_tags", label: "Ürün Etiketlerini Güncelle", description: "AI ile ürün etiketlerini güncelle", group: "Ürün" },
+  // SEO & İçerik
+  { value: "generate_seo_report", label: "SEO Raporu", description: "Site SEO durumunu analiz et", group: "SEO" },
+  { value: "update_seo_meta", label: "SEO Meta Güncelle", description: "Eksik meta başlık/açıklamaları tamamla", group: "SEO" },
+  { value: "create_blog_posts", label: "Blog Yazıları Oluştur", description: "AI ile SEO uyumlu blog yazıları oluştur", group: "İçerik" },
+  { value: "generate_faqs", label: "SSS Oluştur", description: "Sık sorulan soruları AI ile oluştur", group: "İçerik" },
+  // Sipariş & Müşteri
+  { value: "bulk_confirm_orders", label: "Siparişleri Toplu Onayla", description: "Bekleyen siparişleri toplu onayla", group: "Sipariş" },
+  { value: "send_daily_report", label: "Günlük Rapor", description: "Günlük satış ve aktivite raporu", group: "Rapor" },
+  { value: "cleanup_old_carts", label: "Eski Sepetleri Temizle", description: "30 günden eski terk edilmiş sepetleri sil", group: "Bakım" },
+  // Mesaj & Yorum
+  { value: "mark_messages_read", label: "Mesajları Okundu İşaretle", description: "Okunmamış mesajları okundu yap", group: "Mesaj" },
+  { value: "approve_reviews", label: "Yorumları Onayla", description: "Bekleyen tüm yorumları onayla", group: "Yorum" },
 ];
 
-// Schedule presets for user-friendly cron building
 const schedulePresets = [
   { label: "Her Saat", value: "0 * * * *", group: "saat" },
   { label: "Her 2 Saat", value: "0 */2 * * *", group: "saat" },
@@ -136,7 +147,6 @@ const ScheduledTasks = ({ onRunTask }: { onRunTask: (task: Task) => void }) => {
     toast.info(`"${task.title}" çalıştırılıyor...`);
     
     try {
-      // Call the maintenance AI with this task
       const { data, error } = await supabase.functions.invoke("maintenance-ai", {
         body: {
           executeAction: true,
@@ -147,7 +157,6 @@ const ScheduledTasks = ({ onRunTask }: { onRunTask: (task: Task) => void }) => {
 
       if (error) throw error;
 
-      // Update last_run_at
       await supabase.from("maintenance_tasks")
         .update({ 
           last_run_at: new Date().toISOString(), 
@@ -156,7 +165,6 @@ const ScheduledTasks = ({ onRunTask }: { onRunTask: (task: Task) => void }) => {
         })
         .eq("id", task.id);
 
-      // Log the action
       await supabase.from("ai_action_logs").insert([{
         action_type: task.action_type,
         action_params: (task.action_params || {}) as Json,
@@ -171,8 +179,6 @@ const ScheduledTasks = ({ onRunTask }: { onRunTask: (task: Task) => void }) => {
       ));
 
       toast.success(`"${task.title}" başarıyla tamamlandı`);
-      
-      // Also send to chat for visibility
       onRunTask(task);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Bilinmeyen hata";
@@ -194,6 +200,13 @@ const ScheduledTasks = ({ onRunTask }: { onRunTask: (task: Task) => void }) => {
     const preset = schedulePresets.find(p => p.value === cron);
     return preset?.label || cron;
   };
+
+  // Group action types for better UX in select
+  const groupedActions = actionTypes.reduce((acc, at) => {
+    if (!acc[at.group]) acc[at.group] = [];
+    acc[at.group].push(at);
+    return acc;
+  }, {} as Record<string, typeof actionTypes>);
 
   if (loading) {
     return <div className="text-sm text-muted-foreground">Görevler yükleniyor...</div>;
@@ -236,13 +249,18 @@ const ScheduledTasks = ({ onRunTask }: { onRunTask: (task: Task) => void }) => {
                     <SelectValue placeholder="Aksiyon seçin" />
                   </SelectTrigger>
                   <SelectContent>
-                    {actionTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        <div>
-                          <div className="font-medium">{type.label}</div>
-                          <div className="text-xs text-muted-foreground">{type.description}</div>
-                        </div>
-                      </SelectItem>
+                    {Object.entries(groupedActions).map(([group, items]) => (
+                      <div key={group}>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{group}</div>
+                        {items.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            <div>
+                              <div className="font-medium">{type.label}</div>
+                              <div className="text-xs text-muted-foreground">{type.description}</div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </div>
                     ))}
                   </SelectContent>
                 </Select>
