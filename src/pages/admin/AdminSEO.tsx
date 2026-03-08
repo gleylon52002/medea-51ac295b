@@ -192,11 +192,19 @@ Allow: /`;
 
   const autoGenerateFile = async (content: string, filename: string) => {
     const key = filename.includes("sitemap") ? "sitemap" : "robots";
+
+    if (filename === "sitemap.xml") {
+      toast.success("Dinamik sitemap zaten aktif", {
+        description: "URL: /sitemap.xml (dinamik kaynak: backend sitemap fonksiyonu)",
+      });
+      return;
+    }
+
     setIsAutoGenerating(key);
     try {
       const blob = new Blob([content], { type: filename.endsWith('.xml') ? 'text/xml' : 'text/plain' });
       const file = new File([blob], filename, { type: blob.type });
-      
+
       const { error } = await supabase.storage
         .from("site-assets")
         .upload(filename, file, { upsert: true });
