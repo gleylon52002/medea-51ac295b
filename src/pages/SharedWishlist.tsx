@@ -13,7 +13,6 @@ const SharedWishlist = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["shared-wishlist", token],
     queryFn: async () => {
-      // Get the shared wishlist
       const { data: wishlist, error } = await supabase
         .from("shared_wishlists")
         .select("*")
@@ -24,15 +23,13 @@ const SharedWishlist = () => {
       if (error) throw error;
       if (!wishlist) return null;
 
-      // Increment view count
       await supabase
         .from("shared_wishlists")
         .update({ view_count: (wishlist.view_count || 0) + 1 })
         .eq("id", wishlist.id);
 
-      // Get products
       const productIds = wishlist.product_ids || [];
-      if (productIds.length === 0) return { wishlist, products: [] };
+      if (productIds.length === 0) return { title: wishlist.title, view_count: wishlist.view_count, owner_name: "Bir kullanıcı", products: [] as any[] };
 
       const { data: products, error: prodError } = await supabase
         .from("products")
@@ -42,14 +39,13 @@ const SharedWishlist = () => {
 
       if (prodError) throw prodError;
 
-      // Get profile name
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name")
         .eq("user_id", wishlist.user_id)
         .maybeSingle();
 
-      return { wishlist: { ...wishlist, owner_name: profile?.full_name || "Bir kullanıcı" }, products: products || [] };
+      return { title: wishlist.title, view_count: wishlist.view_count || 0, owner_name: profile?.full_name || "Bir kullanıcı", products: products || [] };
     },
     enabled: !!token,
   });
