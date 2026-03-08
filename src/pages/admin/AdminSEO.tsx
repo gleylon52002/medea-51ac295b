@@ -371,8 +371,8 @@ Allow: /`;
               </div>
               <div className="bg-accent/30 border border-accent rounded-lg p-4">
                 <p className="text-sm text-foreground">
-                  <strong>💡 Otomatik Oluştur:</strong> Butona tıkladığınızda <code>sitemap.xml</code> dosyası 
-                  storage'a yüklenir ve herkese açık URL üzerinden erişilebilir olur. Google Search Console'a bu URL'i bildirin.
+                  <strong>💡 Otomatik Oluştur:</strong> <code>/sitemap.xml</code> adresi dinamik olarak backend sitemap fonksiyonuna bağlıdır.
+                  Yeni ürün/kategori/blog içerikleri otomatik yansır; Search Console'a <code>https://medea.tr/sitemap.xml</code> ekleyin.
                 </p>
               </div>
             </CardContent>
