@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, Bot, Trash2, Wrench, Sparkles, Cpu, Zap, Search } from "lucide-react";
+import { Send, Loader2, Bot, Trash2, Wrench, Sparkles, Cpu, Zap, Search, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import HealthMonitor from "@/components/admin/maintenance/HealthMonitor";
 import ScheduledTasks from "@/components/admin/maintenance/ScheduledTasks";
 import ActionButtons, { AIAction, parseActionsFromResponse } from "@/components/admin/maintenance/ActionButtons";
+import FileManager from "@/components/admin/maintenance/FileManager";
 
 interface Message {
   role: "user" | "assistant";
@@ -117,6 +118,10 @@ const AdminMaintenance = () => {
               <Wrench className="h-4 w-4" />
               Görevler
             </TabsTrigger>
+            <TabsTrigger value="files" className="gap-2">
+              <FolderOpen className="h-4 w-4" />
+              Dosyalar
+            </TabsTrigger>
           </TabsList>
           
           {activeTab === "chat" && messages.length > 0 && (
@@ -129,6 +134,10 @@ const AdminMaintenance = () => {
 
         <TabsContent value="tasks" className="flex-1 mt-0">
           <ScheduledTasks onRunTask={handleRunTask} />
+        </TabsContent>
+
+        <TabsContent value="files" className="flex-1 mt-0 min-h-0">
+          <FileManager />
         </TabsContent>
 
         <TabsContent value="chat" className="flex-1 flex flex-col mt-0 min-h-0">
