@@ -160,7 +160,7 @@ const ScheduledTasks = ({ onRunTask }: { onRunTask: (task: Task) => void }) => {
       await supabase.from("ai_action_logs").insert([{
         action_type: task.action_type,
         action_params: (task.action_params || {}) as Json,
-        result: data || {},
+        result: (data || {}) as Json,
         status: "success",
       }]);
 
