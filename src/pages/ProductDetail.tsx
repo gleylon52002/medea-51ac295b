@@ -111,8 +111,11 @@ const ProductDetail = () => {
     );
   }
 
-  // Display images - variant images take priority if selected
+  // Display images/videos - variant images take priority if selected
   const displayImages = variantImages.length > 0 ? variantImages : (product.images || []);
+  // Add video_url to display list if present
+  const displayMedia: string[] = [...displayImages];
+  if ((product as any).video_url) displayMedia.push((product as any).video_url);
 
   const basePrice = Number(product.sale_price || product.price);
   const finalPrice = basePrice + priceAdjustment;
