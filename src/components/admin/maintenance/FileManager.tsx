@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 
 // ── Types ──────────────────────────────────────────────
 type NodeType = "bucket" | "folder" | "file";
-type NodeSource = "storage" | "project";
+type NodeSource = "storage";
 
 interface TreeNode {
   name: string;
