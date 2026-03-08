@@ -696,8 +696,13 @@ const FileManager = () => {
                       key={item.path}
                       className={cn(
                         "border-b border-border/30 hover:bg-accent/40 group cursor-default",
-                        isChecked && "bg-primary/5"
+                        isChecked && "bg-primary/5",
+                        highlightedItem?.path === item.path && !isChecked && "bg-accent/60"
                       )}
+                      onClick={() => {
+                        if (item.type === "file" && isStorageItem) setHighlightedItem(item);
+                        else setHighlightedItem(null);
+                      }}
                       onDoubleClick={() => {
                         if (item.type !== "file") { handleToggle(item); handleSelect(item); }
                         else if (isStorageItem && isEditable(item.name)) openEditor(item);
