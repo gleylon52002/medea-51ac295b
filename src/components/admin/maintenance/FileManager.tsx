@@ -468,14 +468,14 @@ const FileManager = () => {
 
   // Copy / Cut to clipboard
   const handleCopy = () => {
-    if (selectedStorageItems.length === 0) return;
-    setClipboard({ nodes: selectedStorageItems, action: "copy" });
-    toast.success(`${selectedStorageItems.length} öğe kopyalandı`);
+    if (effectiveItems.length === 0) return;
+    setClipboard({ nodes: effectiveItems, action: "copy" });
+    toast.success(`${effectiveItems.length} öğe kopyalandı`);
   };
   const handleCut = () => {
-    if (selectedStorageItems.length === 0) return;
-    setClipboard({ nodes: selectedStorageItems, action: "cut" });
-    toast.success(`${selectedStorageItems.length} öğe kesildi`);
+    if (effectiveItems.length === 0) return;
+    setClipboard({ nodes: effectiveItems, action: "cut" });
+    toast.success(`${effectiveItems.length} öğe kesildi`);
   };
 
   // Paste
