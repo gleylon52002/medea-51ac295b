@@ -362,11 +362,19 @@ Allow: /`;
                   <Download className="h-4 w-4 mr-2" />
                   İndir
                 </Button>
+                <Button 
+                  variant="default"
+                  onClick={() => autoGenerateFile(robotsTxt, "robots.txt")}
+                  disabled={isAutoGenerating === "robots"}
+                >
+                  {isAutoGenerating === "robots" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+                  Otomatik Oluştur
+                </Button>
               </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
-                  <strong>Mevcut robots.txt:</strong> Projenizde zaten bir robots.txt dosyası var. 
-                  Yukarıdaki içeriği kullanarak güncelleyebilirsiniz.
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-sm text-green-800">
+                  <strong>Otomatik Oluştur:</strong> Butona tıkladığınızda <code>robots.txt</code> dosyası 
+                  ana dizinde otomatik olarak oluşturulur ve güncellenir.
                 </p>
               </div>
             </CardContent>
