@@ -134,7 +134,7 @@ const About = () => {
             <p className="text-muted-foreground leading-relaxed mb-8">
               {c.team_description}
             </p>
-            <div className={`grid grid-cols-${Math.min(c.team_images.length, 3)} gap-4`}>
+            <div className={`grid gap-4 ${c.team_images.length === 1 ? 'grid-cols-1' : c.team_images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
               {c.team_images.map((img, i) => (
                 <img
                   key={i}
