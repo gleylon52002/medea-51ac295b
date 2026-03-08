@@ -118,6 +118,10 @@ const AdminMaintenance = () => {
               <Wrench className="h-4 w-4" />
               Görevler
             </TabsTrigger>
+            <TabsTrigger value="files" className="gap-2">
+              <FolderOpen className="h-4 w-4" />
+              Dosyalar
+            </TabsTrigger>
           </TabsList>
           
           {activeTab === "chat" && messages.length > 0 && (
