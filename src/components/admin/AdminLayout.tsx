@@ -43,6 +43,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import AdminAIAssistant from "@/components/admin/AdminAIAssistant";
 
 interface MenuItem {
   icon: any;
