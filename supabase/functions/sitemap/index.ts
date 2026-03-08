@@ -15,7 +15,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const baseUrl = req.headers.get("origin") || "https://medea.lovable.app";
+    const baseUrl = "https://medea.tr";
 
     const { data: products } = await supabase
       .from("products")

@@ -13,4 +13,11 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://gxzlltmivdlpplunuusi.supabase.co/functions/v1/sitemap
+# Disallow admin and private pages
+Disallow: /admin/
+Disallow: /hesabim/
+Disallow: /giris
+Disallow: /odeme
+
+# Sitemap
+Sitemap: https://medea.tr/sitemap.xml
