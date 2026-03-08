@@ -16,43 +16,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Auth check - only admins
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData } = await userClient.auth.getUser();
-    if (!userData?.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Check admin role
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userData.user.id)
-      .eq("role", "admin")
-      .single();
-
-    if (!roleData) {
-      return new Response(JSON.stringify({ error: "Admin access required" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Fetch active products with categories
+    // Fetch active products with categories - NO AUTH REQUIRED (public feed)
     const { data: products, error } = await supabase
       .from("products")
       .select("id, name, slug, description, short_description, price, sale_price, images, created_at, updated_at, categories:category_id(name)")
@@ -62,7 +26,6 @@ serve(async (req) => {
 
     if (error) throw error;
 
-    // Get site settings for base URL
     const { data: settings } = await supabase
       .from("site_settings")
       .select("key, value")
@@ -72,7 +35,6 @@ serve(async (req) => {
     const siteName = (settings?.value as any)?.site_name || "MEDEA";
     const siteUrl = "https://medea.lovable.app";
 
-    // Build RSS XML
     const rssItems = (products || []).map((product: any) => {
       const imageUrl = product.images?.[0] || "";
       const productUrl = `${siteUrl}/urun/${product.slug}`;
