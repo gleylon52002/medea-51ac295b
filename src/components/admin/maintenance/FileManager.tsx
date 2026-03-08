@@ -191,7 +191,7 @@ const FileManager = () => {
   const [moveDest, setMoveDest] = useState("");
   const [highlightedItem, setHighlightedItem] = useState<TreeNode | null>(null);
 
-  const projectRoot = useMemo(() => buildProjectTree(), []);
+  
 
   // ── Tree update helper ────
   const updateNodeInTree = useCallback((nodes: TreeNode[], path: string, updater: (n: TreeNode) => TreeNode): TreeNode[] => {
