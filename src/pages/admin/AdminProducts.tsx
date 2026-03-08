@@ -36,6 +36,7 @@ import ImageUpload from "@/components/admin/ImageUpload";
 import ProductVariantsManager from "@/components/admin/ProductVariantsManager";
 import RelatedProductsManager from "@/components/admin/RelatedProductsManager";
 import InstagramShareButton from "@/components/admin/InstagramShareButton";
+import AIFillButton from "@/components/admin/AIFillButton";
 type Product = Database["public"]["Tables"]["products"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 
