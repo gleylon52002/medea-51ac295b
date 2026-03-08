@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   FilePlus, FolderPlus, Upload, Trash2, Edit3, Download, File, Folder, FolderOpen,
   ChevronRight, ChevronDown, RefreshCw, Search, FileText, FileImage, FileArchive,
@@ -16,11 +16,11 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { projectFilePaths } from "@/data/projectFilePaths";
+
 
 // ── Types ──────────────────────────────────────────────
 type NodeType = "bucket" | "folder" | "file";
-type NodeSource = "storage" | "project";
+type NodeSource = "storage";
 
 interface TreeNode {
   name: string;
@@ -35,8 +35,6 @@ interface TreeNode {
   isPublic?: boolean;
   created_at?: string;
 }
-
-const PROJECT_ROOT_PATH = "project";
 
 // ── Helpers ────────────────────────────────────────────
 const getFileIcon = (name: string) => {
@@ -86,40 +84,6 @@ const getFileType = (name: string) => {
   return map[ext] || ext.toUpperCase();
 };
 
-// ── Build project tree from static paths ───────────────
-const buildProjectTree = (): TreeNode => {
-  const root: TreeNode = {
-    name: "Web Dosyaları", path: PROJECT_ROOT_PATH, type: "folder", source: "project",
-    expanded: true, loaded: true, children: [],
-  };
-
-  const ensureFolder = (parent: TreeNode, folderName: string, fullPath: string): TreeNode => {
-    parent.children ||= [];
-    let folder = parent.children.find((c) => c.type === "folder" && c.name === folderName && c.source === "project");
-    if (!folder) {
-      folder = { name: folderName, path: fullPath, type: "folder", source: "project", expanded: false, loaded: true, children: [] };
-      parent.children.push(folder);
-      parent.children.sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name, "tr") : a.type === "folder" ? -1 : 1));
-    }
-    return folder;
-  };
-
-  for (const rawPath of projectFilePaths) {
-    const parts = rawPath.split("/");
-    let current = root;
-    parts.forEach((part, index) => {
-      const currentPath = `${PROJECT_ROOT_PATH}/${parts.slice(0, index + 1).join("/")}`;
-      if (index === parts.length - 1) {
-        current.children ||= [];
-        current.children.push({ name: part, path: currentPath, type: "file", source: "project", loaded: true });
-        current.children.sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name, "tr") : a.type === "folder" ? -1 : 1));
-      } else {
-        current = ensureFolder(current, part, currentPath);
-      }
-    });
-  }
-  return root;
-};
 
 // ── Tree Item ──────────────────────────────────────────
 const TreeItem = ({ node, depth, selectedPath, onSelect, onToggle }: {
@@ -227,7 +191,7 @@ const FileManager = () => {
   const [moveDest, setMoveDest] = useState("");
   const [highlightedItem, setHighlightedItem] = useState<TreeNode | null>(null);
 
-  const projectRoot = useMemo(() => buildProjectTree(), []);
+  
 
   // ── Tree update helper ────
   const updateNodeInTree = useCallback((nodes: TreeNode[], path: string, updater: (n: TreeNode) => TreeNode): TreeNode[] => {
@@ -245,7 +209,6 @@ const FileManager = () => {
     return node.path.split("/")[1] || null;
   };
   const getStoragePath = (node: TreeNode): string => node.type === "bucket" ? "" : node.path.split("/").slice(2).join("/");
-  const getProjectDisplayPath = (node: TreeNode) => node.path.replace(`${PROJECT_ROOT_PATH}/`, "");
 
   // ── Load buckets ────
   const loadBuckets = useCallback(async () => {
@@ -257,12 +220,12 @@ const FileManager = () => {
         name: b.name, path: `storage/${b.id}`, type: "bucket" as NodeType, source: "storage" as NodeSource,
         bucketId: b.id, loaded: false, expanded: false, children: [], isPublic: b.public, created_at: b.created_at,
       }));
-      setTree([projectRoot, ...storageNodes]);
+      setTree(storageNodes);
     } catch (e: any) {
       toast.error(`Bucket'lar yüklenemedi: ${e.message}`);
-      setTree([projectRoot]);
+      setTree([]);
     } finally { setLoading(false); }
-  }, [projectRoot]);
+  }, []);
 
   // ── Load storage children ────
   const loadStorageChildren = useCallback(async (node: TreeNode): Promise<TreeNode[]> => {
@@ -288,10 +251,6 @@ const FileManager = () => {
   // ── Toggle tree ────
   const handleToggle = useCallback(async (node: TreeNode) => {
     if (node.type === "file") return;
-    if (node.source === "project") {
-      setTree((prev) => updateNodeInTree(prev, node.path, (n) => ({ ...n, expanded: !n.expanded })));
-      return;
-    }
     if (!node.loaded) {
       const children = await loadStorageChildren(node);
       setTree((prev) => updateNodeInTree(prev, node.path, (n) => ({ ...n, children, loaded: true, expanded: true })));
@@ -315,7 +274,6 @@ const FileManager = () => {
     });
     setNavIndex((prev) => prev + 1);
 
-    if (node.source === "project") { setContentItems(node.children || []); return; }
     setContentLoading(true);
     const children = node.loaded && node.children ? node.children : await loadStorageChildren(node);
     setContentItems(children);
@@ -349,7 +307,7 @@ const FileManager = () => {
     const parent = findNode(tree, parentPath);
     if (parent) handleSelect(parent);
   };
-  const goHome = () => handleSelect(projectRoot);
+  const goHome = () => { if (tree.length > 0) handleSelect(tree[0]); };
 
   const refresh = useCallback(async () => {
     await loadBuckets();
@@ -361,9 +319,8 @@ const FileManager = () => {
 
   useEffect(() => { loadBuckets(); }, [loadBuckets]);
 
-  const isStorage = selectedNode?.source === "storage";
-  const isStorageFolder = !!selectedNode && isStorage && selectedNode.type !== "file";
-  const checkedStorageItems = contentItems.filter((c) => selectedFiles.has(c.path) && c.source === "storage");
+  const isStorageFolder = !!selectedNode && selectedNode.type !== "file";
+  const checkedStorageItems = contentItems.filter((c) => selectedFiles.has(c.path));
   const hasSelection = selectedFiles.size > 0;
 
   // Effective selection: row click (highlight) has priority, then checkbox selection
@@ -429,9 +386,8 @@ const FileManager = () => {
 
   // Delete
   const handleDeleteNodes = async (nodes: TreeNode[]) => {
-    const storageNodes = nodes.filter((n) => n.source === "storage");
-    if (!storageNodes.length) { toast.error("Sadece Storage dosyaları silinebilir"); return; }
-    for (const node of storageNodes) {
+    if (!nodes.length) return;
+    for (const node of nodes) {
       const bucket = getStorageBucket(node);
       if (!bucket) continue;
       const path = getStoragePath(node);
@@ -443,7 +399,7 @@ const FileManager = () => {
         await supabase.storage.from(bucket).remove([path]);
       }
     }
-    toast.success(`${storageNodes.length} öğe silindi`);
+    toast.success(`${nodes.length} öğe silindi`);
     setSelectedFiles(new Set());
     refresh();
   };
@@ -532,7 +488,6 @@ const FileManager = () => {
 
   // Edit
   const openEditor = async (node: TreeNode) => {
-    if (node.source !== "storage") { toast.info("Web dosyaları salt okunurdur"); return; }
     const bucket = getStorageBucket(node);
     if (!bucket) return;
     setEditTarget(node); setEditLoading(true); setEditOpen(true);
@@ -541,7 +496,7 @@ const FileManager = () => {
     setEditContent(await data.text()); setEditLoading(false);
   };
   const saveEdit = async () => {
-    if (!editTarget || editTarget.source !== "storage") return;
+    if (!editTarget) return;
     const bucket = getStorageBucket(editTarget);
     if (!bucket) return;
     const { error } = await supabase.storage.from(bucket).upload(getStoragePath(editTarget), new Blob([editContent]), { upsert: true });
@@ -551,7 +506,6 @@ const FileManager = () => {
 
   // Preview
   const openPreview = (node: TreeNode) => {
-    if (node.source !== "storage") return;
     const bucket = getStorageBucket(node);
     if (!bucket) return;
     const { data } = supabase.storage.from(bucket).getPublicUrl(getStoragePath(node));
@@ -560,7 +514,6 @@ const FileManager = () => {
 
   // Download
   const handleDownload = (node: TreeNode) => {
-    if (node.source !== "storage") return;
     const bucket = getStorageBucket(node);
     if (!bucket) return;
     const { data } = supabase.storage.from(bucket).getPublicUrl(getStoragePath(node));
@@ -568,20 +521,15 @@ const FileManager = () => {
   };
 
   const handleCopyUrl = (node: TreeNode) => {
-    if (node.source === "storage") {
-      const bucket = getStorageBucket(node);
-      if (!bucket) return;
-      const { data } = supabase.storage.from(bucket).getPublicUrl(getStoragePath(node));
-      navigator.clipboard.writeText(data.publicUrl);
-    } else {
-      navigator.clipboard.writeText(getProjectDisplayPath(node));
-    }
+    const bucket = getStorageBucket(node);
+    if (!bucket) return;
+    const { data } = supabase.storage.from(bucket).getPublicUrl(getStoragePath(node));
+    navigator.clipboard.writeText(data.publicUrl);
     toast.success("Kopyalandı");
   };
 
   const selectAll = () => {
-    const storageFiles = filteredContent.filter((c) => c.source === "storage");
-    setSelectedFiles(new Set(storageFiles.map((f) => f.path)));
+    setSelectedFiles(new Set(filteredContent.map((f) => f.path)));
   };
   const deselectAll = () => setSelectedFiles(new Set());
 
@@ -678,7 +626,7 @@ const FileManager = () => {
                   <th className="w-7 p-1.5 text-center">
                     <input
                       type="checkbox"
-                      checked={filteredContent.filter((f) => f.source === "storage").length > 0 && selectedFiles.size === filteredContent.filter((f) => f.source === "storage").length}
+                      checked={filteredContent.length > 0 && selectedFiles.size === filteredContent.length}
                       onChange={(e) => e.target.checked ? selectAll() : deselectAll()}
                       className="rounded"
                     />
@@ -693,8 +641,6 @@ const FileManager = () => {
                 {filteredContent.map((item) => {
                   const Icon = item.type === "folder" ? Folder : getFileIcon(item.name);
                   const isChecked = selectedFiles.has(item.path);
-                  const isStorageItem = item.source === "storage";
-
                   return (
                     <tr
                       key={item.path}
@@ -708,20 +654,18 @@ const FileManager = () => {
                       }}
                       onDoubleClick={() => {
                         if (item.type !== "file") { handleToggle(item); handleSelect(item); }
-                        else if (isStorageItem && isEditable(item.name)) openEditor(item);
-                        else if (isStorageItem && isPreviewable(item.name)) openPreview(item);
+                        else if (isEditable(item.name)) openEditor(item);
+                        else if (isPreviewable(item.name)) openPreview(item);
                       }}
                     >
                       <td className="p-1.5 text-center">
-                        {isStorageItem && (
-                          <input type="checkbox" checked={isChecked} onChange={() => toggleSelect(item.path)} className="rounded" />
-                        )}
+                        <input type="checkbox" checked={isChecked} onChange={() => toggleSelect(item.path)} className="rounded" />
                       </td>
                       <td className="p-1.5">
                         <button
                           onClick={() => {
                             if (item.type !== "file") handleSelect(item);
-                            else if (isStorageItem) toggleSelect(item.path);
+                            else toggleSelect(item.path);
                           }}
                           className="flex items-center gap-2 text-left w-full"
                         >
@@ -754,7 +698,7 @@ const FileManager = () => {
           </span>
           {selectedNode && (
             <span className="truncate ml-2">
-              /{selectedNode.source === "project" ? getProjectDisplayPath(selectedNode) : selectedNode.path}
+              /{selectedNode.path}
             </span>
           )}
         </div>
