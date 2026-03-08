@@ -274,7 +274,6 @@ const FileManager = () => {
     });
     setNavIndex((prev) => prev + 1);
 
-    if (node.source === "project") { setContentItems(node.children || []); return; }
     setContentLoading(true);
     const children = node.loaded && node.children ? node.children : await loadStorageChildren(node);
     setContentItems(children);
