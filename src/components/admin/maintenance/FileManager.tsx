@@ -319,9 +319,8 @@ const FileManager = () => {
 
   useEffect(() => { loadBuckets(); }, [loadBuckets]);
 
-  const isStorage = selectedNode?.source === "storage";
-  const isStorageFolder = !!selectedNode && isStorage && selectedNode.type !== "file";
-  const checkedStorageItems = contentItems.filter((c) => selectedFiles.has(c.path) && c.source === "storage");
+  const isStorageFolder = !!selectedNode && selectedNode.type !== "file";
+  const checkedStorageItems = contentItems.filter((c) => selectedFiles.has(c.path));
   const hasSelection = selectedFiles.size > 0;
 
   // Effective selection: row click (highlight) has priority, then checkbox selection
