@@ -220,10 +220,10 @@ const FileManager = () => {
         name: b.name, path: `storage/${b.id}`, type: "bucket" as NodeType, source: "storage" as NodeSource,
         bucketId: b.id, loaded: false, expanded: false, children: [], isPublic: b.public, created_at: b.created_at,
       }));
-      setTree([projectRoot, ...storageNodes]);
+      setTree(storageNodes);
     } catch (e: any) {
       toast.error(`Bucket'lar yüklenemedi: ${e.message}`);
-      setTree([projectRoot]);
+      setTree([]);
     } finally { setLoading(false); }
   }, [projectRoot]);
 
