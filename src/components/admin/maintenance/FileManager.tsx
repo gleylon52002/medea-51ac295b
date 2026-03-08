@@ -84,40 +84,6 @@ const getFileType = (name: string) => {
   return map[ext] || ext.toUpperCase();
 };
 
-// ── Build project tree from static paths ───────────────
-const buildProjectTree = (): TreeNode => {
-  const root: TreeNode = {
-    name: "Web Dosyaları", path: PROJECT_ROOT_PATH, type: "folder", source: "project",
-    expanded: true, loaded: true, children: [],
-  };
-
-  const ensureFolder = (parent: TreeNode, folderName: string, fullPath: string): TreeNode => {
-    parent.children ||= [];
-    let folder = parent.children.find((c) => c.type === "folder" && c.name === folderName && c.source === "project");
-    if (!folder) {
-      folder = { name: folderName, path: fullPath, type: "folder", source: "project", expanded: false, loaded: true, children: [] };
-      parent.children.push(folder);
-      parent.children.sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name, "tr") : a.type === "folder" ? -1 : 1));
-    }
-    return folder;
-  };
-
-  for (const rawPath of projectFilePaths) {
-    const parts = rawPath.split("/");
-    let current = root;
-    parts.forEach((part, index) => {
-      const currentPath = `${PROJECT_ROOT_PATH}/${parts.slice(0, index + 1).join("/")}`;
-      if (index === parts.length - 1) {
-        current.children ||= [];
-        current.children.push({ name: part, path: currentPath, type: "file", source: "project", loaded: true });
-        current.children.sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name, "tr") : a.type === "folder" ? -1 : 1));
-      } else {
-        current = ensureFolder(current, part, currentPath);
-      }
-    });
-  }
-  return root;
-};
 
 // ── Tree Item ──────────────────────────────────────────
 const TreeItem = ({ node, depth, selectedPath, onSelect, onToggle }: {
