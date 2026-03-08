@@ -653,7 +653,15 @@ const AdminProducts = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="meta_description">SEO Açıklama</Label>
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="meta_description">SEO Açıklama</Label>
+                    <AIFillButton
+                      field="meta_description"
+                      context={`Ürün Adı: ${formData.name}\nKısa Açıklama: ${formData.short_description}\nAnahtar Kelimeler: ${formData.keywords}`}
+                      onResult={(val) => setFormData({ ...formData, meta_description: val })}
+                      disabled={!formData.name}
+                    />
+                  </div>
                   <Textarea
                     id="meta_description"
                     rows={3}
