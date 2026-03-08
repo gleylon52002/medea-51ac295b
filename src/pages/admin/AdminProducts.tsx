@@ -415,8 +415,16 @@ const AdminProducts = () => {
                     />
                   </div>
                   
-                  <div className="col-span-2">
-                    <Label htmlFor="short_description">Kısa Açıklama</Label>
+                   <div className="col-span-2">
+                    <div className="flex items-center gap-1">
+                      <Label htmlFor="short_description">Kısa Açıklama</Label>
+                      <AIFillButton
+                        field="short_description"
+                        context={`Ürün Adı: ${formData.name}`}
+                        onResult={(val) => setFormData({ ...formData, short_description: val })}
+                        disabled={!formData.name}
+                      />
+                    </div>
                     <Input
                       id="short_description"
                       value={formData.short_description}
