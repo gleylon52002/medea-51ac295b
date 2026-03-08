@@ -39,6 +39,8 @@ import { ProductVariant } from "@/hooks/useProductVariants";
 import { ProductVariantInfo } from "@/types/product";
 import { useRelatedProducts } from "@/hooks/useRelatedProducts";
 import BarcodeScanner from "@/components/products/BarcodeScanner";
+import { useProductTranslation } from "@/hooks/useProductTranslation";
+import { Loader2 as TranslateLoader } from "lucide-react";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -57,6 +59,7 @@ const ProductDetail = () => {
   const toggleFavorite = useToggleFavorite();
   const { data: categoryProducts } = useProductsByCategory(product?.categories?.slug || "");
   const { data: relatedProductsData } = useRelatedProducts(product?.id || "");
+  const pt = useProductTranslation({ product });
 
   // Get related products - first from explicit relations, then from category
   const relatedProducts = relatedProductsData && relatedProductsData.length > 0
@@ -215,7 +218,8 @@ const ProductDetail = () => {
                 {product.categories?.name}
               </Link>
               <h1 className="font-serif text-3xl lg:text-4xl font-medium text-foreground mt-2">
-                {product.name}
+                {pt.name}
+                {pt.isTranslating && <TranslateLoader className="inline-block ml-2 h-4 w-4 animate-spin text-muted-foreground" />}
               </h1>
             </div>
 
@@ -268,7 +272,7 @@ const ProductDetail = () => {
             <PurchaseCounter productId={product.id} />
 
             <p className="text-muted-foreground leading-relaxed">
-              {product.description}
+              {pt.description}
             </p>
 
             {/* Variant Selector */}
@@ -410,17 +414,17 @@ const ProductDetail = () => {
           </TabsList>
           <TabsContent value="description" className="pt-6">
             <p className="text-muted-foreground leading-relaxed max-w-3xl">
-              {product.description}
+              {pt.description}
             </p>
           </TabsContent>
           <TabsContent value="ingredients" className="pt-6">
             <p className="text-muted-foreground leading-relaxed max-w-3xl">
-              {product.ingredients || "İçerik bilgisi yakında eklenecek."}
+              {pt.ingredients || "İçerik bilgisi yakında eklenecek."}
             </p>
           </TabsContent>
           <TabsContent value="usage" className="pt-6">
             <p className="text-muted-foreground leading-relaxed max-w-3xl">
-              {product.usage_instructions || "Kullanım talimatı yakında eklenecek."}
+              {pt.usage || "Kullanım talimatı yakında eklenecek."}
             </p>
           </TabsContent>
           <TabsContent value="reviews" className="pt-6">
