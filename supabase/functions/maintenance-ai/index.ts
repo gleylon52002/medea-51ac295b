@@ -11,7 +11,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { messages, executeAction, actionType, actionParams, imageBase64, imageContext } = body;
+    const { messages, executeAction, actionType, actionParams, imageBase64, imageContext, fileBase64, fileName, fileType } = body;
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
