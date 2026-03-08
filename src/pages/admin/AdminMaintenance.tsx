@@ -30,11 +30,23 @@ interface Message {
 
 const quickActions = [
   { label: "Sistem Durumu", prompt: "Sistem durumunu analiz et ve bana detaylı rapor ver. Varsa aksiyonları öner.", icon: Cpu },
-  { label: "Eksik Ayarlar", prompt: "Eksik veya yapılandırılmamış ayarları tespit et ve düzeltme önerileri sun", icon: Wrench },
+  { label: "Eksik Ayarlar", prompt: "Eksik veya yapılandırılmamış ayarları tespit et ve düzeltme önerileri sun.", icon: Wrench },
   { label: "Düşük Stok Analizi", prompt: "Düşük stoklu ve stoksuz ürünleri analiz et. Gerekirse pasife alma aksiyonu öner.", icon: Zap },
   { label: "Mesajları Yönet", prompt: "Okunmamış iletişim mesajlarını göster. Her biri için uygun yanıt öner ve yanıtlama aksiyonu sun.", icon: Sparkles },
-  { label: "SEO Analizi", prompt: "Site SEO durumunu analiz et. Meta etiketleri, eksik açıklamalar. Aksiyon butonları ile raporla.", icon: Bot },
-  { label: "Ürün Oluştur", prompt: "Yeni bir ürün oluşturmam için bana yardımcı ol. Kategori listesini göster ve ürün oluşturma aksiyonu sun.", icon: Search },
+  { label: "SEO Analizi", prompt: "Site SEO durumunu analiz et. Meta etiketleri, eksik açıklamalar. Aksiyon butonları ile raporla.", icon: Search },
+  { label: "Ürün Oluştur", prompt: "Yeni bir ürün oluşturmam için bana yardımcı ol. Kategori listesini göster ve ürün oluşturma aksiyonu sun.", icon: Bot },
+  { label: "Sipariş Özeti", prompt: "Bugünkü ve bekleyen siparişleri özetle. Kargoya verilmemiş olanları listele ve toplu onay aksiyonu sun.", icon: Cpu },
+  { label: "Kampanya Oluştur", prompt: "Yeni bir kampanya oluşturmam için yardımcı ol. Mevcut kampanyaları listele ve yeni kampanya aksiyonu sun.", icon: Zap },
+  { label: "Kupon Oluştur", prompt: "Yeni bir indirim kuponu oluştur. Kupon tipi, değer ve süre bilgilerini sor.", icon: Sparkles },
+  { label: "Blog Yazısı Oluştur", prompt: "SEO uyumlu bir blog yazısı oluştur. Konu öner veya benim vereceğim konuda yaz.", icon: Bot },
+  { label: "SSS Üret", prompt: "Ürünlere ve siteye uygun sık sorulan sorular üret ve kaydet.", icon: Wrench },
+  { label: "Yorum Yönetimi", prompt: "Bekleyen ve onaylanmamış ürün yorumlarını listele. Toplu onay veya red aksiyonu sun.", icon: Sparkles },
+  { label: "Satıcı Başvuruları", prompt: "Bekleyen satıcı başvurularını listele ve her biri için onay/red aksiyonu sun.", icon: Search },
+  { label: "Günlük Rapor", prompt: "Bugünün satış, sipariş, yeni üye ve gelir raporunu detaylı oluştur.", icon: Cpu },
+  { label: "Toplu Fiyat Güncelle", prompt: "Kategoriye veya ürün grubuna göre toplu fiyat güncelleme yap. Yüzde veya sabit tutar seçeneği sun.", icon: Zap },
+  { label: "Kargo Takibi", prompt: "Kargoya verilmiş ama teslim edilmemiş siparişleri listele. Takip numarası eksik olanları göster.", icon: Wrench },
+  { label: "Bülten Gönder", prompt: "Newsletter abonelerine kampanya veya bilgilendirme e-postası hazırla ve gönderim aksiyonu sun.", icon: Sparkles },
+  { label: "Tema Ayarları", prompt: "Mevcut tema ve görünüm ayarlarını göster. Değişiklik önerileri sun.", icon: Bot },
 ];
 
 const AdminMaintenance = () => {
@@ -261,34 +273,45 @@ const AdminMaintenance = () => {
             onDrop={handleDrop}
             onDragOver={handleDragOver}
           >
+            {/* Header with hamburger menu */}
+            <div className="flex items-center gap-3 p-3 border-b border-border">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Menu className="h-4 w-4" />
+                    Hızlı Komutlar
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-72 max-h-[400px] overflow-y-auto">
+                  {quickActions.map((action) => (
+                    <DropdownMenuItem 
+                      key={action.label}
+                      onClick={() => sendMessage(action.prompt)}
+                      className="gap-2 cursor-pointer"
+                    >
+                      <action.icon className="h-4 w-4 text-primary shrink-0" />
+                      <span>{action.label}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <span className="text-xs text-muted-foreground hidden sm:inline">
+                {messages.length} mesaj
+              </span>
+            </div>
+
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4">
               {messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full space-y-6">
-                  <div className="text-center space-y-3">
-                    <div className="h-16 w-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center">
-                      <Bot className="h-8 w-8 text-primary" />
-                    </div>
+                <div className="flex flex-col items-center justify-center h-full space-y-4">
+                  <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Bot className="h-8 w-8 text-primary" />
+                  </div>
+                  <div className="text-center space-y-2">
                     <h2 className="text-xl font-semibold text-foreground">MEDEA AI Komuta Merkezi</h2>
                     <p className="text-muted-foreground max-w-lg text-sm">
-                      Tam yetkili AI asistan. Ürün oluştur, mesajlara yanıt ver, siparişleri yönet, 
-                      SEO optimize et, dosya analiz et. Tüm dosya türleri desteklenir.
+                      Sol üstteki menüden hazır komutları kullanın veya aşağıya yazın.
                     </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full max-w-2xl">
-                    {quickActions.map((action) => (
-                      <button
-                        key={action.label}
-                        onClick={() => sendMessage(action.prompt)}
-                        className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:bg-accent/50 transition-colors text-left group"
-                      >
-                        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors shrink-0">
-                          <action.icon className="h-4 w-4 text-primary" />
-                        </div>
-                        <span className="text-sm font-medium text-foreground">{action.label}</span>
-                      </button>
-                    ))}
                   </div>
                 </div>
               ) : (
@@ -396,28 +419,6 @@ const AdminMaintenance = () => {
             {/* Input */}
             <div className="border-t border-border p-4">
               <div className="flex gap-3 max-w-4xl mx-auto items-start">
-                {/* Hamburger menu for quick actions (visible when chat has messages) */}
-                {messages.length > 0 && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon" className="shrink-0 h-[44px] w-[44px]" title="Hızlı komutlar">
-                        <Menu className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-64">
-                      {quickActions.map((action) => (
-                        <DropdownMenuItem 
-                          key={action.label}
-                          onClick={() => sendMessage(action.prompt)}
-                          className="gap-2"
-                        >
-                          <action.icon className="h-4 w-4 text-primary" />
-                          <span>{action.label}</span>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
 
                 <input
                   ref={fileInputRef}
