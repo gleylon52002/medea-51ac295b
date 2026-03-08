@@ -190,6 +190,33 @@ Allow: /`;
     toast.success(`${filename} indirildi`);
   };
 
+  const autoGenerateFile = async (content: string, filename: string) => {
+    const key = filename.includes("sitemap") ? "sitemap" : "robots";
+    setIsAutoGenerating(key);
+    try {
+      const blob = new Blob([content], { type: filename.endsWith('.xml') ? 'text/xml' : 'text/plain' });
+      const file = new File([blob], filename, { type: blob.type });
+      
+      const { error } = await supabase.storage
+        .from("site-assets")
+        .upload(filename, file, { upsert: true });
+
+      if (error) throw error;
+
+      const { data: publicUrl } = supabase.storage
+        .from("site-assets")
+        .getPublicUrl(filename);
+
+      toast.success(`${filename} başarıyla oluşturuldu ve yayınlandı!`, {
+        description: `URL: ${publicUrl.publicUrl}`,
+      });
+    } catch (e: any) {
+      toast.error(`${filename} oluşturulamadı: ${e.message}`);
+    } finally {
+      setIsAutoGenerating(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-6 lg:p-8 flex justify-center">
