@@ -237,7 +237,7 @@ const Checkout = () => {
               orderId: result.order.id,
               orderNumber: result.orderNumber,
               amount: finalTotal,
-              provider: paymentMethod,
+              provider: paymentMethod === "credit-card" ? "credit_card" : paymentMethod,
               customerName: `${formData.firstName} ${formData.lastName}`,
               customerEmail: formData.email,
               customerPhone: formData.phone,
