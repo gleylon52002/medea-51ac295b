@@ -93,6 +93,7 @@ const Products = () => {
     inStockOnly,
     onSaleOnly,
     featuredOnly,
+    selectedTags.length > 0,
   ].filter(Boolean).length;
 
   const clearAllFilters = () => {
