@@ -30,11 +30,23 @@ interface Message {
 
 const quickActions = [
   { label: "Sistem Durumu", prompt: "Sistem durumunu analiz et ve bana detaylı rapor ver. Varsa aksiyonları öner.", icon: Cpu },
-  { label: "Eksik Ayarlar", prompt: "Eksik veya yapılandırılmamış ayarları tespit et ve düzeltme önerileri sun", icon: Wrench },
+  { label: "Eksik Ayarlar", prompt: "Eksik veya yapılandırılmamış ayarları tespit et ve düzeltme önerileri sun.", icon: Wrench },
   { label: "Düşük Stok Analizi", prompt: "Düşük stoklu ve stoksuz ürünleri analiz et. Gerekirse pasife alma aksiyonu öner.", icon: Zap },
   { label: "Mesajları Yönet", prompt: "Okunmamış iletişim mesajlarını göster. Her biri için uygun yanıt öner ve yanıtlama aksiyonu sun.", icon: Sparkles },
-  { label: "SEO Analizi", prompt: "Site SEO durumunu analiz et. Meta etiketleri, eksik açıklamalar. Aksiyon butonları ile raporla.", icon: Bot },
-  { label: "Ürün Oluştur", prompt: "Yeni bir ürün oluşturmam için bana yardımcı ol. Kategori listesini göster ve ürün oluşturma aksiyonu sun.", icon: Search },
+  { label: "SEO Analizi", prompt: "Site SEO durumunu analiz et. Meta etiketleri, eksik açıklamalar. Aksiyon butonları ile raporla.", icon: Search },
+  { label: "Ürün Oluştur", prompt: "Yeni bir ürün oluşturmam için bana yardımcı ol. Kategori listesini göster ve ürün oluşturma aksiyonu sun.", icon: Bot },
+  { label: "Sipariş Özeti", prompt: "Bugünkü ve bekleyen siparişleri özetle. Kargoya verilmemiş olanları listele ve toplu onay aksiyonu sun.", icon: Cpu },
+  { label: "Kampanya Oluştur", prompt: "Yeni bir kampanya oluşturmam için yardımcı ol. Mevcut kampanyaları listele ve yeni kampanya aksiyonu sun.", icon: Zap },
+  { label: "Kupon Oluştur", prompt: "Yeni bir indirim kuponu oluştur. Kupon tipi, değer ve süre bilgilerini sor.", icon: Sparkles },
+  { label: "Blog Yazısı Oluştur", prompt: "SEO uyumlu bir blog yazısı oluştur. Konu öner veya benim vereceğim konuda yaz.", icon: Bot },
+  { label: "SSS Üret", prompt: "Ürünlere ve siteye uygun sık sorulan sorular üret ve kaydet.", icon: Wrench },
+  { label: "Yorum Yönetimi", prompt: "Bekleyen ve onaylanmamış ürün yorumlarını listele. Toplu onay veya red aksiyonu sun.", icon: Sparkles },
+  { label: "Satıcı Başvuruları", prompt: "Bekleyen satıcı başvurularını listele ve her biri için onay/red aksiyonu sun.", icon: Search },
+  { label: "Günlük Rapor", prompt: "Bugünün satış, sipariş, yeni üye ve gelir raporunu detaylı oluştur.", icon: Cpu },
+  { label: "Toplu Fiyat Güncelle", prompt: "Kategoriye veya ürün grubuna göre toplu fiyat güncelleme yap. Yüzde veya sabit tutar seçeneği sun.", icon: Zap },
+  { label: "Kargo Takibi", prompt: "Kargoya verilmiş ama teslim edilmemiş siparişleri listele. Takip numarası eksik olanları göster.", icon: Wrench },
+  { label: "Bülten Gönder", prompt: "Newsletter abonelerine kampanya veya bilgilendirme e-postası hazırla ve gönderim aksiyonu sun.", icon: Sparkles },
+  { label: "Tema Ayarları", prompt: "Mevcut tema ve görünüm ayarlarını göster. Değişiklik önerileri sun.", icon: Bot },
 ];
 
 const AdminMaintenance = () => {
