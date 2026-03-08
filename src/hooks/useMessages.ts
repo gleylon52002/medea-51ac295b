@@ -145,6 +145,7 @@ export const useSendMessage = () => {
         conversation_id: conversationId,
         sender_id: user.id,
         content,
+        ...(replyToId ? { reply_to_id: replyToId } : {}),
       };
 
       const { data: messageData, error: messageError } = await supabase
