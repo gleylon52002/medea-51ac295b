@@ -617,19 +617,19 @@ const FileManager = () => {
           <ToolBtn icon={FilePlus} label="Dosya" onClick={() => { setNewFileOpen(true); setNewFileName(""); }} disabled={!isStorageFolder} />
           <ToolBtn icon={FolderPlus} label="Klasör" onClick={() => { setNewFolderOpen(true); setNewFolderName(""); }} disabled={!isStorageFolder} />
           <Separator orientation="vertical" className="h-8 mx-0.5" />
-          <ToolBtn icon={Copy} label="Kopyala" onClick={handleCopy} disabled={selectedStorageItems.length === 0} />
-          <ToolBtn icon={Scissors} label="Kes" onClick={handleCut} disabled={selectedStorageItems.length === 0} />
+          <ToolBtn icon={Copy} label="Kopyala" onClick={handleCopy} disabled={!hasEffective} />
+          <ToolBtn icon={Scissors} label="Kes" onClick={handleCut} disabled={!hasEffective} />
           <ToolBtn icon={Move} label="Yapıştır" onClick={handlePaste} disabled={!clipboard || !isStorageFolder} />
-          <ToolBtn icon={Move} label="Taşı" onClick={() => { setMoveOpen(true); setMoveDest(""); }} disabled={selectedStorageItems.length === 0} />
+          <ToolBtn icon={Move} label="Taşı" onClick={() => { setMoveOpen(true); setMoveDest(""); }} disabled={!hasEffective} />
           <Separator orientation="vertical" className="h-8 mx-0.5" />
           <label className="cursor-pointer">
             <input ref={fileInputRef} type="file" multiple onChange={handleUpload} className="hidden" />
             <ToolBtn icon={Upload} label={uploading ? "..." : "Yükle"} onClick={() => fileInputRef.current?.click()} disabled={!isStorageFolder || uploading} />
           </label>
-          <ToolBtn icon={Download} label="İndir" onClick={() => selectedStorageItems.forEach(handleDownload)} disabled={selectedStorageItems.filter(s => s.type === "file").length === 0} />
+          <ToolBtn icon={Download} label="İndir" onClick={() => effectiveFiles.forEach(handleDownload)} disabled={effectiveFiles.length === 0} />
           <Separator orientation="vertical" className="h-8 mx-0.5" />
-          <ToolBtn icon={Trash2} label="Sil" onClick={() => handleDeleteNodes(selectedStorageItems)} disabled={selectedStorageItems.length === 0} destructive />
-          <ToolBtn icon={Edit3} label="Adlandır" onClick={() => selectedStorageItems.length === 1 && openRenameFor(selectedStorageItems[0])} disabled={selectedStorageItems.length !== 1} />
+          <ToolBtn icon={Trash2} label="Sil" onClick={() => handleDeleteNodes(effectiveItems)} disabled={!hasEffective} destructive />
+          <ToolBtn icon={Edit3} label="Adlandır" onClick={() => effectiveItems.length === 1 && openRenameFor(effectiveItems[0])} disabled={effectiveItems.length !== 1} />
           <ToolBtn icon={Edit3} label="Düzenle" onClick={() => activeFile && isEditable(activeFile.name) && openEditor(activeFile)} disabled={!activeFile || !isEditable(activeFile?.name || "")} />
           <ToolBtn icon={Eye} label="Görüntüle" onClick={() => activeFile && isPreviewable(activeFile.name) && openPreview(activeFile)} disabled={!activeFile || !isPreviewable(activeFile?.name || "")} />
 
