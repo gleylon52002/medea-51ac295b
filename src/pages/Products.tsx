@@ -102,6 +102,7 @@ const Products = () => {
     setInStockOnly(false);
     setOnSaleOnly(false);
     setFeaturedOnly(false);
+    setSelectedTags([]);
   };
 
   if (productsLoading || categoriesLoading) {
