@@ -626,8 +626,8 @@ const FileManager = () => {
           <Separator orientation="vertical" className="h-8 mx-0.5" />
           <ToolBtn icon={Trash2} label="Sil" onClick={() => handleDeleteNodes(selectedStorageItems)} disabled={selectedStorageItems.length === 0} destructive />
           <ToolBtn icon={Edit3} label="Adlandır" onClick={() => selectedStorageItems.length === 1 && openRenameFor(selectedStorageItems[0])} disabled={selectedStorageItems.length !== 1} />
-          <ToolBtn icon={Edit3} label="Düzenle" onClick={() => selectedStorageItems.length === 1 && selectedStorageItems[0].type === "file" && isEditable(selectedStorageItems[0].name) && openEditor(selectedStorageItems[0])} disabled={!(selectedStorageItems.length === 1 && selectedStorageItems[0]?.type === "file" && isEditable(selectedStorageItems[0]?.name || ""))} />
-          <ToolBtn icon={Eye} label="Görüntüle" onClick={() => selectedStorageItems.length === 1 && selectedStorageItems[0].type === "file" && openPreview(selectedStorageItems[0])} disabled={!(selectedStorageItems.length === 1 && selectedStorageItems[0]?.type === "file" && isPreviewable(selectedStorageItems[0]?.name || ""))} />
+          <ToolBtn icon={Edit3} label="Düzenle" onClick={() => activeFile && isEditable(activeFile.name) && openEditor(activeFile)} disabled={!activeFile || !isEditable(activeFile?.name || "")} />
+          <ToolBtn icon={Eye} label="Görüntüle" onClick={() => activeFile && isPreviewable(activeFile.name) && openPreview(activeFile)} disabled={!activeFile || !isPreviewable(activeFile?.name || "")} />
 
           <div className="flex-1" />
           <div className="flex items-center gap-1">
