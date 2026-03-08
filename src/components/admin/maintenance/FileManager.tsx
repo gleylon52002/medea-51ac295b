@@ -496,7 +496,7 @@ const FileManager = () => {
     setEditContent(await data.text()); setEditLoading(false);
   };
   const saveEdit = async () => {
-    if (!editTarget || editTarget.source !== "storage") return;
+    if (!editTarget) return;
     const bucket = getStorageBucket(editTarget);
     if (!bucket) return;
     const { error } = await supabase.storage.from(bucket).upload(getStoragePath(editTarget), new Blob([editContent]), { upsert: true });
