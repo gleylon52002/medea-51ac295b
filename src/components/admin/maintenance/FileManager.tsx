@@ -514,8 +514,8 @@ const FileManager = () => {
 
   // Move
   const handleMove = async () => {
-    if (!moveDest.trim() || selectedStorageItems.length === 0) { setMoveOpen(false); return; }
-    for (const node of selectedStorageItems) {
+    if (!moveDest.trim() || effectiveItems.length === 0) { setMoveOpen(false); return; }
+    for (const node of effectiveItems) {
       const bucket = getStorageBucket(node);
       if (!bucket) continue;
       const srcPath = getStoragePath(node);
