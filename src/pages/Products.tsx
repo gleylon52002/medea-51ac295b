@@ -28,6 +28,10 @@ const Products = () => {
 
   const { data: products, isLoading: productsLoading } = useProducts();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const { data: allTags } = useAllProductTags();
+
+  // Get unique tags
+  const uniqueTags = [...new Set(allTags?.map(t => t.tag) || [])].sort();
 
   // Calculate max price from products
   const maxPrice = Math.max(...(products?.map(p => Number(p.price)) || [1000]), 1000);
