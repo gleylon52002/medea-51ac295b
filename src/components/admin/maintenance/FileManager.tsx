@@ -798,7 +798,7 @@ const FileManager = () => {
       <Dialog open={moveOpen} onOpenChange={setMoveOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle className="text-sm">Dosyaları Taşı</DialogTitle></DialogHeader>
-          <p className="text-xs text-muted-foreground">{selectedStorageItems.length} öğe taşınacak. Hedef yol girin:</p>
+          <p className="text-xs text-muted-foreground">{effectiveItems.length} öğe taşınacak. Hedef yol girin:</p>
           <Input value={moveDest} onChange={(e) => setMoveDest(e.target.value)} placeholder="hedef/klasor/yolu" onKeyDown={(e) => e.key === "Enter" && handleMove()} />
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setMoveOpen(false)}>İptal</Button>
