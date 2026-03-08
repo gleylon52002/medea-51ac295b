@@ -310,13 +310,13 @@ const FileManager = () => {
         return {
           name: item.name,
           path: childPath,
-          type: isFolder ? "folder" : "file",
+          type: (isFolder ? "folder" : "file") as NodeType,
           source: "storage" as const,
           loaded: false,
           expanded: false,
           children: isFolder ? [] : undefined,
           metadata: item.metadata ? { size: item.metadata.size, mimetype: item.metadata.mimetype } : undefined,
-        };
+        } as TreeNode;
       })
       .sort((a, b) => {
         if (a.type === b.type) return a.name.localeCompare(b.name, "tr");
