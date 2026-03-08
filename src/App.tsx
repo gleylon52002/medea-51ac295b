@@ -71,7 +71,7 @@ import AdminInvoices from "./pages/admin/AdminInvoices";
 import AdminUserCarts from "./pages/admin/AdminUserCarts";
 import AdminActivityLogs from "./pages/admin/AdminActivityLogs";
 import AdminSMS from "./pages/admin/AdminSMS";
-import AdminABTests from "./pages/admin/AdminABTests";
+// AdminABTests removed - not needed for production
 import AdminConversionFunnel from "./pages/admin/AdminConversionFunnel";
 import AdminPushNotifications from "./pages/admin/AdminPushNotifications";
 import AdminBlog from "./pages/admin/AdminBlog";
