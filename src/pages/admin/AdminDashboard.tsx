@@ -142,7 +142,7 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{formatPrice(stats?.totalRevenue || 0)}</div>
-            <p className="text-sm text-muted-foreground mt-1">Tüm zamanlar</p>
+            <p className="text-sm text-muted-foreground mt-1">Teslim edilen siparişler</p>
           </CardContent>
         </Card>
       </div>
