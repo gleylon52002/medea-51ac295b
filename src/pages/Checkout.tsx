@@ -230,7 +230,7 @@ const Checkout = () => {
       }
 
       // Handle external payment providers
-      if (["shopier", "shopinext", "payizone"].includes(paymentMethod)) {
+      if (["credit-card", "shopier", "shopinext", "payizone"].includes(paymentMethod)) {
         try {
           const { data, error } = await supabase.functions.invoke("create-payment", {
             body: {
