@@ -76,11 +76,41 @@ serve(async (req) => {
       });
     }
 
+    // For credit_card, determine which provider to use
+    let effectiveProvider = provider;
+    if (provider === "credit_card") {
+      // Check which online payment provider is active (prefer payizone > shopinext > shopier)
+      const { data: allConfigs } = await supabase
+        .from("payment_settings")
+        .select("method, config, is_active")
+        .in("method", ["payizone", "shopinext", "shopier"])
+        .eq("is_active", true);
+
+      if (allConfigs && allConfigs.length > 0) {
+        const preferred = allConfigs.find(c => c.method === "payizone") 
+          || allConfigs.find(c => c.method === "shopinext")
+          || allConfigs.find(c => c.method === "shopier");
+        if (preferred) {
+          effectiveProvider = preferred.method as "shopier" | "shopinext" | "payizone";
+        } else {
+          return new Response(
+            JSON.stringify({ error: "No online payment provider configured" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      } else {
+        return new Response(
+          JSON.stringify({ error: "No online payment provider configured" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Get payment provider config
     const { data: config } = await supabase
       .from("payment_settings")
       .select("config, is_active")
-      .eq("method", provider)
+      .eq("method", effectiveProvider)
       .single();
 
     if (!config?.is_active) {
@@ -93,7 +123,7 @@ serve(async (req) => {
     const providerConfig = config.config as Record<string, string>;
     let paymentUrl = "";
     let paymentData: Record<string, string | number> = {};
-    const callbackUrl = `${supabaseUrl}/functions/v1/payment-callback/${provider}`;
+    const callbackUrl = `${supabaseUrl}/functions/v1/payment-callback/${effectiveProvider}`;
 
     switch (provider) {
       case "shopier": {
