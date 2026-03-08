@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight, Minus, Plus, Star, Heart, Loader2 } from "lucide-react";
+import { ChevronRight, Minus, Plus, Star, Heart, Loader2, Play } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
