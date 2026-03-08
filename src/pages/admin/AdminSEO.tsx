@@ -192,11 +192,19 @@ Allow: /`;
 
   const autoGenerateFile = async (content: string, filename: string) => {
     const key = filename.includes("sitemap") ? "sitemap" : "robots";
+
+    if (filename === "sitemap.xml") {
+      toast.success("Dinamik sitemap zaten aktif", {
+        description: "URL: /sitemap.xml (dinamik kaynak: backend sitemap fonksiyonu)",
+      });
+      return;
+    }
+
     setIsAutoGenerating(key);
     try {
       const blob = new Blob([content], { type: filename.endsWith('.xml') ? 'text/xml' : 'text/plain' });
       const file = new File([blob], filename, { type: blob.type });
-      
+
       const { error } = await supabase.storage
         .from("site-assets")
         .upload(filename, file, { upsert: true });
@@ -363,8 +371,8 @@ Allow: /`;
               </div>
               <div className="bg-accent/30 border border-accent rounded-lg p-4">
                 <p className="text-sm text-foreground">
-                  <strong>💡 Otomatik Oluştur:</strong> Butona tıkladığınızda <code>sitemap.xml</code> dosyası 
-                  storage'a yüklenir ve herkese açık URL üzerinden erişilebilir olur. Google Search Console'a bu URL'i bildirin.
+                  <strong>💡 Otomatik Oluştur:</strong> <code>/sitemap.xml</code> adresi dinamik olarak backend sitemap fonksiyonuna bağlıdır.
+                  Yeni ürün/kategori/blog içerikleri otomatik yansır; Search Console'a <code>https://medea.tr/sitemap.xml</code> ekleyin.
                 </p>
               </div>
             </CardContent>
