@@ -521,14 +521,10 @@ const FileManager = () => {
   };
 
   const handleCopyUrl = (node: TreeNode) => {
-    if (node.source === "storage") {
-      const bucket = getStorageBucket(node);
-      if (!bucket) return;
-      const { data } = supabase.storage.from(bucket).getPublicUrl(getStoragePath(node));
-      navigator.clipboard.writeText(data.publicUrl);
-    } else {
-      navigator.clipboard.writeText(getProjectDisplayPath(node));
-    }
+    const bucket = getStorageBucket(node);
+    if (!bucket) return;
+    const { data } = supabase.storage.from(bucket).getPublicUrl(getStoragePath(node));
+    navigator.clipboard.writeText(data.publicUrl);
     toast.success("Kopyalandı");
   };
 
