@@ -118,6 +118,7 @@ const Badges = lazy(() => import("./pages/Badges"));
 const Community = lazy(() => import("./pages/Community"));
 const BirthdayReminders = lazy(() => import("./pages/BirthdayReminders"));
 const CustomProductOrder = lazy(() => import("./pages/CustomProductOrder"));
+const SharedWishlist = lazy(() => import("./pages/SharedWishlist"));
 
 const queryClient = new QueryClient();
 
