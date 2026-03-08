@@ -192,17 +192,21 @@ Allow: /`;
 
   const autoGenerateFile = async (content: string, filename: string) => {
     const key = filename.includes("sitemap") ? "sitemap" : "robots";
-
-    if (filename === "sitemap.xml") {
-      toast.success("Dinamik sitemap zaten aktif", {
-        description: "URL: /sitemap.xml (dinamik kaynak: backend sitemap fonksiyonu)",
-      });
-      return;
-    }
-
     setIsAutoGenerating(key);
     try {
-      const blob = new Blob([content], { type: filename.endsWith('.xml') ? 'text/xml' : 'text/plain' });
+      let finalContent = content;
+
+      // For sitemap, fetch the real dynamic content from edge function
+      if (filename === "sitemap.xml") {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "gxzlltmivdlpplunuusi";
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/sitemap`
+        );
+        if (!response.ok) throw new Error("Sitemap fonksiyonu yanıt vermedi");
+        finalContent = await response.text();
+      }
+
+      const blob = new Blob([finalContent], { type: filename.endsWith('.xml') ? 'text/xml' : 'text/plain' });
       const file = new File([blob], filename, { type: blob.type });
 
       const { error } = await supabase.storage
@@ -215,7 +219,7 @@ Allow: /`;
         .from("site-assets")
         .getPublicUrl(filename);
 
-      toast.success(`${filename} başarıyla oluşturuldu ve yayınlandı!`, {
+      toast.success(`${filename} başarıyla oluşturuldu!`, {
         description: `URL: ${publicUrl.publicUrl}`,
       });
     } catch (e: any) {
