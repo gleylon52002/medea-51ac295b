@@ -399,7 +399,7 @@ const FileManager = () => {
         await supabase.storage.from(bucket).remove([path]);
       }
     }
-    toast.success(`${storageNodes.length} öğe silindi`);
+    toast.success(`${nodes.length} öğe silindi`);
     setSelectedFiles(new Set());
     refresh();
   };
