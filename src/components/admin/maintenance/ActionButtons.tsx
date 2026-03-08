@@ -87,8 +87,8 @@ const ActionButtons = ({ actions, onActionComplete }: ActionButtonsProps) => {
               onClick={() => executeAction(action)}
               className={cn(
                 "text-xs h-8",
-                isCompleted && "bg-green-500/20 text-green-700 border-green-500/30",
-                isFailed && "bg-red-500/20 text-red-700 border-red-500/30"
+                isCompleted && "bg-accent text-accent-foreground border-accent",
+                isFailed && "bg-destructive/20 text-destructive border-destructive/30"
               )}
             >
               {isExecuting ? (
