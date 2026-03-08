@@ -135,6 +135,7 @@ const menuGroups: MenuGroup[] = [
       { icon: Palette, label: "Tema", path: "/admin/tema" },
       { icon: Search, label: "SEO", path: "/admin/seo" },
       { icon: Settings, label: "Genel Ayarlar", path: "/admin/ayarlar" },
+      { icon: Wrench, label: "Bakım Merkezi", path: "/admin/bakim" },
     ],
   },
 ];

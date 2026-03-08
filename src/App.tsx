@@ -223,6 +223,7 @@ const App = () => (
                 <Route path="cohort" element={<AdminCohort />} />
                 <Route path="cark" element={<AdminSpinWheel />} />
                 <Route path="rss" element={<AdminRSS />} />
+                <Route path="bakim" element={<AdminMaintenance />} />
               </Route>
 
               {/* Seller Routes */}
