@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, Bot, Trash2, Wrench, Sparkles, Cpu, Zap, Search } from "lucide-react";
+import { Send, Loader2, Bot, Trash2, Wrench, Sparkles, Cpu, Zap, Search, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
