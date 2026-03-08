@@ -215,6 +215,10 @@ const AdminSMS = () => {
             <MessageSquare className="h-4 w-4" />
             Şablonlar
           </TabsTrigger>
+          <TabsTrigger value="test" className="gap-2">
+            <Send className="h-4 w-4" />
+            Test Gönder
+          </TabsTrigger>
           <TabsTrigger value="settings" className="gap-2">
             <Settings className="h-4 w-4" />
             Sağlayıcılar
@@ -224,6 +228,11 @@ const AdminSMS = () => {
             Gönderim Geçmişi
           </TabsTrigger>
         </TabsList>
+
+        {/* Test SMS Tab */}
+        <TabsContent value="test" className="space-y-4">
+          <TestSendPanel />
+        </TabsContent>
 
         {/* Templates Tab */}
         <TabsContent value="templates" className="space-y-4">
