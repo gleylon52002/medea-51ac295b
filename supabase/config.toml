@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.spin-wheel]
 verify_jwt = false
+
+[functions.product-rss-feed]
+verify_jwt = false
