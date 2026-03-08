@@ -39,6 +39,8 @@ import { ProductVariant } from "@/hooks/useProductVariants";
 import { ProductVariantInfo } from "@/types/product";
 import { useRelatedProducts } from "@/hooks/useRelatedProducts";
 import BarcodeScanner from "@/components/products/BarcodeScanner";
+import { useProductTranslation } from "@/hooks/useProductTranslation";
+import { Loader2 as TranslateLoader } from "lucide-react";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
