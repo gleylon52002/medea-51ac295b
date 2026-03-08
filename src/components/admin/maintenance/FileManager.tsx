@@ -225,6 +225,7 @@ const FileManager = () => {
   const [previewName, setPreviewName] = useState("");
   const [moveOpen, setMoveOpen] = useState(false);
   const [moveDest, setMoveDest] = useState("");
+  const [highlightedItem, setHighlightedItem] = useState<TreeNode | null>(null);
 
   const projectRoot = useMemo(() => buildProjectTree(), []);
 
@@ -364,6 +365,13 @@ const FileManager = () => {
   const isStorageFolder = !!selectedNode && isStorage && selectedNode.type !== "file";
   const selectedStorageItems = contentItems.filter((c) => selectedFiles.has(c.path) && c.source === "storage");
   const hasSelection = selectedFiles.size > 0;
+
+  // Resolve the "active" file for edit/view: checkbox selection takes priority, then highlighted item
+  const activeFile = selectedStorageItems.length === 1 && selectedStorageItems[0].type === "file"
+    ? selectedStorageItems[0]
+    : highlightedItem?.source === "storage" && highlightedItem?.type === "file"
+      ? highlightedItem
+      : null;
 
   // ═══════════ OPERATIONS ═══════════
 
@@ -618,8 +626,8 @@ const FileManager = () => {
           <Separator orientation="vertical" className="h-8 mx-0.5" />
           <ToolBtn icon={Trash2} label="Sil" onClick={() => handleDeleteNodes(selectedStorageItems)} disabled={selectedStorageItems.length === 0} destructive />
           <ToolBtn icon={Edit3} label="Adlandır" onClick={() => selectedStorageItems.length === 1 && openRenameFor(selectedStorageItems[0])} disabled={selectedStorageItems.length !== 1} />
-          <ToolBtn icon={Edit3} label="Düzenle" onClick={() => selectedStorageItems.length === 1 && selectedStorageItems[0].type === "file" && isEditable(selectedStorageItems[0].name) && openEditor(selectedStorageItems[0])} disabled={!(selectedStorageItems.length === 1 && selectedStorageItems[0]?.type === "file" && isEditable(selectedStorageItems[0]?.name || ""))} />
-          <ToolBtn icon={Eye} label="Görüntüle" onClick={() => selectedStorageItems.length === 1 && selectedStorageItems[0].type === "file" && openPreview(selectedStorageItems[0])} disabled={!(selectedStorageItems.length === 1 && selectedStorageItems[0]?.type === "file" && isPreviewable(selectedStorageItems[0]?.name || ""))} />
+          <ToolBtn icon={Edit3} label="Düzenle" onClick={() => activeFile && isEditable(activeFile.name) && openEditor(activeFile)} disabled={!activeFile || !isEditable(activeFile?.name || "")} />
+          <ToolBtn icon={Eye} label="Görüntüle" onClick={() => activeFile && isPreviewable(activeFile.name) && openPreview(activeFile)} disabled={!activeFile || !isPreviewable(activeFile?.name || "")} />
 
           <div className="flex-1" />
           <div className="flex items-center gap-1">
@@ -688,8 +696,13 @@ const FileManager = () => {
                       key={item.path}
                       className={cn(
                         "border-b border-border/30 hover:bg-accent/40 group cursor-default",
-                        isChecked && "bg-primary/5"
+                        isChecked && "bg-primary/5",
+                        highlightedItem?.path === item.path && !isChecked && "bg-accent/60"
                       )}
+                      onClick={() => {
+                        if (item.type === "file" && isStorageItem) setHighlightedItem(item);
+                        else setHighlightedItem(null);
+                      }}
                       onDoubleClick={() => {
                         if (item.type !== "file") { handleToggle(item); handleSelect(item); }
                         else if (isStorageItem && isEditable(item.name)) openEditor(item);
