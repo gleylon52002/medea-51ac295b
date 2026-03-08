@@ -38,6 +38,9 @@ import {
   CircleDot,
   ChevronDown,
   Wrench,
+  Target,
+  Zap,
+  Calendar,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
