@@ -242,6 +242,7 @@ const App = () => (
                   <Route path="segmentler" element={<AdminSegments />} />
                   <Route path="email-otomasyon" element={<AdminEmailAutomation />} />
                   <Route path="kampanya-takvimi" element={<AdminCampaignCalendar />} />
+                  <Route path="hakkimizda" element={<AdminAbout />} />
                 </Route>
 
                 {/* Seller Routes */}

@@ -125,6 +125,7 @@ const menuGroups: MenuGroup[] = [
       { icon: Newspaper, label: "Blog", path: "/admin/blog" },
       { icon: HelpCircle, label: "SSS", path: "/admin/sss" },
       { icon: Share2, label: "Sosyal Medya", path: "/admin/sosyal-medya" },
+      { icon: Info, label: "Hakkımızda", path: "/admin/hakkimizda" },
     ],
   },
   {
