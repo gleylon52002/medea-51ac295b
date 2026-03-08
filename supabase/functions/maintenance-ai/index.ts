@@ -846,6 +846,32 @@ async function executeMaintenanceAction(
       return { success: true, message: "Stok uyarı bildirimi gönderildi" };
     }
 
+    case "check_stock": {
+      const { data: lowStock } = await supabase.from("products")
+        .select("id, name, stock").lte("stock", 5).gt("stock", 0).eq("is_active", true).order("stock", { ascending: true });
+      const { data: outOfStock } = await supabase.from("products")
+        .select("id, name").eq("stock", 0).eq("is_active", true);
+      return {
+        success: true,
+        message: `Stok kontrolü tamamlandı: ${lowStock?.length || 0} düşük stoklu, ${outOfStock?.length || 0} stoksuz ürün`,
+        details: { lowStock: lowStock || [], outOfStock: outOfStock || [] },
+      };
+    }
+
+    case "send_daily_report": {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const [{ data: todayOrders }, { count: newUsers }] = await Promise.all([
+        supabase.from("orders").select("total, status").gte("created_at", today.toISOString()),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", today.toISOString()),
+      ]);
+      const revenue = todayOrders?.filter((o: any) => o.status !== "cancelled").reduce((sum: number, o: any) => sum + (Number(o.total) || 0), 0) || 0;
+      return {
+        success: true,
+        message: `Günlük rapor: ${todayOrders?.length || 0} sipariş, ₺${revenue.toLocaleString("tr-TR")} gelir, ${newUsers || 0} yeni kullanıcı`,
+        details: { orderCount: todayOrders?.length || 0, revenue, newUsers: newUsers || 0 },
+      };
+    }
+
     default:
       return { success: false, message: `Bilinmeyen aksiyon: ${actionType}` };
   }
