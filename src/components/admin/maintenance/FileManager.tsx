@@ -366,6 +366,13 @@ const FileManager = () => {
   const selectedStorageItems = contentItems.filter((c) => selectedFiles.has(c.path) && c.source === "storage");
   const hasSelection = selectedFiles.size > 0;
 
+  // Resolve the "active" file for edit/view: checkbox selection takes priority, then highlighted item
+  const activeFile = selectedStorageItems.length === 1 && selectedStorageItems[0].type === "file"
+    ? selectedStorageItems[0]
+    : highlightedItem?.source === "storage" && highlightedItem?.type === "file"
+      ? highlightedItem
+      : null;
+
   // ═══════════ OPERATIONS ═══════════
 
   // Upload
