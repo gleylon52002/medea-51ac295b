@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import HealthMonitor from "@/components/admin/maintenance/HealthMonitor";
 import ScheduledTasks from "@/components/admin/maintenance/ScheduledTasks";
 import ActionButtons, { AIAction, parseActionsFromResponse } from "@/components/admin/maintenance/ActionButtons";
+import FileManager from "@/components/admin/maintenance/FileManager";
 
 interface Message {
   role: "user" | "assistant";
