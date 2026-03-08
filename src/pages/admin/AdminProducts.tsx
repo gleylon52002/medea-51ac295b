@@ -590,7 +590,15 @@ const AdminProducts = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="usage_instructions">Kullanım Talimatı</Label>
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="usage_instructions">Kullanım Talimatı</Label>
+                    <AIFillButton
+                      field="usage_instructions"
+                      context={`Ürün Adı: ${formData.name}\nKısa Açıklama: ${formData.short_description}\nİçerikler: ${formData.ingredients}`}
+                      onResult={(val) => setFormData({ ...formData, usage_instructions: val })}
+                      disabled={!formData.name}
+                    />
+                  </div>
                   <Textarea
                     id="usage_instructions"
                     rows={4}
