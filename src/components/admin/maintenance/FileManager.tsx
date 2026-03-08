@@ -225,7 +225,7 @@ const FileManager = () => {
       toast.error(`Bucket'lar yüklenemedi: ${e.message}`);
       setTree([]);
     } finally { setLoading(false); }
-  }, [projectRoot]);
+  }, []);
 
   // ── Load storage children ────
   const loadStorageChildren = useCallback(async (node: TreeNode): Promise<TreeNode[]> => {
