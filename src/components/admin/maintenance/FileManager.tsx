@@ -307,7 +307,7 @@ const FileManager = () => {
     const parent = findNode(tree, parentPath);
     if (parent) handleSelect(parent);
   };
-  const goHome = () => handleSelect(projectRoot);
+  const goHome = () => { if (tree.length > 0) handleSelect(tree[0]); };
 
   const refresh = useCallback(async () => {
     await loadBuckets();
