@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, Bot, Trash2, Wrench, Sparkles, Cpu, Zap, Search, FolderOpen } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Send, Loader2, Bot, Trash2, Wrench, Sparkles, Cpu, Zap, Search, FolderOpen, ImagePlus, X, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
@@ -11,21 +11,23 @@ import HealthMonitor from "@/components/admin/maintenance/HealthMonitor";
 import ScheduledTasks from "@/components/admin/maintenance/ScheduledTasks";
 import ActionButtons, { AIAction, parseActionsFromResponse } from "@/components/admin/maintenance/ActionButtons";
 import FileManager from "@/components/admin/maintenance/FileManager";
+import { toast } from "sonner";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
   actions?: AIAction[];
+  imagePreview?: string;
 }
 
 const quickActions = [
   { label: "Sistem Durumu", prompt: "Sistem durumunu analiz et ve bana detaylı rapor ver. Varsa aksiyonları öner.", icon: Cpu },
   { label: "Eksik Ayarlar", prompt: "Eksik veya yapılandırılmamış ayarları tespit et ve düzeltme önerileri sun", icon: Wrench },
   { label: "Düşük Stok Analizi", prompt: "Düşük stoklu ve stoksuz ürünleri analiz et. Gerekirse pasife alma aksiyonu öner.", icon: Zap },
-  { label: "AI Sistemleri", prompt: "Tüm AI sistemlerinin durumunu kontrol et. Her birinin ne yaptığını, nasıl çalıştığını açıkla.", icon: Sparkles },
+  { label: "Mesajları Yönet", prompt: "Okunmamış iletişim mesajlarını göster. Her biri için uygun yanıt öner ve yanıtlama aksiyonu sun.", icon: Sparkles },
   { label: "SEO Analizi", prompt: "Site SEO durumunu analiz et. Meta etiketleri, eksik açıklamalar. Aksiyon butonları ile raporla.", icon: Bot },
-  { label: "Trend Analizi", prompt: "Son haftalık satış trendlerini analiz et. Hangi ürünler popüler, hangileri düşüşte? Strateji öner.", icon: Search },
+  { label: "Ürün Oluştur", prompt: "Yeni bir ürün oluşturmam için bana yardımcı ol. Kategori listesini göster ve ürün oluşturma aksiyonu sun.", icon: Search },
 ];
 
 const AdminMaintenance = () => {
@@ -33,7 +35,10 @@ const AdminMaintenance = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -41,22 +46,89 @@ const AdminMaintenance = () => {
     }
   }, [messages]);
 
+  const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith("image/")) {
+      toast.error("Sadece görsel dosyaları yüklenebilir");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Dosya boyutu 10MB'dan küçük olmalı");
+      return;
+    }
+
+    setSelectedImage(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }, []);
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove the data:image/...;base64, prefix
+        resolve(result.split(",")[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const sendMessage = async (text?: string) => {
     const messageText = text || input;
-    if (!messageText.trim() || isLoading) return;
+    if ((!messageText.trim() && !selectedImage) || isLoading) return;
 
-    const userMsg: Message = { role: "user", content: messageText, timestamp: new Date() };
+    const userMsg: Message = { 
+      role: "user", 
+      content: messageText || (selectedImage ? "📸 Görsel gönderildi" : ""),
+      timestamp: new Date(),
+      imagePreview: imagePreview || undefined,
+    };
     const allMessages = [...messages, userMsg];
     setMessages(allMessages);
     setInput("");
     setIsLoading(true);
 
+    const currentImage = selectedImage;
+    const currentImagePreview = imagePreview;
+    removeImage();
+
     try {
-      const { data, error } = await supabase.functions.invoke("maintenance-ai", {
-        body: {
-          messages: allMessages.map((m) => ({ role: m.role, content: m.content })),
-        },
-      });
+      let data: any;
+      let error: any;
+
+      if (currentImage) {
+        // Send with image for analysis
+        const base64 = await fileToBase64(currentImage);
+        const result = await supabase.functions.invoke("maintenance-ai", {
+          body: {
+            imageBase64: base64,
+            imageContext: messageText || "Bu görseli analiz et. Ürün görseli ise ürün oluşturma öner.",
+          },
+        });
+        data = result.data;
+        error = result.error;
+      } else {
+        const result = await supabase.functions.invoke("maintenance-ai", {
+          body: {
+            messages: allMessages
+              .filter(m => !m.imagePreview || m.role === "user")
+              .map((m) => ({ role: m.role, content: m.content })),
+          },
+        });
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -97,22 +169,33 @@ const AdminMaintenance = () => {
     sendMessage(`"${task.title}" görevini çalıştır. Aksiyon tipi: ${task.action_type}`);
   };
 
-  const handleActionComplete = () => {
-    // Optionally refresh or add a system message
-  };
+  const handleActionComplete = () => {};
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
 
   return (
     <div className="p-4 lg:p-6 h-[calc(100vh-56px)] lg:h-screen flex flex-col gap-4">
-      {/* Health Monitor */}
       <HealthMonitor />
 
-      {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between mb-2">
           <TabsList>
             <TabsTrigger value="chat" className="gap-2">
               <Bot className="h-4 w-4" />
-              AI Sohbet
+              AI Komuta Merkezi
             </TabsTrigger>
             <TabsTrigger value="tasks" className="gap-2">
               <Wrench className="h-4 w-4" />
@@ -141,7 +224,11 @@ const AdminMaintenance = () => {
         </TabsContent>
 
         <TabsContent value="chat" className="flex-1 flex flex-col mt-0 min-h-0">
-          <Card className="flex-1 flex flex-col overflow-hidden border-border">
+          <Card 
+            className="flex-1 flex flex-col overflow-hidden border-border"
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+          >
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4">
               {messages.length === 0 ? (
@@ -150,10 +237,10 @@ const AdminMaintenance = () => {
                     <div className="h-16 w-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center">
                       <Bot className="h-8 w-8 text-primary" />
                     </div>
-                    <h2 className="text-xl font-semibold text-foreground">MEDEA Bakım AI</h2>
-                    <p className="text-muted-foreground max-w-md text-sm">
-                      Sistem durumunu izle, sorunları gider, toplu işlemler yap.
-                      AI aksiyonları önerecek ve onayınla uygulayacak.
+                    <h2 className="text-xl font-semibold text-foreground">MEDEA AI Komuta Merkezi</h2>
+                    <p className="text-muted-foreground max-w-lg text-sm">
+                      Tam yetkili AI asistan. Ürün oluştur, mesajlara yanıt ver, siparişleri yönet, 
+                      SEO optimize et, görsel analiz yap. Görsel sürükle-bırak veya yapıştır.
                     </p>
                   </div>
 
@@ -194,6 +281,14 @@ const AdminMaintenance = () => {
                           : "bg-muted text-foreground rounded-bl-sm"
                       )}
                     >
+                      {/* Image preview in message */}
+                      {msg.imagePreview && (
+                        <img 
+                          src={msg.imagePreview} 
+                          alt="Yüklenen görsel" 
+                          className="rounded-lg mb-2 max-h-48 object-cover"
+                        />
+                      )}
                       {msg.role === "assistant" ? (
                         <>
                           <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-2 [&>ul]:mb-2 [&>ol]:mb-2 [&>h1]:text-lg [&>h2]:text-base [&>h3]:text-sm [&>pre]:bg-background/50 [&>pre]:rounded-lg [&>pre]:p-3">
@@ -235,27 +330,58 @@ const AdminMaintenance = () => {
               )}
             </div>
 
+            {/* Image Preview */}
+            {imagePreview && (
+              <div className="px-4 pt-2 border-t border-border">
+                <div className="relative inline-block">
+                  <img src={imagePreview} alt="Seçilen görsel" className="h-20 rounded-lg border border-border" />
+                  <button
+                    onClick={removeImage}
+                    className="absolute -top-2 -right-2 h-5 w-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Input */}
             <div className="border-t border-border p-4">
               <div className="flex gap-3 max-w-4xl mx-auto">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="shrink-0 h-[44px] w-[44px]"
+                  title="Görsel yükle"
+                >
+                  <ImagePlus className="h-4 w-4" />
+                </Button>
                 <Textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Komut verin: 'Stoksuz ürünleri pasife al', 'SEO raporu çıkar', 'Tüm fiyatları %10 artır'..."
+                  placeholder="Komut ver: 'Ürün oluştur', 'Mesajlara yanıt ver', 'Görseli analiz et'..."
                   className="min-h-[44px] max-h-[120px] resize-none text-sm"
                   rows={1}
                 />
                 <Button
                   onClick={() => sendMessage()}
-                  disabled={!input.trim() || isLoading}
+                  disabled={(!input.trim() && !selectedImage) || isLoading}
                   className="shrink-0 h-[44px] px-5"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
               <p className="text-[11px] text-muted-foreground text-center mt-2">
-                Bakım AI sistem verilerine erişir ve aksiyonları uygular • Shift+Enter ile yeni satır
+                🔓 Tam yetkili AI • Ürün, sipariş, mesaj, SEO, ayarlar • Görsel sürükle-bırak destekli
               </p>
             </div>
           </Card>
