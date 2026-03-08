@@ -421,6 +421,50 @@ export type Database = {
           },
         ]
       }
+      campaign_calendar: {
+        Row: {
+          campaign_id: string | null
+          color: string | null
+          created_at: string
+          description: string | null
+          event_date: string
+          event_type: string
+          id: string
+          is_completed: boolean
+          title: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          event_date: string
+          event_type?: string
+          id?: string
+          is_completed?: boolean
+          title: string
+        }
+        Update: {
+          campaign_id?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          is_completed?: boolean
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_calendar_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           applies_to: string
@@ -755,6 +799,42 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_segments: {
+        Row: {
+          conditions: Json
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          segment_type: string
+          updated_at: string
+          user_count: number
+        }
+        Insert: {
+          conditions?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          segment_type?: string
+          updated_at?: string
+          user_count?: number
+        }
+        Update: {
+          conditions?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          segment_type?: string
+          updated_at?: string
+          user_count?: number
+        }
+        Relationships: []
+      }
       daily_checkins: {
         Row: {
           checkin_date: string
@@ -779,6 +859,45 @@ export type Database = {
           points_earned?: number
           streak_days?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      email_automations: {
+        Row: {
+          created_at: string
+          delay_minutes: number
+          email_body: string
+          email_subject: string
+          id: string
+          is_active: boolean
+          name: string
+          sent_count: number
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delay_minutes?: number
+          email_body: string
+          email_subject: string
+          id?: string
+          is_active?: boolean
+          name: string
+          sent_count?: number
+          trigger_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delay_minutes?: number
+          email_body?: string
+          email_subject?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          sent_count?: number
+          trigger_type?: string
+          updated_at?: string
         }
         Relationships: []
       }
