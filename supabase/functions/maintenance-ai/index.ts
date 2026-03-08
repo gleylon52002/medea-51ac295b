@@ -36,6 +36,14 @@ serve(async (req) => {
       });
     }
 
+    // Handle non-image file analysis
+    if (fileBase64 && fileName) {
+      const analysisResult = await analyzeFile(LOVABLE_API_KEY, fileBase64, fileName, fileType || "application/octet-stream", imageContext || `Bu dosyayı analiz et: ${fileName}`);
+      return new Response(JSON.stringify({ content: analysisResult }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Gather comprehensive system diagnostics
     const diagnostics = await gatherSystemDiagnostics(supabase);
     const systemPrompt = buildSystemPrompt(diagnostics);
