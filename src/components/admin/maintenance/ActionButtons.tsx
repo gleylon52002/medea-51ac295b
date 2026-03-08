@@ -39,12 +39,12 @@ const ActionButtons = ({ actions, onActionComplete }: ActionButtonsProps) => {
       if (error) throw error;
 
       // Log the action
-      await supabase.from("ai_action_logs").insert({
+      await supabase.from("ai_action_logs").insert([{
         action_type: action.type,
         action_params: action.params || {},
         result: data,
         status: "success",
-      });
+      }]);
 
       setCompleted([...completed, action.id]);
       toast.success(`"${action.label}" başarıyla uygulandı`);
@@ -55,12 +55,12 @@ const ActionButtons = ({ actions, onActionComplete }: ActionButtonsProps) => {
       toast.error(`Aksiyon başarısız: ${errorMessage}`);
       
       // Log the failure
-      await supabase.from("ai_action_logs").insert({
+      await supabase.from("ai_action_logs").insert([{
         action_type: action.type,
         action_params: action.params || {},
         status: "failed",
         error_message: errorMessage,
-      });
+      }]);
     } finally {
       setExecuting(null);
     }
