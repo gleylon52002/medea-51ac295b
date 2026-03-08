@@ -10,7 +10,7 @@ interface PaymentRequest {
   orderId: string;
   orderNumber: string;
   amount: number;
-  provider: "shopier" | "shopinext" | "payizone";
+  provider: "credit_card" | "shopier" | "shopinext" | "payizone";
   customerName: string;
   customerEmail: string;
   customerPhone: string;
