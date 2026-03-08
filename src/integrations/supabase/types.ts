@@ -1846,6 +1846,7 @@ export type Database = {
           sustainability_score: number | null
           updated_at: string
           usage_instructions: string | null
+          video_url: string | null
         }
         Insert: {
           category_id?: string | null
@@ -1870,6 +1871,7 @@ export type Database = {
           sustainability_score?: number | null
           updated_at?: string
           usage_instructions?: string | null
+          video_url?: string | null
         }
         Update: {
           category_id?: string | null
@@ -1894,6 +1896,7 @@ export type Database = {
           sustainability_score?: number | null
           updated_at?: string
           usage_instructions?: string | null
+          video_url?: string | null
         }
         Relationships: [
           {
@@ -2725,6 +2728,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      shared_wishlists: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          product_ids: string[]
+          share_token: string
+          title: string
+          updated_at: string
+          user_id: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          product_ids?: string[]
+          share_token?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          product_ids?: string[]
+          share_token?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          view_count?: number
+        }
+        Relationships: []
       }
       shipping_companies: {
         Row: {
