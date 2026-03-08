@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
-  FolderPlus, Upload, Trash2, Edit3, Download, File, Folder,
-  ChevronRight, Home, RefreshCw, Search, MoreVertical,
-  FileText, FileImage, FileArchive, FileCode, Eye, Copy, Check, ArrowLeft,
-  HardDrive, Database
+  FolderPlus, Upload, Trash2, Edit3, Download, File, Folder, FolderOpen,
+  ChevronRight, ChevronDown, Home, RefreshCw, Search, MoreVertical,
+  FileText, FileImage, FileArchive, FileCode, Eye, Copy,
+  HardDrive, ArrowLeft, X, Save
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,30 +19,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-interface StorageFile {
+// ── Types ──────────────────────────────────────────────
+interface TreeNode {
   name: string;
-  id?: string;
+  path: string;
+  type: "bucket" | "folder" | "file";
+  bucketId?: string;
+  children?: TreeNode[];
+  loaded?: boolean;
+  expanded?: boolean;
   metadata?: { size?: number; mimetype?: string };
-  created_at?: string;
-  updated_at?: string;
+  isPublic?: boolean;
 }
 
-interface StorageFolder {
-  name: string;
-}
-
-interface BucketInfo {
-  id: string;
-  name: string;
-  public: boolean;
-  created_at?: string;
-}
-
+// ── Helpers ────────────────────────────────────────────
 const getFileIcon = (name: string) => {
   const ext = name.split(".").pop()?.toLowerCase() || "";
   if (["jpg", "jpeg", "png", "gif", "webp", "svg", "ico"].includes(ext)) return FileImage;
   if (["zip", "rar", "7z", "tar", "gz"].includes(ext)) return FileArchive;
-  if (["html", "css", "js", "ts", "tsx", "jsx", "json", "xml", "php", "py"].includes(ext)) return FileCode;
+  if (["html", "css", "js", "ts", "tsx", "jsx", "json", "xml", "php", "py", "sql"].includes(ext)) return FileCode;
   if (["txt", "md", "csv", "log", "pdf", "doc", "docx"].includes(ext)) return FileText;
   return File;
 };
@@ -64,25 +59,102 @@ const isPreviewable = (name: string) => {
   return ["jpg", "jpeg", "png", "gif", "webp", "svg", "ico", "pdf"].includes(ext);
 };
 
+// ── Tree Item Component ────────────────────────────────
+const TreeItem = ({
+  node,
+  depth,
+  selectedPath,
+  onSelect,
+  onToggle,
+}: {
+  node: TreeNode;
+  depth: number;
+  selectedPath: string;
+  onSelect: (node: TreeNode) => void;
+  onToggle: (node: TreeNode) => void;
+}) => {
+  const isSelected = selectedPath === node.path;
+  const isFolder = node.type === "bucket" || node.type === "folder";
+  const hasChildren = node.children && node.children.length > 0;
+  const IconComponent = node.type === "bucket"
+    ? HardDrive
+    : node.type === "folder"
+      ? (node.expanded ? FolderOpen : Folder)
+      : getFileIcon(node.name);
+
+  const handleClick = () => {
+    if (isFolder) {
+      onToggle(node);
+      onSelect(node);
+    } else {
+      onSelect(node);
+    }
+  };
+
+  return (
+    <>
+      <button
+        onClick={handleClick}
+        className={cn(
+          "w-full flex items-center gap-1.5 py-1 px-2 text-xs hover:bg-accent/50 transition-colors text-left",
+          isSelected && "bg-accent text-accent-foreground"
+        )}
+        style={{ paddingLeft: `${depth * 16 + 8}px` }}
+      >
+        {isFolder ? (
+          <span className="shrink-0 w-3.5 h-3.5 flex items-center justify-center">
+            {node.expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          </span>
+        ) : (
+          <span className="w-3.5 shrink-0" />
+        )}
+        <IconComponent className={cn(
+          "h-3.5 w-3.5 shrink-0",
+          node.type === "bucket" ? "text-blue-500" : isFolder ? "text-amber-500" : "text-muted-foreground"
+        )} />
+        <span className="truncate">{node.name}</span>
+        {node.type === "bucket" && node.isPublic !== undefined && (
+          <span className={cn(
+            "ml-auto text-[9px] px-1 rounded",
+            node.isPublic ? "text-emerald-600" : "text-orange-500"
+          )}>
+            {node.isPublic ? "pub" : "prv"}
+          </span>
+        )}
+      </button>
+      {node.expanded && node.children?.map((child) => (
+        <TreeItem
+          key={child.path}
+          node={child}
+          depth={depth + 1}
+          selectedPath={selectedPath}
+          onSelect={onSelect}
+          onToggle={onToggle}
+        />
+      ))}
+    </>
+  );
+};
+
+// ── Main FileManager ───────────────────────────────────
 const FileManager = () => {
-  // null = bucket listing, string = inside a bucket
-  const [currentBucket, setCurrentBucket] = useState<string | null>(null);
-  const [currentPath, setCurrentPath] = useState("");
-  const [buckets, setBuckets] = useState<BucketInfo[]>([]);
-  const [files, setFiles] = useState<StorageFile[]>([]);
-  const [folders, setFolders] = useState<StorageFolder[]>([]);
+  const [tree, setTree] = useState<TreeNode[]>([]);
+  const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
+  const [contentItems, setContentItems] = useState<TreeNode[]>([]);
   const [loading, setLoading] = useState(false);
+  const [contentLoading, setContentLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Dialogs
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [renameOpen, setRenameOpen] = useState(false);
-  const [renameTarget, setRenameTarget] = useState("");
+  const [renameTarget, setRenameTarget] = useState<TreeNode | null>(null);
   const [renameName, setRenameName] = useState("");
   const [editOpen, setEditOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState("");
+  const [editTarget, setEditTarget] = useState<TreeNode | null>(null);
   const [editContent, setEditContent] = useState("");
   const [editLoading, setEditLoading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -90,15 +162,36 @@ const FileManager = () => {
   const [previewName, setPreviewName] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
 
-  const fullPath = (name: string) => currentPath ? `${currentPath}/${name}` : name;
+  // Get bucket ID from a node's path
+  const getBucketFromNode = (node: TreeNode): string | undefined => {
+    if (node.type === "bucket") return node.bucketId || node.name;
+    // Walk up path: first segment is bucket
+    const parts = node.path.split("/");
+    return parts[0];
+  };
 
-  // Load buckets
+  const getStoragePath = (node: TreeNode): string => {
+    const parts = node.path.split("/");
+    return parts.slice(1).join("/");
+  };
+
+  // Load all buckets as root tree nodes
   const loadBuckets = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.storage.listBuckets();
       if (error) throw error;
-      setBuckets((data || []) as BucketInfo[]);
+      const bucketNodes: TreeNode[] = (data || []).map((b: any) => ({
+        name: b.name,
+        path: b.id,
+        type: "bucket" as const,
+        bucketId: b.id,
+        children: [],
+        loaded: false,
+        expanded: false,
+        isPublic: b.public,
+      }));
+      setTree(bucketNodes);
     } catch (e: any) {
       toast.error("Bucket'lar yüklenemedi: " + e.message);
     } finally {
@@ -106,160 +199,216 @@ const FileManager = () => {
     }
   }, []);
 
-  // Load files within a bucket
-  const loadFiles = useCallback(async () => {
-    if (!currentBucket) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.storage.from(currentBucket).list(currentPath || "", {
-        limit: 500,
-        sortBy: { column: "name", order: "asc" },
-      });
-      if (error) throw error;
+  // Load children of a folder/bucket
+  const loadChildren = useCallback(async (node: TreeNode): Promise<TreeNode[]> => {
+    const bucket = getBucketFromNode(node);
+    if (!bucket) return [];
+    const storagePath = node.type === "bucket" ? "" : getStoragePath(node);
 
-      const folderItems: StorageFolder[] = [];
-      const fileItems: StorageFile[] = [];
-
-      (data || []).forEach((item) => {
-        if (item.id === null || item.name === ".emptyFolderPlaceholder") {
-          if (item.name !== ".emptyFolderPlaceholder") {
-            folderItems.push({ name: item.name });
-          }
-        } else {
-          fileItems.push(item);
-        }
-      });
-
-      setFolders(folderItems);
-      setFiles(fileItems);
-      setSelectedFiles(new Set());
-    } catch (e: any) {
-      toast.error("Dosyalar yüklenemedi: " + e.message);
-    } finally {
-      setLoading(false);
+    const { data, error } = await supabase.storage.from(bucket).list(storagePath || "", {
+      limit: 500,
+      sortBy: { column: "name", order: "asc" },
+    });
+    if (error) {
+      toast.error("Dosyalar yüklenemedi: " + error.message);
+      return [];
     }
-  }, [currentBucket, currentPath]);
+
+    const children: TreeNode[] = [];
+    (data || []).forEach((item) => {
+      if (item.name === ".emptyFolderPlaceholder") return;
+      const childPath = node.path + "/" + item.name;
+      const isFolder = item.id === null;
+      children.push({
+        name: item.name,
+        path: childPath,
+        type: isFolder ? "folder" : "file",
+        children: isFolder ? [] : undefined,
+        loaded: false,
+        expanded: false,
+        metadata: item.metadata ? { size: item.metadata.size, mimetype: item.metadata.mimetype } : undefined,
+      });
+    });
+    return children;
+  }, []);
+
+  // Update tree node deeply
+  const updateNodeInTree = (nodes: TreeNode[], path: string, updater: (n: TreeNode) => TreeNode): TreeNode[] => {
+    return nodes.map((n) => {
+      if (n.path === path) return updater(n);
+      if (n.children && path.startsWith(n.path + "/")) {
+        return { ...n, children: updateNodeInTree(n.children, path, updater) };
+      }
+      return n;
+    });
+  };
+
+  // Toggle expand/collapse
+  const handleToggle = useCallback(async (node: TreeNode) => {
+    if (node.type === "file") return;
+
+    if (!node.loaded) {
+      const children = await loadChildren(node);
+      setTree((prev) =>
+        updateNodeInTree(prev, node.path, (n) => ({
+          ...n,
+          children,
+          loaded: true,
+          expanded: true,
+        }))
+      );
+    } else {
+      setTree((prev) =>
+        updateNodeInTree(prev, node.path, (n) => ({
+          ...n,
+          expanded: !n.expanded,
+        }))
+      );
+    }
+  }, [loadChildren]);
+
+  // Select a node → load content panel
+  const handleSelect = useCallback(async (node: TreeNode) => {
+    setSelectedNode(node);
+    setSelectedFiles(new Set());
+    setSearchQuery("");
+
+    if (node.type === "file") {
+      // For files, show parent's contents
+      return;
+    }
+
+    setContentLoading(true);
+    const children = node.loaded && node.children ? node.children : await loadChildren(node);
+    setContentItems(children);
+    setContentLoading(false);
+
+    // Also update tree
+    if (!node.loaded) {
+      setTree((prev) =>
+        updateNodeInTree(prev, node.path, (n) => ({
+          ...n,
+          children,
+          loaded: true,
+          expanded: true,
+        }))
+      );
+    }
+  }, [loadChildren]);
 
   useEffect(() => {
-    if (currentBucket === null) {
+    loadBuckets();
+  }, [loadBuckets]);
+
+  // Refresh current view
+  const refresh = async () => {
+    if (!selectedNode) {
       loadBuckets();
-    } else {
-      loadFiles();
+      return;
     }
-  }, [currentBucket, loadBuckets, loadFiles]);
-
-  const navigateToRoot = () => {
-    setCurrentBucket(null);
-    setCurrentPath("");
-    setSearchQuery("");
-    setFiles([]);
-    setFolders([]);
+    const children = await loadChildren(selectedNode);
+    setContentItems(children);
+    setTree((prev) =>
+      updateNodeInTree(prev, selectedNode.path, (n) => ({
+        ...n,
+        children,
+        loaded: true,
+      }))
+    );
   };
-
-  const enterBucket = (bucketId: string) => {
-    setCurrentBucket(bucketId);
-    setCurrentPath("");
-    setSearchQuery("");
-  };
-
-  const navigateTo = (path: string) => {
-    setCurrentPath(path);
-    setSearchQuery("");
-  };
-
-  const goUp = () => {
-    if (currentPath) {
-      const parts = currentPath.split("/");
-      parts.pop();
-      navigateTo(parts.join("/"));
-    } else {
-      navigateToRoot();
-    }
-  };
-
-  const breadcrumbs = currentPath ? currentPath.split("/") : [];
 
   // Upload
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!currentBucket) return;
+    if (!selectedNode || selectedNode.type === "file") return;
+    const bucket = getBucketFromNode(selectedNode);
+    if (!bucket) return;
     const fileList = e.target.files;
     if (!fileList?.length) return;
+
+    const storagePath = selectedNode.type === "bucket" ? "" : getStoragePath(selectedNode);
     setUploading(true);
-    let successCount = 0;
+    let ok = 0;
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
-      const path = fullPath(file.name);
-      const { error } = await supabase.storage.from(currentBucket).upload(path, file, { upsert: true });
-      if (error) {
-        toast.error(`${file.name}: ${error.message}`);
-      } else {
-        successCount++;
-      }
+      const path = storagePath ? `${storagePath}/${file.name}` : file.name;
+      const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true });
+      if (error) toast.error(`${file.name}: ${error.message}`);
+      else ok++;
     }
-    if (successCount > 0) toast.success(`${successCount} dosya yüklendi`);
+    if (ok > 0) toast.success(`${ok} dosya yüklendi`);
     setUploading(false);
-    loadFiles();
     e.target.value = "";
+    refresh();
   };
 
   // Create folder
   const handleCreateFolder = async () => {
-    if (!currentBucket || !newFolderName.trim()) return;
-    const path = fullPath(newFolderName.trim()) + "/.emptyFolderPlaceholder";
-    const { error } = await supabase.storage.from(currentBucket).upload(path, new Blob([""]), { upsert: true });
+    if (!selectedNode || !newFolderName.trim()) return;
+    const bucket = getBucketFromNode(selectedNode);
+    if (!bucket) return;
+    const storagePath = selectedNode.type === "bucket" ? "" : getStoragePath(selectedNode);
+    const folderPath = storagePath ? `${storagePath}/${newFolderName.trim()}/.emptyFolderPlaceholder` : `${newFolderName.trim()}/.emptyFolderPlaceholder`;
+
+    const { error } = await supabase.storage.from(bucket).upload(folderPath, new Blob([""]), { upsert: true });
     if (error) { toast.error(error.message); return; }
     toast.success("Klasör oluşturuldu");
     setNewFolderOpen(false);
     setNewFolderName("");
-    loadFiles();
+    refresh();
   };
 
-  // Delete
-  const handleDelete = async (names: string[]) => {
-    if (!currentBucket) return;
-    const paths = names.map((n) => fullPath(n));
-    const { error } = await supabase.storage.from(currentBucket).remove(paths);
-    if (error) { toast.error(error.message); return; }
-    toast.success(`${names.length} öğe silindi`);
-    loadFiles();
-  };
+  // Delete files
+  const handleDeleteFiles = async (nodes: TreeNode[]) => {
+    for (const node of nodes) {
+      const bucket = getBucketFromNode(node);
+      if (!bucket) continue;
+      const sp = getStoragePath(node);
 
-  const handleDeleteFolder = async (name: string) => {
-    if (!currentBucket) return;
-    const folderPath = fullPath(name);
-    const { data } = await supabase.storage.from(currentBucket).list(folderPath, { limit: 1000 });
-    if (data?.length) {
-      const paths = data.map((f) => `${folderPath}/${f.name}`);
-      await supabase.storage.from(currentBucket).remove(paths);
+      if (node.type === "folder") {
+        const { data } = await supabase.storage.from(bucket).list(sp, { limit: 1000 });
+        if (data?.length) {
+          const paths = data.map((f) => `${sp}/${f.name}`);
+          await supabase.storage.from(bucket).remove(paths);
+        }
+        await supabase.storage.from(bucket).remove([`${sp}/.emptyFolderPlaceholder`]);
+      } else {
+        await supabase.storage.from(bucket).remove([sp]);
+      }
     }
-    await supabase.storage.from(currentBucket).remove([`${folderPath}/.emptyFolderPlaceholder`]);
-    toast.success("Klasör silindi");
-    loadFiles();
+    toast.success(`${nodes.length} öğe silindi`);
+    setSelectedFiles(new Set());
+    refresh();
   };
 
   // Rename
   const handleRename = async () => {
-    if (!currentBucket || !renameName.trim() || renameName === renameTarget) { setRenameOpen(false); return; }
-    const oldPath = fullPath(renameTarget);
-    const newPath = fullPath(renameName.trim());
-    const { data: blob, error: dlErr } = await supabase.storage.from(currentBucket).download(oldPath);
+    if (!renameTarget || !renameName.trim() || renameName === renameTarget.name) { setRenameOpen(false); return; }
+    const bucket = getBucketFromNode(renameTarget);
+    if (!bucket) return;
+    const oldPath = getStoragePath(renameTarget);
+    const pathParts = oldPath.split("/");
+    pathParts[pathParts.length - 1] = renameName.trim();
+    const newPath = pathParts.join("/");
+
+    const { data: blob, error: dlErr } = await supabase.storage.from(bucket).download(oldPath);
     if (dlErr) { toast.error(dlErr.message); return; }
-    const { error: upErr } = await supabase.storage.from(currentBucket).upload(newPath, blob, { upsert: true });
+    const { error: upErr } = await supabase.storage.from(bucket).upload(newPath, blob, { upsert: true });
     if (upErr) { toast.error(upErr.message); return; }
-    await supabase.storage.from(currentBucket).remove([oldPath]);
+    await supabase.storage.from(bucket).remove([oldPath]);
     toast.success("Dosya yeniden adlandırıldı");
     setRenameOpen(false);
-    loadFiles();
+    refresh();
   };
 
   // Edit
-  const openEditor = async (name: string) => {
-    if (!currentBucket) return;
-    setEditTarget(name);
+  const openEditor = async (node: TreeNode) => {
+    const bucket = getBucketFromNode(node);
+    if (!bucket) return;
+    setEditTarget(node);
     setEditLoading(true);
     setEditOpen(true);
-    const path = fullPath(name);
-    const { data, error } = await supabase.storage.from(currentBucket).download(path);
+    const sp = getStoragePath(node);
+    const { data, error } = await supabase.storage.from(bucket).download(sp);
     if (error) { toast.error(error.message); setEditOpen(false); return; }
     const text = await data.text();
     setEditContent(text);
@@ -267,349 +416,314 @@ const FileManager = () => {
   };
 
   const saveEdit = async () => {
-    if (!currentBucket) return;
-    const path = fullPath(editTarget);
-    const { error } = await supabase.storage.from(currentBucket).upload(path, new Blob([editContent]), { upsert: true });
+    if (!editTarget) return;
+    const bucket = getBucketFromNode(editTarget);
+    if (!bucket) return;
+    const sp = getStoragePath(editTarget);
+    const { error } = await supabase.storage.from(bucket).upload(sp, new Blob([editContent]), { upsert: true });
     if (error) { toast.error(error.message); return; }
     toast.success("Dosya kaydedildi");
     setEditOpen(false);
   };
 
   // Preview
-  const openPreview = (name: string) => {
-    if (!currentBucket) return;
-    const path = fullPath(name);
-    const { data } = supabase.storage.from(currentBucket).getPublicUrl(path);
+  const openPreview = (node: TreeNode) => {
+    const bucket = getBucketFromNode(node);
+    if (!bucket) return;
+    const sp = getStoragePath(node);
+    const { data } = supabase.storage.from(bucket).getPublicUrl(sp);
     setPreviewUrl(data.publicUrl);
-    setPreviewName(name);
+    setPreviewName(node.name);
     setPreviewOpen(true);
   };
 
   // Download
-  const handleDownload = (name: string) => {
-    if (!currentBucket) return;
-    const path = fullPath(name);
-    const { data } = supabase.storage.from(currentBucket).getPublicUrl(path);
+  const handleDownload = (node: TreeNode) => {
+    const bucket = getBucketFromNode(node);
+    if (!bucket) return;
+    const sp = getStoragePath(node);
+    const { data } = supabase.storage.from(bucket).getPublicUrl(sp);
     const a = document.createElement("a");
     a.href = data.publicUrl;
-    a.download = name;
+    a.download = node.name;
     a.target = "_blank";
     a.click();
   };
 
   // Copy URL
-  const handleCopyUrl = (name: string) => {
-    if (!currentBucket) return;
-    const path = fullPath(name);
-    const { data } = supabase.storage.from(currentBucket).getPublicUrl(path);
+  const handleCopyUrl = (node: TreeNode) => {
+    const bucket = getBucketFromNode(node);
+    if (!bucket) return;
+    const sp = getStoragePath(node);
+    const { data } = supabase.storage.from(bucket).getPublicUrl(sp);
     navigator.clipboard.writeText(data.publicUrl);
     toast.success("URL kopyalandı");
   };
 
-  const toggleSelect = (name: string) => {
+  const toggleSelect = (path: string) => {
     setSelectedFiles((prev) => {
       const next = new Set(prev);
-      next.has(name) ? next.delete(name) : next.add(name);
+      next.has(path) ? next.delete(path) : next.add(path);
       return next;
     });
   };
 
-  const filteredFolders = folders.filter((f) => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
-  const filteredFiles = files.filter((f) => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
-  const filteredBuckets = buckets.filter((b) => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const currentBreadcrumbs = selectedNode ? selectedNode.path.split("/") : [];
+  const filteredContent = contentItems.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const isFolderSelected = selectedNode && selectedNode.type !== "file";
 
-  const refresh = () => {
-    if (currentBucket === null) loadBuckets();
-    else loadFiles();
+  const selectedContentNodes = contentItems.filter((c) => selectedFiles.has(c.path));
+
+  // Navigate content panel by double-clicking a folder
+  const enterContentFolder = (node: TreeNode) => {
+    handleToggle(node);
+    handleSelect(node);
   };
 
   return (
-    <Card className="flex flex-col h-full overflow-hidden border-border">
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2 p-3 border-b border-border bg-muted/30">
-        <Button variant="outline" size="sm" onClick={navigateToRoot} title="Ana dizin">
-          <Home className="h-4 w-4" />
-        </Button>
-        {(currentBucket !== null) && (
-          <Button variant="outline" size="sm" onClick={goUp}>
-            <ArrowLeft className="h-4 w-4" />
+    <Card className="flex h-full overflow-hidden border-border">
+      {/* ── Left: Tree Sidebar ── */}
+      <div className="w-56 lg:w-64 border-r border-border flex flex-col bg-muted/20 shrink-0">
+        <div className="flex items-center gap-1 p-2 border-b border-border">
+          <HardDrive className="h-3.5 w-3.5 text-primary" />
+          <span className="text-xs font-semibold text-foreground">Dosya Sistemi</span>
+          <Button variant="ghost" size="icon" className="h-6 w-6 ml-auto" onClick={loadBuckets} disabled={loading}>
+            <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} />
           </Button>
-        )}
-        <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
-          <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-        </Button>
-
-        {currentBucket !== null && (
-          <>
-            <div className="h-5 w-px bg-border" />
-            <label className="cursor-pointer">
-              <input type="file" multiple onChange={handleUpload} className="hidden" />
-              <Button variant="default" size="sm" disabled={uploading} asChild>
-                <span>
-                  <Upload className="h-4 w-4 mr-1" />
-                  {uploading ? "Yükleniyor..." : "Yükle"}
-                </span>
-              </Button>
-            </label>
-            <Button variant="outline" size="sm" onClick={() => setNewFolderOpen(true)}>
-              <FolderPlus className="h-4 w-4 mr-1" />
-              Yeni Klasör
-            </Button>
-            {selectedFiles.size > 0 && (
-              <Button variant="destructive" size="sm" onClick={() => handleDelete(Array.from(selectedFiles))}>
-                <Trash2 className="h-4 w-4 mr-1" />
-                Sil ({selectedFiles.size})
-              </Button>
-            )}
-          </>
-        )}
-
-        <div className="flex-1" />
-        <div className="relative w-48">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input
-            placeholder="Ara..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 pl-7 text-xs"
-          />
+        </div>
+        <div className="flex-1 overflow-y-auto py-1">
+          {tree.length === 0 && !loading && (
+            <p className="text-xs text-muted-foreground text-center py-4">Bucket bulunamadı</p>
+          )}
+          {tree.map((node) => (
+            <TreeItem
+              key={node.path}
+              node={node}
+              depth={0}
+              selectedPath={selectedNode?.path || ""}
+              onSelect={handleSelect}
+              onToggle={handleToggle}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Breadcrumbs */}
-      <div className="flex items-center gap-1 px-3 py-2 text-xs text-muted-foreground bg-muted/10 border-b border-border overflow-x-auto">
-        <button onClick={navigateToRoot} className="hover:text-foreground font-medium flex items-center gap-1">
-          <Database className="h-3 w-3" />
-          Storage
-        </button>
-        {currentBucket && (
-          <>
-            <ChevronRight className="h-3 w-3 shrink-0" />
-            <button
-              onClick={() => { setCurrentPath(""); }}
-              className="hover:text-foreground font-medium flex items-center gap-1"
+      {/* ── Right: Content Panel ── */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Toolbar */}
+        <div className="flex flex-wrap items-center gap-1.5 p-2 border-b border-border bg-muted/30">
+          {isFolderSelected && (
+            <>
+              <label className="cursor-pointer">
+                <input ref={fileInputRef} type="file" multiple onChange={handleUpload} className="hidden" />
+                <Button variant="default" size="sm" disabled={uploading} className="h-7 text-xs" asChild>
+                  <span>
+                    <Upload className="h-3.5 w-3.5 mr-1" />
+                    {uploading ? "Yükleniyor..." : "Yükle"}
+                  </span>
+                </Button>
+              </label>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => { setNewFolderOpen(true); setNewFolderName(""); }}>
+                <FolderPlus className="h-3.5 w-3.5 mr-1" />
+                Yeni Klasör
+              </Button>
+            </>
+          )}
+          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={refresh} disabled={loading || contentLoading}>
+            <RefreshCw className={cn("h-3.5 w-3.5", (loading || contentLoading) && "animate-spin")} />
+          </Button>
+          {selectedFiles.size > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => handleDeleteFiles(selectedContentNodes)}
             >
-              <HardDrive className="h-3 w-3" />
-              {currentBucket}
-            </button>
-          </>
-        )}
-        {breadcrumbs.map((part, i) => (
-          <span key={i} className="flex items-center gap-1">
-            <ChevronRight className="h-3 w-3 shrink-0" />
-            <button
-              onClick={() => navigateTo(breadcrumbs.slice(0, i + 1).join("/"))}
-              className="hover:text-foreground font-medium"
-            >
-              {part}
-            </button>
-          </span>
-        ))}
-      </div>
+              <Trash2 className="h-3.5 w-3.5 mr-1" />
+              Sil ({selectedFiles.size})
+            </Button>
+          )}
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        {loading ? (
-          <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
-            Yükleniyor...
+          <div className="flex-1" />
+          <div className="relative w-40">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+            <Input
+              placeholder="Ara..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-7 pl-7 text-xs"
+            />
           </div>
-        ) : currentBucket === null ? (
-          /* Bucket listing */
-          filteredBuckets.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-32 text-muted-foreground text-sm gap-2">
-              <HardDrive className="h-8 w-8 opacity-30" />
-              <p>Bucket bulunamadı</p>
+        </div>
+
+        {/* Breadcrumbs */}
+        <div className="flex items-center gap-1 px-3 py-1.5 text-[11px] text-muted-foreground border-b border-border overflow-x-auto bg-muted/10">
+          <button onClick={() => { setSelectedNode(null); setContentItems([]); }} className="hover:text-foreground font-medium">
+            /
+          </button>
+          {currentBreadcrumbs.map((part, i) => (
+            <span key={i} className="flex items-center gap-1">
+              <ChevronRight className="h-2.5 w-2.5 shrink-0" />
+              <span className={cn(
+                "font-medium",
+                i === currentBreadcrumbs.length - 1 ? "text-foreground" : "hover:text-foreground cursor-pointer"
+              )}>
+                {part}
+              </span>
+            </span>
+          ))}
+        </div>
+
+        {/* File List */}
+        <div className="flex-1 overflow-y-auto">
+          {!selectedNode ? (
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
+              <FolderOpen className="h-12 w-12 opacity-20" />
+              <p className="text-sm">Sol panelden bir klasör seçin</p>
             </div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-muted-foreground text-xs">
-                  <th className="w-8 p-2" />
-                  <th className="text-left p-2 font-medium">Bucket Adı</th>
-                  <th className="text-left p-2 font-medium w-24">Erişim</th>
-                  <th className="text-left p-2 font-medium w-40 hidden md:table-cell">Oluşturulma</th>
-                  <th className="w-10 p-2" />
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBuckets.map((bucket) => (
-                  <tr
-                    key={bucket.id}
-                    className="border-b border-border/50 hover:bg-accent/30 cursor-pointer group"
-                    onDoubleClick={() => enterBucket(bucket.id)}
-                  >
-                    <td className="p-2" />
-                    <td className="p-2">
-                      <button
-                        onClick={() => enterBucket(bucket.id)}
-                        className="flex items-center gap-2 text-foreground hover:text-primary"
-                      >
-                        <HardDrive className="h-4 w-4 text-primary shrink-0" />
-                        <span className="font-medium">{bucket.name}</span>
-                      </button>
-                    </td>
-                    <td className="p-2">
-                      <span className={cn(
-                        "text-xs px-2 py-0.5 rounded-full",
-                        bucket.public
-                          ? "bg-emerald-500/10 text-emerald-600"
-                          : "bg-orange-500/10 text-orange-600"
-                      )}>
-                        {bucket.public ? "Public" : "Private"}
-                      </span>
-                    </td>
-                    <td className="p-2 text-muted-foreground text-xs hidden md:table-cell">
-                      {bucket.created_at
-                        ? new Date(bucket.created_at).toLocaleString("tr-TR", {
-                            day: "2-digit", month: "2-digit", year: "numeric",
-                            hour: "2-digit", minute: "2-digit"
-                          })
-                        : "-"}
-                    </td>
-                    <td className="p-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 opacity-0 group-hover:opacity-100"
-                        onClick={() => enterBucket(bucket.id)}
-                      >
-                        <ChevronRight className="h-3.5 w-3.5" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )
-        ) : (
-          /* File/folder listing */
-          filteredFolders.length === 0 && filteredFiles.length === 0 ? (
+          ) : contentLoading ? (
+            <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
+              Yükleniyor...
+            </div>
+          ) : filteredContent.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-muted-foreground text-sm gap-2">
-              <Folder className="h-8 w-8 opacity-30" />
+              <File className="h-8 w-8 opacity-20" />
               <p>Bu klasör boş</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-border text-muted-foreground text-xs">
-                  <th className="w-8 p-2" />
-                  <th className="text-left p-2 font-medium">Ad</th>
-                  <th className="text-left p-2 font-medium w-24">Boyut</th>
-                  <th className="text-left p-2 font-medium w-40 hidden md:table-cell">Tarih</th>
-                  <th className="w-10 p-2" />
+                <tr className="border-b border-border text-muted-foreground sticky top-0 bg-background z-10">
+                  <th className="w-8 p-1.5">
+                    <input
+                      type="checkbox"
+                      checked={selectedFiles.size === filteredContent.filter(f => f.type === "file").length && selectedFiles.size > 0}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedFiles(new Set(filteredContent.filter(f => f.type === "file").map(f => f.path)));
+                        } else {
+                          setSelectedFiles(new Set());
+                        }
+                      }}
+                      className="rounded"
+                    />
+                  </th>
+                  <th className="text-left p-1.5 font-medium">Ad</th>
+                  <th className="text-left p-1.5 font-medium w-20 hidden sm:table-cell">Boyut</th>
+                  <th className="text-left p-1.5 font-medium w-28 hidden md:table-cell">Tür</th>
+                  <th className="w-10 p-1.5" />
                 </tr>
               </thead>
               <tbody>
-                {filteredFolders.map((folder) => (
+                {/* Folders first */}
+                {filteredContent.filter(c => c.type === "folder").map((item) => (
                   <tr
-                    key={"d-" + folder.name}
-                    className="border-b border-border/50 hover:bg-accent/30 cursor-pointer group"
-                    onDoubleClick={() => navigateTo(fullPath(folder.name))}
+                    key={item.path}
+                    className="border-b border-border/30 hover:bg-accent/30 group cursor-pointer"
+                    onDoubleClick={() => enterContentFolder(item)}
                   >
-                    <td className="p-2" />
-                    <td className="p-2">
+                    <td className="p-1.5" />
+                    <td className="p-1.5">
                       <button
-                        onClick={() => navigateTo(fullPath(folder.name))}
+                        onClick={() => enterContentFolder(item)}
                         className="flex items-center gap-2 text-foreground hover:text-primary"
                       >
-                        <Folder className="h-4 w-4 text-amber-500" />
-                        <span className="font-medium">{folder.name}</span>
+                        <Folder className="h-4 w-4 text-amber-500 shrink-0" />
+                        <span className="font-medium">{item.name}</span>
                       </button>
                     </td>
-                    <td className="p-2 text-muted-foreground">-</td>
-                    <td className="p-2 text-muted-foreground hidden md:table-cell">-</td>
-                    <td className="p-2">
+                    <td className="p-1.5 text-muted-foreground hidden sm:table-cell">-</td>
+                    <td className="p-1.5 text-muted-foreground hidden md:table-cell">Klasör</td>
+                    <td className="p-1.5">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
+                          <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">
                             <MoreVertical className="h-3.5 w-3.5" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => navigateTo(fullPath(folder.name))}>
-                            <Folder className="h-4 w-4 mr-2" /> Aç
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteFolder(folder.name)}>
-                            <Trash2 className="h-4 w-4 mr-2" /> Sil
+                        <DropdownMenuContent align="end" className="text-xs">
+                          <DropdownMenuItem onClick={() => handleDeleteFiles([item])}>
+                            <Trash2 className="h-3.5 w-3.5 mr-2 text-destructive" />
+                            Sil
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
                   </tr>
                 ))}
-                {filteredFiles.map((file) => {
-                  const Icon = getFileIcon(file.name);
-                  const selected = selectedFiles.has(file.name);
+                {/* Then files */}
+                {filteredContent.filter(c => c.type === "file").map((item) => {
+                  const Icon = getFileIcon(item.name);
                   return (
                     <tr
-                      key={"f-" + file.name}
+                      key={item.path}
                       className={cn(
-                        "border-b border-border/50 hover:bg-accent/30 group",
-                        selected && "bg-primary/5"
+                        "border-b border-border/30 hover:bg-accent/30 group",
+                        selectedFiles.has(item.path) && "bg-accent/20"
                       )}
                     >
-                      <td className="p-2 text-center">
-                        <button onClick={() => toggleSelect(file.name)}>
-                          <div className={cn(
-                            "h-4 w-4 rounded border flex items-center justify-center transition-colors",
-                            selected ? "bg-primary border-primary" : "border-muted-foreground/30"
-                          )}>
-                            {selected && <Check className="h-3 w-3 text-primary-foreground" />}
-                          </div>
-                        </button>
+                      <td className="p-1.5">
+                        <input
+                          type="checkbox"
+                          checked={selectedFiles.has(item.path)}
+                          onChange={() => toggleSelect(item.path)}
+                          className="rounded"
+                        />
                       </td>
-                      <td className="p-2">
+                      <td className="p-1.5">
                         <div className="flex items-center gap-2">
                           <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
-                          <span className="truncate">{file.name}</span>
+                          <span className="truncate">{item.name}</span>
                         </div>
                       </td>
-                      <td className="p-2 text-muted-foreground text-xs">
-                        {formatSize(file.metadata?.size)}
+                      <td className="p-1.5 text-muted-foreground hidden sm:table-cell">
+                        {formatSize(item.metadata?.size)}
                       </td>
-                      <td className="p-2 text-muted-foreground text-xs hidden md:table-cell">
-                        {file.created_at
-                          ? new Date(file.created_at).toLocaleString("tr-TR", {
-                              day: "2-digit", month: "2-digit", year: "numeric",
-                              hour: "2-digit", minute: "2-digit"
-                            })
-                          : "-"}
+                      <td className="p-1.5 text-muted-foreground hidden md:table-cell">
+                        {item.metadata?.mimetype || item.name.split(".").pop()?.toUpperCase() || "-"}
                       </td>
-                      <td className="p-2">
+                      <td className="p-1.5">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
+                            <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">
                               <MoreVertical className="h-3.5 w-3.5" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {isPreviewable(file.name) && (
-                              <DropdownMenuItem onClick={() => openPreview(file.name)}>
-                                <Eye className="h-4 w-4 mr-2" /> Önizle
+                          <DropdownMenuContent align="end" className="text-xs">
+                            {isPreviewable(item.name) && (
+                              <DropdownMenuItem onClick={() => openPreview(item)}>
+                                <Eye className="h-3.5 w-3.5 mr-2" />
+                                Önizle
                               </DropdownMenuItem>
                             )}
-                            {isEditable(file.name) && (
-                              <DropdownMenuItem onClick={() => openEditor(file.name)}>
-                                <FileCode className="h-4 w-4 mr-2" /> Düzenle
+                            {isEditable(item.name) && (
+                              <DropdownMenuItem onClick={() => openEditor(item)}>
+                                <Edit3 className="h-3.5 w-3.5 mr-2" />
+                                Düzenle
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem onClick={() => handleDownload(file.name)}>
-                              <Download className="h-4 w-4 mr-2" /> İndir
+                            <DropdownMenuItem onClick={() => handleDownload(item)}>
+                              <Download className="h-3.5 w-3.5 mr-2" />
+                              İndir
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleCopyUrl(file.name)}>
-                              <Copy className="h-4 w-4 mr-2" /> URL Kopyala
+                            <DropdownMenuItem onClick={() => handleCopyUrl(item)}>
+                              <Copy className="h-3.5 w-3.5 mr-2" />
+                              URL Kopyala
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => {
-                              setRenameTarget(file.name);
-                              setRenameName(file.name);
+                              setRenameTarget(item);
+                              setRenameName(item.name);
                               setRenameOpen(true);
                             }}>
-                              <Edit3 className="h-4 w-4 mr-2" /> Yeniden Adlandır
+                              <Edit3 className="h-3.5 w-3.5 mr-2" />
+                              Yeniden Adlandır
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete([file.name])}>
-                              <Trash2 className="h-4 w-4 mr-2" /> Sil
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleDeleteFiles([item])} className="text-destructive">
+                              <Trash2 className="h-3.5 w-3.5 mr-2" />
+                              Sil
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -619,89 +733,100 @@ const FileManager = () => {
                 })}
               </tbody>
             </table>
-          )
-        )}
+          )}
+        </div>
+
+        {/* Status bar */}
+        <div className="flex items-center justify-between px-3 py-1 text-[10px] text-muted-foreground border-t border-border bg-muted/10">
+          <span>
+            {filteredContent.filter(c => c.type === "folder").length} klasör, {filteredContent.filter(c => c.type === "file").length} dosya
+          </span>
+          {selectedNode && (
+            <span className="truncate ml-2">
+              /{selectedNode.path}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Status bar */}
-      <div className="flex items-center justify-between px-3 py-1.5 text-[11px] text-muted-foreground border-t border-border bg-muted/20">
-        {currentBucket === null ? (
-          <span>{buckets.length} bucket</span>
-        ) : (
-          <span>{folders.length} klasör, {files.length} dosya</span>
-        )}
-        <span>
-          {currentBucket === null
-            ? "/ Storage"
-            : `/${currentBucket}${currentPath ? "/" + currentPath : ""}`}
-        </span>
-      </div>
+      {/* ── Dialogs ── */}
 
-      {/* New Folder Dialog */}
+      {/* New Folder */}
       <Dialog open={newFolderOpen} onOpenChange={setNewFolderOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Yeni Klasör</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Yeni Klasör</DialogTitle>
+          </DialogHeader>
           <Input
-            placeholder="Klasör adı"
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
+            placeholder="Klasör adı"
+            className="text-sm"
             onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setNewFolderOpen(false)}>İptal</Button>
-            <Button onClick={handleCreateFolder}>Oluştur</Button>
+            <Button variant="outline" size="sm" onClick={() => setNewFolderOpen(false)}>İptal</Button>
+            <Button size="sm" onClick={handleCreateFolder} disabled={!newFolderName.trim()}>Oluştur</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Rename Dialog */}
+      {/* Rename */}
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Yeniden Adlandır</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Yeniden Adlandır</DialogTitle>
+          </DialogHeader>
           <Input
             value={renameName}
             onChange={(e) => setRenameName(e.target.value)}
+            className="text-sm"
             onKeyDown={(e) => e.key === "Enter" && handleRename()}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRenameOpen(false)}>İptal</Button>
-            <Button onClick={handleRename}>Kaydet</Button>
+            <Button variant="outline" size="sm" onClick={() => setRenameOpen(false)}>İptal</Button>
+            <Button size="sm" onClick={handleRename}>Kaydet</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit File Dialog */}
+      {/* Editor */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-3xl max-h-[80vh] flex flex-col">
+        <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="text-sm flex items-center gap-2">
               <FileCode className="h-4 w-4" />
-              {editTarget}
+              {editTarget?.name}
             </DialogTitle>
           </DialogHeader>
           {editLoading ? (
-            <div className="flex items-center justify-center py-12 text-muted-foreground">Yükleniyor...</div>
+            <div className="flex-1 flex items-center justify-center text-muted-foreground">Yükleniyor...</div>
           ) : (
             <Textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="flex-1 min-h-[300px] font-mono text-xs resize-none"
+              className="flex-1 font-mono text-xs resize-none"
             />
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>İptal</Button>
-            <Button onClick={saveEdit} disabled={editLoading}>Kaydet</Button>
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(false)}>İptal</Button>
+            <Button size="sm" onClick={saveEdit} disabled={editLoading}>
+              <Save className="h-3.5 w-3.5 mr-1" />
+              Kaydet
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Preview Dialog */}
+      {/* Preview */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="sm:max-w-3xl max-h-[80vh]">
-          <DialogHeader><DialogTitle>{previewName}</DialogTitle></DialogHeader>
-          <div className="flex items-center justify-center">
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-sm">{previewName}</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center max-h-[70vh] overflow-auto">
             {previewName.toLowerCase().endsWith(".pdf") ? (
-              <iframe src={previewUrl} className="w-full h-[60vh] rounded" />
+              <iframe src={previewUrl} className="w-full h-[60vh]" />
             ) : (
               <img src={previewUrl} alt={previewName} className="max-w-full max-h-[60vh] object-contain rounded" />
             )}
