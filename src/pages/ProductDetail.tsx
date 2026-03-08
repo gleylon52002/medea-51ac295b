@@ -159,7 +159,7 @@ const ProductDetail = () => {
       <SEOHead
         title={product.meta_title || product.name}
         description={product.meta_description || product.short_description || product.description?.slice(0, 160) || ""}
-        canonical={`https://medea.lovable.app/urun/${product.slug}`}
+        canonical={`https://medea.tr/urun/${product.slug}`}
         ogImage={product.images?.[0]}
         ogType="product"
         keywords={(product as any).keywords || []}

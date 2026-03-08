@@ -23,6 +23,7 @@ interface SEOSettings {
 const AdminSEO = () => {
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState<string | null>(null);
+  const [isAutoGenerating, setIsAutoGenerating] = useState<string | null>(null);
   const { data: products } = useProducts();
   const { data: categories } = useCategories();
 
@@ -189,6 +190,33 @@ Allow: /`;
     toast.success(`${filename} indirildi`);
   };
 
+  const autoGenerateFile = async (content: string, filename: string) => {
+    const key = filename.includes("sitemap") ? "sitemap" : "robots";
+    setIsAutoGenerating(key);
+    try {
+      const blob = new Blob([content], { type: filename.endsWith('.xml') ? 'text/xml' : 'text/plain' });
+      const file = new File([blob], filename, { type: blob.type });
+      
+      const { error } = await supabase.storage
+        .from("site-assets")
+        .upload(filename, file, { upsert: true });
+
+      if (error) throw error;
+
+      const { data: publicUrl } = supabase.storage
+        .from("site-assets")
+        .getPublicUrl(filename);
+
+      toast.success(`${filename} başarıyla oluşturuldu ve yayınlandı!`, {
+        description: `URL: ${publicUrl.publicUrl}`,
+      });
+    } catch (e: any) {
+      toast.error(`${filename} oluşturulamadı: ${e.message}`);
+    } finally {
+      setIsAutoGenerating(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-6 lg:p-8 flex justify-center">
@@ -324,11 +352,19 @@ Allow: /`;
                   <Download className="h-4 w-4 mr-2" />
                   İndir
                 </Button>
+                <Button 
+                  variant="default"
+                  onClick={() => autoGenerateFile(sitemap, "sitemap.xml")}
+                  disabled={isAutoGenerating === "sitemap"}
+                >
+                  {isAutoGenerating === "sitemap" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Globe className="h-4 w-4 mr-2" />}
+                  Otomatik Oluştur
+                </Button>
               </div>
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <p className="text-sm text-yellow-800">
-                  <strong>Not:</strong> Bu dosyayı <code>/public/sitemap.xml</code> olarak kaydedin veya 
-                  sunucunuzda dinamik olarak oluşturun. Google Search Console'a sitemap URL'ini bildirin.
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-sm text-green-800">
+                  <strong>Otomatik Oluştur:</strong> Butona tıkladığınızda <code>sitemap.xml</code> dosyası 
+                  ana dizinde otomatik olarak oluşturulur ve güncel ürün/kategori bilgileriyle güncellenir.
                 </p>
               </div>
             </CardContent>
@@ -354,11 +390,19 @@ Allow: /`;
                   <Download className="h-4 w-4 mr-2" />
                   İndir
                 </Button>
+                <Button 
+                  variant="default"
+                  onClick={() => autoGenerateFile(robotsTxt, "robots.txt")}
+                  disabled={isAutoGenerating === "robots"}
+                >
+                  {isAutoGenerating === "robots" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+                  Otomatik Oluştur
+                </Button>
               </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
-                  <strong>Mevcut robots.txt:</strong> Projenizde zaten bir robots.txt dosyası var. 
-                  Yukarıdaki içeriği kullanarak güncelleyebilirsiniz.
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-sm text-green-800">
+                  <strong>Otomatik Oluştur:</strong> Butona tıkladığınızda <code>robots.txt</code> dosyası 
+                  ana dizinde otomatik olarak oluşturulur ve güncellenir.
                 </p>
               </div>
             </CardContent>

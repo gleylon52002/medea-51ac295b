@@ -24,7 +24,7 @@ const AdminDashboard = () => {
       const lowStockProducts = productsRes.data?.filter(p => p.stock <= 5).length || 0;
       const totalOrders = ordersRes.count || 0;
       const pendingOrders = ordersRes.data?.filter(o => o.status === "pending").length || 0;
-      const totalRevenue = ordersRes.data?.reduce((sum, o) => sum + (Number(o.total) || 0), 0) || 0;
+      const totalRevenue = ordersRes.data?.filter(o => o.status === "delivered").reduce((sum, o) => sum + (Number(o.total) || 0), 0) || 0;
       const totalUsers = usersRes.count || 0;
 
       return {
@@ -142,7 +142,7 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{formatPrice(stats?.totalRevenue || 0)}</div>
-            <p className="text-sm text-muted-foreground mt-1">Tüm zamanlar</p>
+            <p className="text-sm text-muted-foreground mt-1">Teslim edilen siparişler</p>
           </CardContent>
         </Card>
       </div>

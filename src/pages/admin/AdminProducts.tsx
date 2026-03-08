@@ -36,6 +36,7 @@ import ImageUpload from "@/components/admin/ImageUpload";
 import ProductVariantsManager from "@/components/admin/ProductVariantsManager";
 import RelatedProductsManager from "@/components/admin/RelatedProductsManager";
 import InstagramShareButton from "@/components/admin/InstagramShareButton";
+import AIFillButton from "@/components/admin/AIFillButton";
 type Product = Database["public"]["Tables"]["products"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 
@@ -414,8 +415,16 @@ const AdminProducts = () => {
                     />
                   </div>
                   
-                  <div className="col-span-2">
-                    <Label htmlFor="short_description">Kısa Açıklama</Label>
+                   <div className="col-span-2">
+                    <div className="flex items-center gap-1">
+                      <Label htmlFor="short_description">Kısa Açıklama</Label>
+                      <AIFillButton
+                        field="short_description"
+                        context={`Ürün Adı: ${formData.name}`}
+                        onResult={(val) => setFormData({ ...formData, short_description: val })}
+                        disabled={!formData.name}
+                      />
+                    </div>
                     <Input
                       id="short_description"
                       value={formData.short_description}
@@ -425,7 +434,15 @@ const AdminProducts = () => {
                   </div>
 
                   <div className="col-span-2">
-                    <Label htmlFor="description">Açıklama</Label>
+                    <div className="flex items-center gap-1">
+                      <Label htmlFor="description">Açıklama</Label>
+                      <AIFillButton
+                        field="description"
+                        context={`Ürün Adı: ${formData.name}\nKısa Açıklama: ${formData.short_description}`}
+                        onResult={(val) => setFormData({ ...formData, description: val })}
+                        disabled={!formData.name}
+                      />
+                    </div>
                     <Textarea
                       id="description"
                       rows={4}
@@ -554,7 +571,15 @@ const AdminProducts = () => {
 
               <TabsContent value="details" className="space-y-4">
                 <div>
-                  <Label htmlFor="ingredients">İçerikler</Label>
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="ingredients">İçerikler</Label>
+                    <AIFillButton
+                      field="ingredients"
+                      context={`Ürün Adı: ${formData.name}\nKısa Açıklama: ${formData.short_description}\nKategori: ${categories?.find(c => c.id === formData.category_id)?.name || ''}`}
+                      onResult={(val) => setFormData({ ...formData, ingredients: val })}
+                      disabled={!formData.name}
+                    />
+                  </div>
                   <Textarea
                     id="ingredients"
                     rows={4}
@@ -565,7 +590,15 @@ const AdminProducts = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="usage_instructions">Kullanım Talimatı</Label>
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="usage_instructions">Kullanım Talimatı</Label>
+                    <AIFillButton
+                      field="usage_instructions"
+                      context={`Ürün Adı: ${formData.name}\nKısa Açıklama: ${formData.short_description}\nİçerikler: ${formData.ingredients}`}
+                      onResult={(val) => setFormData({ ...formData, usage_instructions: val })}
+                      disabled={!formData.name}
+                    />
+                  </div>
                   <Textarea
                     id="usage_instructions"
                     rows={4}
@@ -578,7 +611,15 @@ const AdminProducts = () => {
 
               <TabsContent value="seo" className="space-y-4">
                 <div>
-                  <Label htmlFor="keywords">Anahtar Kelimeler</Label>
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="keywords">Anahtar Kelimeler</Label>
+                    <AIFillButton
+                      field="keywords"
+                      context={`Ürün Adı: ${formData.name}\nKısa Açıklama: ${formData.short_description}\nKategori: ${categories?.find(c => c.id === formData.category_id)?.name || ''}`}
+                      onResult={(val) => setFormData({ ...formData, keywords: val })}
+                      disabled={!formData.name}
+                    />
+                  </div>
                   <Input
                     id="keywords"
                     value={formData.keywords}
@@ -591,7 +632,15 @@ const AdminProducts = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="meta_title">SEO Başlık</Label>
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="meta_title">SEO Başlık</Label>
+                    <AIFillButton
+                      field="meta_title"
+                      context={`Ürün Adı: ${formData.name}\nKısa Açıklama: ${formData.short_description}`}
+                      onResult={(val) => setFormData({ ...formData, meta_title: val })}
+                      disabled={!formData.name}
+                    />
+                  </div>
                   <Input
                     id="meta_title"
                     value={formData.meta_title}
@@ -604,7 +653,15 @@ const AdminProducts = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="meta_description">SEO Açıklama</Label>
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="meta_description">SEO Açıklama</Label>
+                    <AIFillButton
+                      field="meta_description"
+                      context={`Ürün Adı: ${formData.name}\nKısa Açıklama: ${formData.short_description}\nAnahtar Kelimeler: ${formData.keywords}`}
+                      onResult={(val) => setFormData({ ...formData, meta_description: val })}
+                      disabled={!formData.name}
+                    />
+                  </div>
                   <Textarea
                     id="meta_description"
                     rows={3}
@@ -623,7 +680,7 @@ const AdminProducts = () => {
                     {formData.meta_title || formData.name || "Ürün Başlığı"}
                   </div>
                   <div className="text-green-700 text-sm">
-                    medea.lovable.app/urun/{generateSlug(formData.name) || "urun-slug"}
+                    medea.tr/urun/{generateSlug(formData.name) || "urun-slug"}
                   </div>
                   <div className="text-sm text-muted-foreground line-clamp-2">
                     {formData.meta_description || formData.short_description || "Ürün açıklaması..."}
