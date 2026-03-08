@@ -935,6 +935,7 @@ const Checkout = () => {
                     <span>Kişiye Özel İndirim</span>
                     <span>-{formatPrice(personalDiscountTotal)}</span>
                   </div>
+                )}
                 {useWalletBalance && walletAmount > 0 && (
                   <div className="flex justify-between text-primary font-medium">
                     <span>Cüzdan Kullanımı</span>
