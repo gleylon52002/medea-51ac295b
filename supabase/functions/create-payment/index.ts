@@ -125,7 +125,7 @@ serve(async (req) => {
     let paymentData: Record<string, string | number> = {};
     const callbackUrl = `${supabaseUrl}/functions/v1/payment-callback/${effectiveProvider}`;
 
-    switch (provider) {
+    switch (effectiveProvider) {
       case "shopier": {
         const shopierApiKey = providerConfig.api_key;
         const shopierSecret = providerConfig.secret;
