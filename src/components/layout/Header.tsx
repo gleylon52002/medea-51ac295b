@@ -83,6 +83,7 @@ const Header = () => {
 
           {/* Right side icons */}
           <div className="flex items-center gap-1 sm:gap-2">
+            <LanguageSwitcher />
             <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
               <Search className="h-5 w-5" />
             </Button>
