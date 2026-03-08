@@ -414,17 +414,17 @@ const ProductDetail = () => {
           </TabsList>
           <TabsContent value="description" className="pt-6">
             <p className="text-muted-foreground leading-relaxed max-w-3xl">
-              {product.description}
+              {pt.description}
             </p>
           </TabsContent>
           <TabsContent value="ingredients" className="pt-6">
             <p className="text-muted-foreground leading-relaxed max-w-3xl">
-              {product.ingredients || "İçerik bilgisi yakında eklenecek."}
+              {pt.ingredients || "İçerik bilgisi yakında eklenecek."}
             </p>
           </TabsContent>
           <TabsContent value="usage" className="pt-6">
             <p className="text-muted-foreground leading-relaxed max-w-3xl">
-              {product.usage_instructions || "Kullanım talimatı yakında eklenecek."}
+              {pt.usage || "Kullanım talimatı yakında eklenecek."}
             </p>
           </TabsContent>
           <TabsContent value="reviews" className="pt-6">
