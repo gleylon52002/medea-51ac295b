@@ -191,6 +191,33 @@ const Products = () => {
         </div>
       </div>
 
+      {/* Tag Filters */}
+      {uniqueTags.length > 0 && (
+        <div>
+          <h4 className="font-medium mb-3">Özellikler</h4>
+          <div className="space-y-2">
+            {uniqueTags.slice(0, 15).map((tag) => (
+              <div key={tag} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`tag-${tag}`}
+                  checked={selectedTags.includes(tag)}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedTags([...selectedTags, tag]);
+                    } else {
+                      setSelectedTags(selectedTags.filter(t => t !== tag));
+                    }
+                  }}
+                />
+                <Label htmlFor={`tag-${tag}`} className="cursor-pointer text-sm">
+                  {tag}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {activeFiltersCount > 0 && (
         <Button variant="outline" onClick={clearAllFilters} className="w-full">
           <X className="h-4 w-4 mr-2" />
