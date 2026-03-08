@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
+import { useAllProductTags } from "@/hooks/useProductTags";
 
 const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
