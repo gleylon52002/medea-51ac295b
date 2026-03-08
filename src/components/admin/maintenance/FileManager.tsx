@@ -366,10 +366,10 @@ const FileManager = () => {
   const checkedStorageItems = contentItems.filter((c) => selectedFiles.has(c.path) && c.source === "storage");
   const hasSelection = selectedFiles.size > 0;
 
-  // Effective selection: checkbox items take priority, fallback to highlighted item
-  const effectiveItems: TreeNode[] = checkedStorageItems.length > 0
-    ? checkedStorageItems
-    : (highlightedItem?.source === "storage" ? [highlightedItem] : []);
+  // Effective selection: row click (highlight) has priority, then checkbox selection
+  const effectiveItems: TreeNode[] = highlightedItem
+    ? [highlightedItem]
+    : checkedStorageItems;
 
   const effectiveFiles = effectiveItems.filter((i) => i.type === "file");
   const hasEffective = effectiveItems.length > 0;
@@ -704,8 +704,7 @@ const FileManager = () => {
                         highlightedItem?.path === item.path && !isChecked && "bg-accent/60"
                       )}
                       onClick={() => {
-                        if (isStorageItem) setHighlightedItem(item);
-                        else setHighlightedItem(null);
+                        setHighlightedItem(item);
                       }}
                       onDoubleClick={() => {
                         if (item.type !== "file") { handleToggle(item); handleSelect(item); }
