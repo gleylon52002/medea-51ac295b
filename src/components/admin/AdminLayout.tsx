@@ -261,6 +261,9 @@ const AdminLayout = () => {
       <main className="flex-1 lg:ml-64 pt-14 lg:pt-0 overflow-auto min-h-screen">
         <Outlet />
       </main>
+
+      {/* AI Assistant */}
+      <AdminAIAssistant />
     </div>
   );
 };
