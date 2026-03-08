@@ -210,7 +210,7 @@ serve(async (req) => {
     // Record initial transaction
     await supabase.from("payment_transactions").insert({
       order_id: orderId,
-      payment_method: provider,
+      payment_method: effectiveProvider,
       amount,
       status: "pending",
     });
