@@ -209,7 +209,6 @@ const FileManager = () => {
     return node.path.split("/")[1] || null;
   };
   const getStoragePath = (node: TreeNode): string => node.type === "bucket" ? "" : node.path.split("/").slice(2).join("/");
-  const getProjectDisplayPath = (node: TreeNode) => node.path.replace(`${PROJECT_ROOT_PATH}/`, "");
 
   // ── Load buckets ────
   const loadBuckets = useCallback(async () => {
