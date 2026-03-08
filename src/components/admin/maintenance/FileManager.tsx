@@ -363,15 +363,19 @@ const FileManager = () => {
 
   const isStorage = selectedNode?.source === "storage";
   const isStorageFolder = !!selectedNode && isStorage && selectedNode.type !== "file";
-  const selectedStorageItems = contentItems.filter((c) => selectedFiles.has(c.path) && c.source === "storage");
+  const checkedStorageItems = contentItems.filter((c) => selectedFiles.has(c.path) && c.source === "storage");
   const hasSelection = selectedFiles.size > 0;
 
-  // Resolve the "active" file for edit/view: checkbox selection takes priority, then highlighted item
-  const activeFile = selectedStorageItems.length === 1 && selectedStorageItems[0].type === "file"
-    ? selectedStorageItems[0]
-    : highlightedItem?.source === "storage" && highlightedItem?.type === "file"
-      ? highlightedItem
-      : null;
+  // Effective selection: checkbox items take priority, fallback to highlighted item
+  const effectiveItems: TreeNode[] = checkedStorageItems.length > 0
+    ? checkedStorageItems
+    : (highlightedItem?.source === "storage" ? [highlightedItem] : []);
+
+  const effectiveFiles = effectiveItems.filter((i) => i.type === "file");
+  const hasEffective = effectiveItems.length > 0;
+
+  // Resolve the "active" file for edit/view
+  const activeFile = effectiveFiles.length === 1 ? effectiveFiles[0] : null;
 
   // ═══════════ OPERATIONS ═══════════
 
