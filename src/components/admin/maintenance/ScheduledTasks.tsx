@@ -243,7 +243,7 @@ const ScheduledTasks = ({ onRunTask }: { onRunTask: (task: Task) => void }) => {
                     )}
                     {task.last_run_at && (
                       <span className="flex items-center gap-1">
-                        <CheckCircle className="h-3 w-3 text-green-500" />
+                        <CheckCircle className="h-3 w-3 text-primary" />
                         {task.run_count}x
                       </span>
                     )}
