@@ -488,7 +488,6 @@ const FileManager = () => {
 
   // Edit
   const openEditor = async (node: TreeNode) => {
-    if (node.source !== "storage") { toast.info("Web dosyaları salt okunurdur"); return; }
     const bucket = getStorageBucket(node);
     if (!bucket) return;
     setEditTarget(node); setEditLoading(true); setEditOpen(true);
