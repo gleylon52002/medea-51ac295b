@@ -84,6 +84,9 @@ const AdminCohort = lazy(() => import("./pages/admin/AdminCohort"));
 const AdminSpinWheel = lazy(() => import("./pages/admin/AdminSpinWheel"));
 const AdminRSS = lazy(() => import("./pages/admin/AdminRSS"));
 const AdminMaintenance = lazy(() => import("./pages/admin/AdminMaintenance"));
+const AdminSegments = lazy(() => import("./pages/admin/AdminSegments"));
+const AdminEmailAutomation = lazy(() => import("./pages/admin/AdminEmailAutomation"));
+const AdminCampaignCalendar = lazy(() => import("./pages/admin/AdminCampaignCalendar"));
 
 // Seller Pages (lazy)
 const SellerGuard = lazy(() => import("./components/seller/SellerGuard"));
@@ -235,6 +238,9 @@ const App = () => (
                   <Route path="cark" element={<AdminSpinWheel />} />
                   <Route path="rss" element={<AdminRSS />} />
                   <Route path="bakim" element={<AdminMaintenance />} />
+                  <Route path="segmentler" element={<AdminSegments />} />
+                  <Route path="email-otomasyon" element={<AdminEmailAutomation />} />
+                  <Route path="kampanya-takvimi" element={<AdminCampaignCalendar />} />
                 </Route>
 
                 {/* Seller Routes */}

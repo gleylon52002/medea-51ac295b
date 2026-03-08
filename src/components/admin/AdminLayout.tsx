@@ -38,6 +38,9 @@ import {
   CircleDot,
   ChevronDown,
   Wrench,
+  Target,
+  Zap,
+  Calendar,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -85,7 +88,10 @@ const menuGroups: MenuGroup[] = [
     title: "Pazarlama",
     items: [
       { icon: Percent, label: "Kampanyalar", path: "/admin/kampanyalar" },
+      { icon: Calendar, label: "Kampanya Takvimi", path: "/admin/kampanya-takvimi" },
       { icon: Tag, label: "Kuponlar", path: "/admin/kuponlar" },
+      { icon: Target, label: "Müşteri Segmentleri", path: "/admin/segmentler" },
+      { icon: Zap, label: "E-posta Otomasyonu", path: "/admin/email-otomasyon" },
       { icon: Newspaper, label: "Bülten Aboneleri", path: "/admin/bulten" },
       { icon: Bell, label: "Push Bildirimler", path: "/admin/push-bildirimler" },
       { icon: Smartphone, label: "SMS Yönetimi", path: "/admin/sms" },

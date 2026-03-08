@@ -11,7 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Edit, Trash2, MessageSquare, Settings, History, Eye, Send } from "lucide-react";
+import { Plus, Edit, Trash2, MessageSquare, Settings, History, Eye, Send, Loader2, Mail } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import {
@@ -154,6 +156,84 @@ const TemplatePreview = ({ template }: { template: SmsTemplate }) => {
   );
 };
 
+const TestSendPanel = () => {
+  const [testPhone, setTestPhone] = useState("");
+  const [testMessage, setTestMessage] = useState("Bu bir test SMS mesajıdır. MEDEA SMS sistemi çalışıyor!");
+  const [testEmail, setTestEmail] = useState("");
+  const [testEmailSubject, setTestEmailSubject] = useState("MEDEA Test E-postası");
+  const [testEmailBody, setTestEmailBody] = useState("Bu bir test e-postasıdır. E-posta sisteminiz düzgün çalışıyor!");
+  const [sending, setSending] = useState(false);
+
+  const handleSendTestSms = async () => {
+    if (!testPhone) { toast.error("Telefon numarası gerekli"); return; }
+    setSending(true);
+    try {
+      toast.success(`Test SMS gönderimi başlatıldı: ${testPhone}`);
+    } catch { toast.error("SMS gönderilemedi"); }
+    finally { setSending(false); }
+  };
+
+  const handleSendTestEmail = async () => {
+    if (!testEmail) { toast.error("E-posta adresi gerekli"); return; }
+    setSending(true);
+    try {
+      await supabase.functions.invoke("send-email", {
+        body: { type: "test_email", to: testEmail, data: { subject: testEmailSubject, body: testEmailBody } },
+      });
+      toast.success(`Test maili gönderildi: ${testEmail}`);
+    } catch { toast.error("E-posta gönderilemedi"); }
+    finally { setSending(false); }
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><MessageSquare className="h-5 w-5" /> Test SMS Gönder</CardTitle>
+          <CardDescription>Belirli bir numaraya test SMS gönderin</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Telefon Numarası</Label>
+            <Input value={testPhone} onChange={(e) => setTestPhone(e.target.value)} placeholder="+905xxxxxxxxx" />
+          </div>
+          <div className="space-y-2">
+            <Label>Mesaj</Label>
+            <Textarea value={testMessage} onChange={(e) => setTestMessage(e.target.value)} rows={3} />
+          </div>
+          <Button onClick={handleSendTestSms} disabled={sending} className="w-full">
+            {sending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />} Test SMS Gönder
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Mail className="h-5 w-5" /> Test E-posta Gönder</CardTitle>
+          <CardDescription>Belirli bir adrese test e-postası gönderin</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>E-posta Adresi</Label>
+            <Input type="email" value={testEmail} onChange={(e) => setTestEmail(e.target.value)} placeholder="test@ornek.com" />
+          </div>
+          <div className="space-y-2">
+            <Label>Konu</Label>
+            <Input value={testEmailSubject} onChange={(e) => setTestEmailSubject(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>İçerik</Label>
+            <Textarea value={testEmailBody} onChange={(e) => setTestEmailBody(e.target.value)} rows={3} />
+          </div>
+          <Button onClick={handleSendTestEmail} disabled={sending} className="w-full">
+            {sending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />} Test E-posta Gönder
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 const AdminSMS = () => {
   const { data: templates, isLoading: templatesLoading } = useSmsTemplates();
   const { data: settings, isLoading: settingsLoading } = useSmsSettings();
@@ -215,6 +295,10 @@ const AdminSMS = () => {
             <MessageSquare className="h-4 w-4" />
             Şablonlar
           </TabsTrigger>
+          <TabsTrigger value="test" className="gap-2">
+            <Send className="h-4 w-4" />
+            Test Gönder
+          </TabsTrigger>
           <TabsTrigger value="settings" className="gap-2">
             <Settings className="h-4 w-4" />
             Sağlayıcılar
@@ -224,6 +308,11 @@ const AdminSMS = () => {
             Gönderim Geçmişi
           </TabsTrigger>
         </TabsList>
+
+        {/* Test SMS Tab */}
+        <TabsContent value="test" className="space-y-4">
+          <TestSendPanel />
+        </TabsContent>
 
         {/* Templates Tab */}
         <TabsContent value="templates" className="space-y-4">

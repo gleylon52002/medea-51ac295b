@@ -22,6 +22,7 @@ import { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useWallet } from "@/hooks/useAffiliate";
+import { usePersonalDiscounts } from "@/hooks/useUserCart";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useBulkDiscounts, calculateBulkDiscount } from "@/hooks/useBulkDiscounts";
 
@@ -75,6 +76,7 @@ const Checkout = () => {
   const { data: wallet } = useWallet();
   const { data: siteSettings } = useSiteSettings();
   const [referralCode, setReferralCode] = useState<string | null>(null);
+  const { data: personalDiscounts } = usePersonalDiscounts();
 
   // Load referral code from session
   useEffect(() => {
@@ -88,8 +90,16 @@ const Checkout = () => {
   const computedShipping = total >= freeShippingThreshold ? 0 : defaultShippingCost;
   const { data: bulkRules } = useBulkDiscounts();
   const bulkResult = bulkRules ? calculateBulkDiscount(items, bulkRules) : { discount: 0, appliedRule: null };
-  const walletAmount = useWalletBalance && wallet ? Math.min(wallet.balance, total - (appliedCoupon?.discount || 0) - bulkResult.discount) : 0;
-  const finalTotal = Math.max(0, total - (appliedCoupon?.discount || 0) - bulkResult.discount - walletAmount + computedShipping);
+
+  // Calculate personal discounts total
+  const personalDiscountTotal = personalDiscounts?.reduce((sum, pd) => {
+    const matchingItem = items.find(i => i.product.id === pd.product_id);
+    if (matchingItem) return sum + pd.personal_discount;
+    return sum;
+  }, 0) || 0;
+
+  const walletAmount = useWalletBalance && wallet ? Math.min(wallet.balance, total - (appliedCoupon?.discount || 0) - bulkResult.discount - personalDiscountTotal) : 0;
+  const finalTotal = Math.max(0, total - (appliedCoupon?.discount || 0) - bulkResult.discount - personalDiscountTotal - walletAmount + computedShipping);
 
   const [identityNumber, setIdentityNumber] = useState("");
   const [formData, setFormData] = useState({
@@ -310,6 +320,37 @@ const Checkout = () => {
         });
       } catch (emailErr) {
         console.error("Order confirmation email failed:", emailErr);
+      }
+
+      // Auto-generate invoice
+      try {
+        const invoiceNumber = `FTR-${result.orderNumber.replace('MDA-', '')}`;
+        await supabase.from("invoices").insert({
+          order_id: result.order.id,
+          invoice_number: invoiceNumber,
+          billing_info: {
+            full_name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email,
+            phone: formData.phone,
+            address: formData.address,
+            city: formData.city,
+            district: formData.district,
+            postal_code: formData.postalCode,
+          },
+          items: items.map(item => ({
+            product_name: item.product.name,
+            quantity: item.quantity,
+            unit_price: (item.product.salePrice || item.product.price) + (item.priceAdjustment || 0),
+            total_price: ((item.product.salePrice || item.product.price) + (item.priceAdjustment || 0)) * item.quantity,
+          })),
+          subtotal: total,
+          tax_amount: total * 0.20,
+          shipping_cost: shippingCost,
+          discount_amount: discountAmount + walletAmount + bulkResult.discount,
+          total: finalTotal,
+        });
+      } catch (invoiceErr) {
+        console.error("Auto invoice creation failed:", invoiceErr);
       }
 
       // Earn loyalty points (10 points per 100₺)
@@ -887,6 +928,12 @@ const Checkout = () => {
                   <div className="flex justify-between text-green-600 font-medium">
                     <span>Toplu Alım İndirimi{bulkResult.appliedRule ? ` (${bulkResult.appliedRule})` : ""}</span>
                     <span>-{formatPrice(bulkResult.discount)}</span>
+                  </div>
+                )}
+                {personalDiscountTotal > 0 && (
+                  <div className="flex justify-between text-green-600 font-medium">
+                    <span>Kişiye Özel İndirim</span>
+                    <span>-{formatPrice(personalDiscountTotal)}</span>
                   </div>
                 )}
                 {useWalletBalance && walletAmount > 0 && (
