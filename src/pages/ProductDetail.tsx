@@ -59,6 +59,7 @@ const ProductDetail = () => {
   const toggleFavorite = useToggleFavorite();
   const { data: categoryProducts } = useProductsByCategory(product?.categories?.slug || "");
   const { data: relatedProductsData } = useRelatedProducts(product?.id || "");
+  const pt = useProductTranslation({ product });
 
   // Get related products - first from explicit relations, then from category
   const relatedProducts = relatedProductsData && relatedProductsData.length > 0
