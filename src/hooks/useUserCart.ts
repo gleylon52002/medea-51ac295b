@@ -51,6 +51,19 @@ export const useCartSync = () => {
  */
 export const usePersonalDiscounts = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Listen for realtime changes to user_carts
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('personal-discounts')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'user_carts', filter: `user_id=eq.${user.id}` }, () => {
+        queryClient.invalidateQueries({ queryKey: ["personal-discounts", user.id] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, queryClient]);
 
   return useQuery({
     queryKey: ["personal-discounts", user?.id],
@@ -71,6 +84,6 @@ export const usePersonalDiscounts = () => {
       }>;
     },
     enabled: !!user,
-    refetchInterval: 30000, // Check every 30s for new discounts
+    refetchInterval: 10000,
   });
 };
