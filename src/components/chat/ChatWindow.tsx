@@ -148,7 +148,19 @@ const ChatWindow = ({ conversationId, title, onClose, participantProfiles = {}, 
         await editMessage.mutateAsync({ messageId: editingMsg.id, content: content.trim(), conversationId });
         setEditingMsg(null);
       } else {
-        await sendMessage.mutateAsync({ conversationId, content: content.trim(), replyToId: replyToMsg?.id, attachments });
+        // If only attachments, generate a descriptive content
+        let messageContent = content.trim();
+        if (!messageContent && attachments.length > 0) {
+          const imageCount = attachments.filter(a => a.type === "image").length;
+          const docCount = attachments.filter(a => a.type === "document").length;
+          const otherCount = attachments.filter(a => a.type === "other").length;
+          const parts: string[] = [];
+          if (imageCount) parts.push(`📷 ${imageCount} fotoğraf`);
+          if (docCount) parts.push(`📄 ${docCount} dosya`);
+          if (otherCount) parts.push(`📎 ${otherCount} ek`);
+          messageContent = parts.join(", ");
+        }
+        await sendMessage.mutateAsync({ conversationId, content: messageContent, replyToId: replyToMsg?.id, attachments });
         setReplyToMsg(null);
       }
       setContent("");
@@ -514,34 +526,41 @@ const ChatWindow = ({ conversationId, title, onClose, participantProfiles = {}, 
           </div>
         )}
 
-        {/* Attachment preview */}
+        {/* Attachment preview before sending */}
         {attachments.length > 0 && (
-          <div className="px-4 py-2 border-t bg-muted/30 flex flex-wrap gap-2">
-            {attachments.map((item, i) => (
-              <div key={i} className="relative bg-card p-2 rounded-lg border flex items-center gap-2 pr-8">
-                {item.type === "image" ? (
-                  <div className="h-10 w-10 rounded overflow-hidden">
-                    <img src={URL.createObjectURL(item.file)} alt="" className="h-full w-full object-cover" />
-                  </div>
-                ) : (
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                )}
-                <div className="min-w-0">
-                  <span className="text-xs truncate block max-w-[100px]">{item.file.name}</span>
-                  <span className="text-[10px] text-muted-foreground">{(item.file.size / 1024).toFixed(0)} KB</span>
+          <div className="px-4 py-2 border-t bg-muted/30">
+            <div className="flex flex-wrap gap-2">
+              {attachments.map((item, i) => (
+                <div key={i} className="relative group">
+                  {item.type === "image" ? (
+                    <div className="relative h-20 w-20 rounded-lg overflow-hidden border bg-muted">
+                      <img src={URL.createObjectURL(item.file)} alt={item.file.name} className="h-full w-full object-cover" />
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-1 py-0.5">
+                        <span className="text-[9px] text-white truncate block">{item.file.name}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-20 w-20 rounded-lg border bg-muted flex flex-col items-center justify-center gap-1 p-1">
+                      <FileText className="h-6 w-6 text-muted-foreground" />
+                      <span className="text-[9px] text-muted-foreground truncate w-full text-center">{item.file.name}</span>
+                      <span className="text-[8px] text-muted-foreground/70">{(item.file.size / 1024).toFixed(0)} KB</span>
+                    </div>
+                  )}
+                  <button onClick={() => removeAttachment(i)}
+                    className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X className="h-3 w-3" />
+                  </button>
                 </div>
-                <button onClick={() => removeAttachment(i)} className="absolute top-1 right-1 p-0.5 rounded-full hover:bg-muted">
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1.5">{attachments.length} dosya eklenecek</p>
           </div>
         )}
 
         {/* Input */}
         {!isMultiSelect && (
           <form onSubmit={handleSend} className="px-3 py-3 border-t flex items-end gap-2 bg-card">
-            <input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" className="hidden" ref={fileInputRef} onChange={handleFileSelect} />
+            <input type="file" multiple accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.txt" className="hidden" ref={fileInputRef} onChange={handleFileSelect} />
 
             <div className="flex items-center gap-0.5 shrink-0">
               <Tooltip>
@@ -703,39 +722,63 @@ const RoleBadge = ({ icon, label, variant }: { icon: React.ReactNode; label: str
 );
 
 const AttachmentPreview = ({ attachment, isMe }: { attachment: any; isMe: boolean }) => {
-  const [url, setUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchUrl = async () => {
-      const { data } = await supabase.storage.from("chat_attachments").createSignedUrl(attachment.file_path, 3600);
-      if (data) setUrl(data.signedUrl);
-    };
-    fetchUrl();
+  const url = useMemo(() => {
+    const { data } = supabase.storage.from("chat_attachments").getPublicUrl(attachment.file_path);
+    return data.publicUrl;
   }, [attachment.file_path]);
 
-  if (attachment.file_type === "image") {
+  const fileExt = attachment.file_name?.split(".").pop()?.toLowerCase() || "";
+  const isImage = attachment.file_type === "image" || ["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(fileExt);
+  const isPdf = fileExt === "pdf";
+  const isVideo = ["mp4", "mov", "webm", "avi"].includes(fileExt);
+
+  if (isImage) {
     return (
-      <a href={url || "#"} target="_blank" rel="noopener noreferrer" className="block rounded-lg overflow-hidden border border-white/10">
-        {url ? (
-          <img src={url} alt={attachment.file_name} className="max-h-48 object-cover hover:opacity-90 transition-opacity" />
-        ) : (
-          <div className="h-24 w-full bg-muted flex items-center justify-center"><Loader2 className="h-4 w-4 animate-spin" /></div>
-        )}
+      <a href={url} target="_blank" rel="noopener noreferrer" className="block rounded-lg overflow-hidden border border-white/10 max-w-[280px]">
+        <img
+          src={url}
+          alt={attachment.file_name}
+          className="max-h-52 w-auto object-cover hover:opacity-90 transition-opacity"
+          loading="lazy"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+        />
+        <div className={cn("px-2 py-1 flex items-center gap-1.5", isMe ? "bg-primary-foreground/10" : "bg-muted/50")}>
+          <ImageIcon className="h-3 w-3 shrink-0 opacity-60" />
+          <span className="text-[10px] truncate flex-1">{attachment.file_name}</span>
+          <span className="text-[9px] opacity-50">{(attachment.file_size / 1024).toFixed(0)} KB</span>
+        </div>
       </a>
     );
   }
 
+  if (isVideo) {
+    return (
+      <div className="rounded-lg overflow-hidden border border-white/10 max-w-[280px]">
+        <video src={url} controls className="max-h-52 w-full" preload="metadata" />
+        <div className={cn("px-2 py-1 flex items-center gap-1.5", isMe ? "bg-primary-foreground/10" : "bg-muted/50")}>
+          <span className="text-[10px] truncate flex-1">{attachment.file_name}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Document / other file types
+  const iconColor = isPdf ? "text-red-500" : "text-blue-500";
+  const bgColor = isPdf ? "bg-red-500/10" : "bg-blue-500/10";
+
   return (
-    <a href={url || "#"} target="_blank" rel="noopener noreferrer"
-      className={cn("flex items-center gap-2 p-2 rounded-lg border hover:opacity-80 transition-opacity",
+    <a href={url} target="_blank" rel="noopener noreferrer"
+      className={cn("flex items-center gap-3 p-2.5 rounded-lg border hover:opacity-80 transition-opacity min-w-[200px]",
         isMe ? "bg-primary-foreground/10 border-primary-foreground/20" : "bg-background/50 border-border"
       )}>
-      <FileText className="h-4 w-4 shrink-0" />
+      <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center shrink-0", bgColor)}>
+        <FileText className={cn("h-5 w-5", iconColor)} />
+      </div>
       <div className="flex-1 overflow-hidden">
         <p className="text-xs font-medium truncate">{attachment.file_name}</p>
-        <p className="text-[10px] opacity-70">{(attachment.file_size / 1024).toFixed(1)} KB</p>
+        <p className="text-[10px] opacity-60">{fileExt.toUpperCase()} • {attachment.file_size >= 1024 * 1024 ? `${(attachment.file_size / (1024 * 1024)).toFixed(1)} MB` : `${(attachment.file_size / 1024).toFixed(1)} KB`}</p>
       </div>
-      <Download className="h-3 w-3 shrink-0" />
+      <Download className="h-4 w-4 shrink-0 opacity-50" />
     </a>
   );
 };
