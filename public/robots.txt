@@ -13,4 +13,11 @@ Allow: /
 User-agent: *
 Allow: /
 
+# Disallow admin and private pages
+Disallow: /admin/
+Disallow: /hesabim/
+Disallow: /giris
+Disallow: /odeme
+
+# Sitemap (dynamic - auto-updated with new products/categories/blog posts)
 Sitemap: https://gxzlltmivdlpplunuusi.supabase.co/functions/v1/sitemap
