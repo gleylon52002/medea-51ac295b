@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Play, Trash2, Plus, Clock, CheckCircle } from "lucide-react";
+import { Calendar, Play, Trash2, Plus, Clock, CheckCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 interface Task {
   id: string;
@@ -41,9 +42,33 @@ const actionTypes = [
   { value: "update_product_tags", label: "Ürün Etiketlerini Güncelle", description: "AI ile ürün etiketlerini güncelle" },
 ];
 
+// Schedule presets for user-friendly cron building
+const schedulePresets = [
+  { label: "Her Saat", value: "0 * * * *", group: "saat" },
+  { label: "Her 2 Saat", value: "0 */2 * * *", group: "saat" },
+  { label: "Her 6 Saat", value: "0 */6 * * *", group: "saat" },
+  { label: "Her 12 Saat", value: "0 */12 * * *", group: "saat" },
+  { label: "Her Gün 09:00", value: "0 9 * * *", group: "gün" },
+  { label: "Her Gün 18:00", value: "0 18 * * *", group: "gün" },
+  { label: "Her Gün Gece 00:00", value: "0 0 * * *", group: "gün" },
+  { label: "Hafta İçi 09:00", value: "0 9 * * 1-5", group: "hafta" },
+  { label: "Her Pazartesi 09:00", value: "0 9 * * 1", group: "hafta" },
+  { label: "Her Cuma 17:00", value: "0 17 * * 5", group: "hafta" },
+  { label: "Ayın 1'i 09:00", value: "0 9 1 * *", group: "ay" },
+  { label: "Ayın 15'i 09:00", value: "0 9 15 * *", group: "ay" },
+];
+
+const scheduleGroups = [
+  { key: "saat", label: "Saatlik" },
+  { key: "gün", label: "Günlük" },
+  { key: "hafta", label: "Haftalık" },
+  { key: "ay", label: "Aylık" },
+];
+
 const ScheduledTasks = ({ onRunTask }: { onRunTask: (task: Task) => void }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [runningId, setRunningId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newTask, setNewTask] = useState({
     title: "",
@@ -105,13 +130,68 @@ const ScheduledTasks = ({ onRunTask }: { onRunTask: (task: Task) => void }) => {
     toast.success("Görev oluşturuldu");
   };
 
-  const runTask = (task: Task) => {
-    onRunTask(task);
-    // Update last_run_at
-    supabase.from("maintenance_tasks")
-      .update({ last_run_at: new Date().toISOString(), run_count: task.run_count + 1 })
-      .eq("id", task.id)
-      .then(() => fetchTasks());
+  const runTask = async (task: Task) => {
+    setRunningId(task.id);
+    toast.info(`"${task.title}" çalıştırılıyor...`);
+    
+    try {
+      // Call the maintenance AI with this task
+      const { data, error } = await supabase.functions.invoke("maintenance-ai", {
+        body: {
+          executeAction: true,
+          actionType: task.action_type,
+          actionParams: task.action_params || {},
+        },
+      });
+
+      if (error) throw error;
+
+      // Update last_run_at
+      await supabase.from("maintenance_tasks")
+        .update({ 
+          last_run_at: new Date().toISOString(), 
+          run_count: (task.run_count || 0) + 1,
+          last_result: data || {},
+        })
+        .eq("id", task.id);
+
+      // Log the action
+      await supabase.from("ai_action_logs").insert([{
+        action_type: task.action_type,
+        action_params: task.action_params || {},
+        result: data || {},
+        status: "success",
+      }]);
+
+      setTasks(prev => prev.map(t => 
+        t.id === task.id 
+          ? { ...t, last_run_at: new Date().toISOString(), run_count: (t.run_count || 0) + 1 } 
+          : t
+      ));
+
+      toast.success(`"${task.title}" başarıyla tamamlandı`);
+      
+      // Also send to chat for visibility
+      onRunTask(task);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Bilinmeyen hata";
+      toast.error(`Görev başarısız: ${errorMessage}`);
+      
+      await supabase.from("ai_action_logs").insert([{
+        action_type: task.action_type,
+        action_params: task.action_params || {},
+        status: "failed",
+        error_message: errorMessage,
+      }]);
+    } finally {
+      setRunningId(null);
+    }
+  };
+
+  const getScheduleLabel = (cron: string | null) => {
+    if (!cron) return null;
+    const preset = schedulePresets.find(p => p.value === cron);
+    return preset?.label || cron;
   };
 
   if (loading) {
@@ -134,7 +214,7 @@ const ScheduledTasks = ({ onRunTask }: { onRunTask: (task: Task) => void }) => {
               Yeni Görev
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Yeni Bakım Görevi</DialogTitle>
             </DialogHeader>
@@ -175,22 +255,47 @@ const ScheduledTasks = ({ onRunTask }: { onRunTask: (task: Task) => void }) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="manual">Manuel (Elle çalıştır)</SelectItem>
-                    <SelectItem value="scheduled">Zamanlanmış (Cron)</SelectItem>
+                    <SelectItem value="scheduled">Zamanlanmış (Otomatik)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {newTask.task_type === "scheduled" && (
-                <div className="space-y-2">
-                  <Label>Cron İfadesi</Label>
-                  <Input 
-                    value={newTask.schedule}
-                    onChange={(e) => setNewTask({ ...newTask, schedule: e.target.value })}
-                    placeholder="0 9 * * * (her gün 09:00)"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Örnek: "0 9 * * *" = Her gün 09:00, "0 */6 * * *" = Her 6 saatte
-                  </p>
+                <div className="space-y-3">
+                  <Label>Çalışma Zamanı</Label>
+                  <div className="space-y-3">
+                    {scheduleGroups.map((group) => (
+                      <div key={group.key}>
+                        <p className="text-xs font-medium text-muted-foreground mb-1.5">{group.label}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {schedulePresets
+                            .filter(p => p.group === group.key)
+                            .map((preset) => (
+                              <button
+                                key={preset.value}
+                                type="button"
+                                onClick={() => setNewTask({ ...newTask, schedule: preset.value })}
+                                className={cn(
+                                  "px-3 py-1.5 text-xs rounded-lg border transition-colors",
+                                  newTask.schedule === preset.value
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-card border-border hover:bg-accent/50 text-foreground"
+                                )}
+                              >
+                                {preset.label}
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {newTask.schedule && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      Seçilen: <span className="font-medium text-foreground">{getScheduleLabel(newTask.schedule)}</span>
+                      <span className="text-muted-foreground/60">({newTask.schedule})</span>
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -218,59 +323,72 @@ const ScheduledTasks = ({ onRunTask }: { onRunTask: (task: Task) => void }) => {
           <p className="text-xs">AI'a görev planlamasını söyleyebilirsiniz</p>
         </div>
       ) : (
-        <div className="space-y-2 max-h-[200px] overflow-y-auto">
-          {tasks.map((task) => (
-            <div 
-              key={task.id} 
-              className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors"
-            >
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <Switch 
-                  checked={task.is_active}
-                  onCheckedChange={(checked) => toggleTask(task.id, checked)}
-                />
-                <div className="min-w-0">
-                  <p className="font-medium text-sm truncate">{task.title}</p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Badge variant="outline" className="text-[10px]">
-                      {actionTypes.find(t => t.value === task.action_type)?.label || task.action_type}
-                    </Badge>
-                    {task.schedule && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {task.schedule}
-                      </span>
-                    )}
-                    {task.last_run_at && (
-                      <span className="flex items-center gap-1">
-                        <CheckCircle className="h-3 w-3 text-primary" />
-                        {task.run_count}x
-                      </span>
-                    )}
+        <div className="space-y-2 max-h-[400px] overflow-y-auto">
+          {tasks.map((task) => {
+            const isRunning = runningId === task.id;
+            return (
+              <div 
+                key={task.id} 
+                className={cn(
+                  "flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/30 transition-all",
+                  isRunning && "border-primary/40 bg-primary/5"
+                )}
+              >
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <Switch 
+                    checked={task.is_active}
+                    onCheckedChange={(checked) => toggleTask(task.id, checked)}
+                    disabled={isRunning}
+                  />
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{task.title}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                      <Badge variant="outline" className="text-[10px]">
+                        {actionTypes.find(t => t.value === task.action_type)?.label || task.action_type}
+                      </Badge>
+                      {task.schedule && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {getScheduleLabel(task.schedule)}
+                        </span>
+                      )}
+                      {task.last_run_at && (
+                        <span className="flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3 text-primary" />
+                          {task.run_count}x çalıştı
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
+                
+                <div className="flex items-center gap-1">
+                  <Button 
+                    size="sm" 
+                    variant={isRunning ? "default" : "ghost"}
+                    onClick={() => runTask(task)}
+                    disabled={isRunning}
+                    className={cn("h-8 w-8 p-0", isRunning && "animate-pulse")}
+                  >
+                    {isRunning ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    onClick={() => deleteTask(task.id)}
+                    disabled={isRunning}
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              
-              <div className="flex items-center gap-1">
-                <Button 
-                  size="sm" 
-                  variant="ghost"
-                  onClick={() => runTask(task)}
-                  className="h-8 w-8 p-0"
-                >
-                  <Play className="h-4 w-4" />
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="ghost"
-                  onClick={() => deleteTask(task.id)}
-                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </Card>
