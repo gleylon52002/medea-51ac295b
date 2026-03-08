@@ -529,8 +529,7 @@ const FileManager = () => {
   };
 
   const selectAll = () => {
-    const storageFiles = filteredContent.filter((c) => c.source === "storage");
-    setSelectedFiles(new Set(storageFiles.map((f) => f.path)));
+    setSelectedFiles(new Set(filteredContent.map((f) => f.path)));
   };
   const deselectAll = () => setSelectedFiles(new Set());
 
