@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
+import { useAllProductTags } from "@/hooks/useProductTags";
 
 const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -23,9 +24,14 @@ const Products = () => {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [onSaleOnly, setOnSaleOnly] = useState(false);
   const [featuredOnly, setFeaturedOnly] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const { data: products, isLoading: productsLoading } = useProducts();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const { data: allTags } = useAllProductTags();
+
+  // Get unique tags
+  const uniqueTags = [...new Set(allTags?.map(t => t.tag) || [])].sort();
 
   // Calculate max price from products
   const maxPrice = Math.max(...(products?.map(p => Number(p.price)) || [1000]), 1000);
@@ -56,6 +62,14 @@ const Products = () => {
     if (featuredOnly && !product.is_featured) {
       return false;
     }
+
+    // Tag filter
+    if (selectedTags.length > 0) {
+      const productTagList = allTags?.filter(t => t.product_id === product.id).map(t => t.tag) || [];
+      if (!selectedTags.some(tag => productTagList.includes(tag))) {
+        return false;
+      }
+    }
     
     return true;
   }) || [];
@@ -79,6 +93,7 @@ const Products = () => {
     inStockOnly,
     onSaleOnly,
     featuredOnly,
+    selectedTags.length > 0,
   ].filter(Boolean).length;
 
   const clearAllFilters = () => {
@@ -87,6 +102,7 @@ const Products = () => {
     setInStockOnly(false);
     setOnSaleOnly(false);
     setFeaturedOnly(false);
+    setSelectedTags([]);
   };
 
   if (productsLoading || categoriesLoading) {
@@ -174,6 +190,33 @@ const Products = () => {
           </div>
         </div>
       </div>
+
+      {/* Tag Filters */}
+      {uniqueTags.length > 0 && (
+        <div>
+          <h4 className="font-medium mb-3">Özellikler</h4>
+          <div className="space-y-2">
+            {uniqueTags.slice(0, 15).map((tag) => (
+              <div key={tag} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`tag-${tag}`}
+                  checked={selectedTags.includes(tag)}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedTags([...selectedTags, tag]);
+                    } else {
+                      setSelectedTags(selectedTags.filter(t => t !== tag));
+                    }
+                  }}
+                />
+                <Label htmlFor={`tag-${tag}`} className="cursor-pointer text-sm">
+                  {tag}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {activeFiltersCount > 0 && (
         <Button variant="outline" onClick={clearAllFilters} className="w-full">

@@ -118,6 +118,7 @@ const Badges = lazy(() => import("./pages/Badges"));
 const Community = lazy(() => import("./pages/Community"));
 const BirthdayReminders = lazy(() => import("./pages/BirthdayReminders"));
 const CustomProductOrder = lazy(() => import("./pages/CustomProductOrder"));
+const SharedWishlist = lazy(() => import("./pages/SharedWishlist"));
 
 const queryClient = new QueryClient();
 
@@ -202,6 +203,7 @@ const App = () => (
                 <Route path="/topluluk" element={<Community />} />
                 <Route path="/dogum-gunu" element={<BirthdayReminders />} />
                 <Route path="/ozel-urun" element={<CustomProductOrder />} />
+                <Route path="/favoriler/:token" element={<SharedWishlist />} />
 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
