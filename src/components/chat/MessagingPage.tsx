@@ -165,7 +165,7 @@ const MessagingPage = ({ role }: { role: "admin" | "seller" }) => {
                             className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted rounded-lg transition-colors"
                           >
                             <Avatar className="h-9 w-9">
-                              {seller.logo_url && <AvatarImage src={seller.logo_url} />}
+                              {(seller as any).logo_url && <AvatarImage src={(seller as any).logo_url} />}
                               <AvatarFallback className="bg-primary/10 text-primary">
                                 <Store className="h-4 w-4" />
                               </AvatarFallback>
