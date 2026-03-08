@@ -3015,6 +3015,42 @@ export type Database = {
           },
         ]
       }
+      translations: {
+        Row: {
+          content_key: string
+          content_type: string
+          created_at: string
+          id: string
+          source_lang: string
+          source_text: string
+          target_lang: string
+          translated_text: string
+          updated_at: string
+        }
+        Insert: {
+          content_key: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          source_lang?: string
+          source_text: string
+          target_lang: string
+          translated_text: string
+          updated_at?: string
+        }
+        Update: {
+          content_key?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          source_lang?: string
+          source_text?: string
+          target_lang?: string
+          translated_text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           badge_id: string
