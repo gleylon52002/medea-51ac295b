@@ -704,8 +704,7 @@ const FileManager = () => {
                         highlightedItem?.path === item.path && !isChecked && "bg-accent/60"
                       )}
                       onClick={() => {
-                        if (isStorageItem) setHighlightedItem(item);
-                        else setHighlightedItem(null);
+                        setHighlightedItem(item);
                       }}
                       onDoubleClick={() => {
                         if (item.type !== "file") { handleToggle(item); handleSelect(item); }
