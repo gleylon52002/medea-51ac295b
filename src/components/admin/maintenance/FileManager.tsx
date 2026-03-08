@@ -698,7 +698,7 @@ const FileManager = () => {
           </span>
           {selectedNode && (
             <span className="truncate ml-2">
-              /{selectedNode.source === "project" ? getProjectDisplayPath(selectedNode) : selectedNode.path}
+              /{selectedNode.path}
             </span>
           )}
         </div>
