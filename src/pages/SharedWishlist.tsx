@@ -75,22 +75,20 @@ const SharedWishlist = () => {
     );
   }
 
-  const { wishlist, products } = data;
-
   return (
     <Layout>
       <SEOHead
-        title={`${wishlist.title} - ${wishlist.owner_name}'in Favori Listesi`}
-        description={`${wishlist.owner_name} favori ürünlerini sizinle paylaştı. ${products.length} ürün içeriyor.`}
+        title={`${data.title} - ${data.owner_name}'in Favori Listesi`}
+        description={`${data.owner_name} favori ürünlerini sizinle paylaştı. ${data.products.length} ürün içeriyor.`}
       />
       <div className="container-main py-8 lg:py-12">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Heart className="h-6 w-6 text-primary fill-primary" />
-            <span className="text-sm text-muted-foreground">{wishlist.owner_name}'in paylaştığı liste</span>
+            <span className="text-sm text-muted-foreground">{data.owner_name}'in paylaştığı liste</span>
           </div>
           <h1 className="font-serif text-3xl lg:text-4xl font-medium text-foreground">
-            {wishlist.title}
+            {data.title}
           </h1>
           <p className="mt-2 text-muted-foreground">
             {products.length} ürün · {wishlist.view_count} kez görüntülendi
