@@ -16,7 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { projectFilePaths } from "@/data/projectFilePaths";
+
 
 // ── Types ──────────────────────────────────────────────
 type NodeType = "bucket" | "folder" | "file";
