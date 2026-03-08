@@ -1288,6 +1288,7 @@ export type Database = {
           id: string
           is_edited: boolean
           is_read: boolean
+          reply_to_id: string | null
           sender_id: string
         }
         Insert: {
@@ -1297,6 +1298,7 @@ export type Database = {
           id?: string
           is_edited?: boolean
           is_read?: boolean
+          reply_to_id?: string | null
           sender_id: string
         }
         Update: {
@@ -1306,6 +1308,7 @@ export type Database = {
           id?: string
           is_edited?: boolean
           is_read?: boolean
+          reply_to_id?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -1314,6 +1317,13 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
         ]
@@ -3172,6 +3182,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      typing_status: {
+        Row: {
+          conversation_id: string
+          id: string
+          is_typing: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          id?: string
+          is_typing?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          id?: string
+          is_typing?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "typing_status_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_badges: {
         Row: {
