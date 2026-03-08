@@ -571,7 +571,15 @@ const AdminProducts = () => {
 
               <TabsContent value="details" className="space-y-4">
                 <div>
-                  <Label htmlFor="ingredients">İçerikler</Label>
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="ingredients">İçerikler</Label>
+                    <AIFillButton
+                      field="ingredients"
+                      context={`Ürün Adı: ${formData.name}\nKısa Açıklama: ${formData.short_description}\nKategori: ${categories?.find(c => c.id === formData.category_id)?.name || ''}`}
+                      onResult={(val) => setFormData({ ...formData, ingredients: val })}
+                      disabled={!formData.name}
+                    />
+                  </div>
                   <Textarea
                     id="ingredients"
                     rows={4}
