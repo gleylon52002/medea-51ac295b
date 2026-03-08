@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
-import { Loader2 } from "lucide-react";
+import { Loader2, CalendarDays } from "lucide-react";
 
 const Profile = () => {
   const { data: profile, isLoading } = useProfile();
@@ -12,6 +12,7 @@ const Profile = () => {
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
+    birthday: "",
   });
 
   useEffect(() => {
@@ -19,6 +20,7 @@ const Profile = () => {
       setFormData({
         fullName: profile.full_name || "",
         phone: profile.phone || "",
+        birthday: profile.birthday || "",
       });
     }
   }, [profile]);
@@ -28,6 +30,7 @@ const Profile = () => {
     updateProfile.mutate({
       full_name: formData.fullName,
       phone: formData.phone,
+      birthday: formData.birthday || null,
     });
   };
 
@@ -74,6 +77,21 @@ const Profile = () => {
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             placeholder="05xx xxx xx xx"
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="birthday" className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4" />
+            Doğum Tarihi
+          </Label>
+          <Input
+            id="birthday"
+            type="date"
+            value={formData.birthday}
+            onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
+            max={new Date().toISOString().split("T")[0]}
+          />
+          <p className="text-xs text-muted-foreground">Doğum gününüzde size özel sürprizler için!</p>
         </div>
 
         <Button type="submit" disabled={updateProfile.isPending}>
