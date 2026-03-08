@@ -272,7 +272,7 @@ const ProductDetail = () => {
             <PurchaseCounter productId={product.id} />
 
             <p className="text-muted-foreground leading-relaxed">
-              {product.description}
+              {pt.description}
             </p>
 
             {/* Variant Selector */}
