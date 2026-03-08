@@ -41,9 +41,9 @@ const ActionButtons = ({ actions, onActionComplete }: ActionButtonsProps) => {
       // Log the action
       await supabase.from("ai_action_logs").insert([{
         action_type: action.type,
-        action_params: action.params || {},
-        result: data,
-        status: "success",
+        action_params: JSON.parse(JSON.stringify(action.params || {})),
+        result: data as Record<string, unknown>,
+        status: "success" as const,
       }]);
 
       setCompleted([...completed, action.id]);
@@ -57,8 +57,8 @@ const ActionButtons = ({ actions, onActionComplete }: ActionButtonsProps) => {
       // Log the failure
       await supabase.from("ai_action_logs").insert([{
         action_type: action.type,
-        action_params: action.params || {},
-        status: "failed",
+        action_params: JSON.parse(JSON.stringify(action.params || {})),
+        status: "failed" as const,
         error_message: errorMessage,
       }]);
     } finally {
