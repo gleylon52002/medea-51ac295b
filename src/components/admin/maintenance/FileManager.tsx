@@ -251,10 +251,6 @@ const FileManager = () => {
   // ── Toggle tree ────
   const handleToggle = useCallback(async (node: TreeNode) => {
     if (node.type === "file") return;
-    if (node.source === "project") {
-      setTree((prev) => updateNodeInTree(prev, node.path, (n) => ({ ...n, expanded: !n.expanded })));
-      return;
-    }
     if (!node.loaded) {
       const children = await loadStorageChildren(node);
       setTree((prev) => updateNodeInTree(prev, node.path, (n) => ({ ...n, children, loaded: true, expanded: true })));
