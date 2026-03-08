@@ -187,25 +187,34 @@ const ProductDetail = () => {
         </nav>
 
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
-          {/* Image Gallery */}
+          {/* Image & Video Gallery */}
           <div className="space-y-4">
-            <div className="aspect-square">
-              <ImageZoom
-                src={displayImages[selectedImage] || "/placeholder.svg"}
-                alt={product.name}
-                className="w-full h-full"
-              />
+            <div className="aspect-square rounded-lg overflow-hidden">
+              {isVideoUrl(displayMedia[selectedImage] || "") ? (
+                <VideoPlayer url={displayMedia[selectedImage]} className="w-full h-full" />
+              ) : (
+                <ImageZoom
+                  src={displayMedia[selectedImage] || "/placeholder.svg"}
+                  alt={product.name}
+                  className="w-full h-full"
+                />
+              )}
             </div>
-            {displayImages.length > 1 && (
+            {displayMedia.length > 1 && (
               <div className="grid grid-cols-4 gap-4">
-                {displayImages.map((image, index) => (
+                {displayMedia.map((media, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`aspect-square rounded-lg overflow-hidden bg-secondary border-2 transition-colors ${selectedImage === index ? "border-primary" : "border-transparent hover:border-primary/50"
-                      }`}
+                    className={`aspect-square rounded-lg overflow-hidden bg-secondary border-2 transition-colors ${selectedImage === index ? "border-primary" : "border-transparent hover:border-primary/50"}`}
                   >
-                    <img src={image} alt="" className="w-full h-full object-cover" />
+                    {isVideoUrl(media) ? (
+                      <div className="w-full h-full flex items-center justify-center bg-muted">
+                        <Play className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                    ) : (
+                      <img src={media} alt="" className="w-full h-full object-cover" />
+                    )}
                   </button>
                 ))}
               </div>
