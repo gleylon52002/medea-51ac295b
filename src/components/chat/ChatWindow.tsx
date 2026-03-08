@@ -722,39 +722,63 @@ const RoleBadge = ({ icon, label, variant }: { icon: React.ReactNode; label: str
 );
 
 const AttachmentPreview = ({ attachment, isMe }: { attachment: any; isMe: boolean }) => {
-  const [url, setUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchUrl = async () => {
-      const { data } = await supabase.storage.from("chat_attachments").createSignedUrl(attachment.file_path, 3600);
-      if (data) setUrl(data.signedUrl);
-    };
-    fetchUrl();
+  const url = useMemo(() => {
+    const { data } = supabase.storage.from("chat_attachments").getPublicUrl(attachment.file_path);
+    return data.publicUrl;
   }, [attachment.file_path]);
 
-  if (attachment.file_type === "image") {
+  const fileExt = attachment.file_name?.split(".").pop()?.toLowerCase() || "";
+  const isImage = attachment.file_type === "image" || ["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(fileExt);
+  const isPdf = fileExt === "pdf";
+  const isVideo = ["mp4", "mov", "webm", "avi"].includes(fileExt);
+
+  if (isImage) {
     return (
-      <a href={url || "#"} target="_blank" rel="noopener noreferrer" className="block rounded-lg overflow-hidden border border-white/10">
-        {url ? (
-          <img src={url} alt={attachment.file_name} className="max-h-48 object-cover hover:opacity-90 transition-opacity" />
-        ) : (
-          <div className="h-24 w-full bg-muted flex items-center justify-center"><Loader2 className="h-4 w-4 animate-spin" /></div>
-        )}
+      <a href={url} target="_blank" rel="noopener noreferrer" className="block rounded-lg overflow-hidden border border-white/10 max-w-[280px]">
+        <img
+          src={url}
+          alt={attachment.file_name}
+          className="max-h-52 w-auto object-cover hover:opacity-90 transition-opacity"
+          loading="lazy"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+        />
+        <div className={cn("px-2 py-1 flex items-center gap-1.5", isMe ? "bg-primary-foreground/10" : "bg-muted/50")}>
+          <ImageIcon className="h-3 w-3 shrink-0 opacity-60" />
+          <span className="text-[10px] truncate flex-1">{attachment.file_name}</span>
+          <span className="text-[9px] opacity-50">{(attachment.file_size / 1024).toFixed(0)} KB</span>
+        </div>
       </a>
     );
   }
 
+  if (isVideo) {
+    return (
+      <div className="rounded-lg overflow-hidden border border-white/10 max-w-[280px]">
+        <video src={url} controls className="max-h-52 w-full" preload="metadata" />
+        <div className={cn("px-2 py-1 flex items-center gap-1.5", isMe ? "bg-primary-foreground/10" : "bg-muted/50")}>
+          <span className="text-[10px] truncate flex-1">{attachment.file_name}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Document / other file types
+  const iconColor = isPdf ? "text-red-500" : "text-blue-500";
+  const bgColor = isPdf ? "bg-red-500/10" : "bg-blue-500/10";
+
   return (
-    <a href={url || "#"} target="_blank" rel="noopener noreferrer"
-      className={cn("flex items-center gap-2 p-2 rounded-lg border hover:opacity-80 transition-opacity",
+    <a href={url} target="_blank" rel="noopener noreferrer"
+      className={cn("flex items-center gap-3 p-2.5 rounded-lg border hover:opacity-80 transition-opacity min-w-[200px]",
         isMe ? "bg-primary-foreground/10 border-primary-foreground/20" : "bg-background/50 border-border"
       )}>
-      <FileText className="h-4 w-4 shrink-0" />
+      <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center shrink-0", bgColor)}>
+        <FileText className={cn("h-5 w-5", iconColor)} />
+      </div>
       <div className="flex-1 overflow-hidden">
         <p className="text-xs font-medium truncate">{attachment.file_name}</p>
-        <p className="text-[10px] opacity-70">{(attachment.file_size / 1024).toFixed(1)} KB</p>
+        <p className="text-[10px] opacity-60">{fileExt.toUpperCase()} • {attachment.file_size >= 1024 * 1024 ? `${(attachment.file_size / (1024 * 1024)).toFixed(1)} MB` : `${(attachment.file_size / 1024).toFixed(1)} KB`}</p>
       </div>
-      <Download className="h-3 w-3 shrink-0" />
+      <Download className="h-4 w-4 shrink-0 opacity-50" />
     </a>
   );
 };
