@@ -514,7 +514,6 @@ const FileManager = () => {
 
   // Download
   const handleDownload = (node: TreeNode) => {
-    if (node.source !== "storage") return;
     const bucket = getStorageBucket(node);
     if (!bucket) return;
     const { data } = supabase.storage.from(bucket).getPublicUrl(getStoragePath(node));
