@@ -526,27 +526,34 @@ const ChatWindow = ({ conversationId, title, onClose, participantProfiles = {}, 
           </div>
         )}
 
-        {/* Attachment preview */}
+        {/* Attachment preview before sending */}
         {attachments.length > 0 && (
-          <div className="px-4 py-2 border-t bg-muted/30 flex flex-wrap gap-2">
-            {attachments.map((item, i) => (
-              <div key={i} className="relative bg-card p-2 rounded-lg border flex items-center gap-2 pr-8">
-                {item.type === "image" ? (
-                  <div className="h-10 w-10 rounded overflow-hidden">
-                    <img src={URL.createObjectURL(item.file)} alt="" className="h-full w-full object-cover" />
-                  </div>
-                ) : (
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                )}
-                <div className="min-w-0">
-                  <span className="text-xs truncate block max-w-[100px]">{item.file.name}</span>
-                  <span className="text-[10px] text-muted-foreground">{(item.file.size / 1024).toFixed(0)} KB</span>
+          <div className="px-4 py-2 border-t bg-muted/30">
+            <div className="flex flex-wrap gap-2">
+              {attachments.map((item, i) => (
+                <div key={i} className="relative group">
+                  {item.type === "image" ? (
+                    <div className="relative h-20 w-20 rounded-lg overflow-hidden border bg-muted">
+                      <img src={URL.createObjectURL(item.file)} alt={item.file.name} className="h-full w-full object-cover" />
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-1 py-0.5">
+                        <span className="text-[9px] text-white truncate block">{item.file.name}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-20 w-20 rounded-lg border bg-muted flex flex-col items-center justify-center gap-1 p-1">
+                      <FileText className="h-6 w-6 text-muted-foreground" />
+                      <span className="text-[9px] text-muted-foreground truncate w-full text-center">{item.file.name}</span>
+                      <span className="text-[8px] text-muted-foreground/70">{(item.file.size / 1024).toFixed(0)} KB</span>
+                    </div>
+                  )}
+                  <button onClick={() => removeAttachment(i)}
+                    className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X className="h-3 w-3" />
+                  </button>
                 </div>
-                <button onClick={() => removeAttachment(i)} className="absolute top-1 right-1 p-0.5 rounded-full hover:bg-muted">
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1.5">{attachments.length} dosya eklenecek</p>
           </div>
         )}
 
