@@ -225,6 +225,7 @@ const FileManager = () => {
   const [previewName, setPreviewName] = useState("");
   const [moveOpen, setMoveOpen] = useState(false);
   const [moveDest, setMoveDest] = useState("");
+  const [highlightedItem, setHighlightedItem] = useState<TreeNode | null>(null);
 
   const projectRoot = useMemo(() => buildProjectTree(), []);
 
