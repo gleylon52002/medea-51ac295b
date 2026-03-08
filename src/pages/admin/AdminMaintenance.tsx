@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Loader2, Bot, Trash2, Wrench, Sparkles, Cpu, Zap, Search, FolderOpen, ImagePlus, X, Paperclip } from "lucide-react";
+import { Send, Loader2, Bot, Trash2, Wrench, Sparkles, Cpu, Zap, Search, FolderOpen, X, Paperclip, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
@@ -12,13 +12,20 @@ import ScheduledTasks from "@/components/admin/maintenance/ScheduledTasks";
 import ActionButtons, { AIAction, parseActionsFromResponse } from "@/components/admin/maintenance/ActionButtons";
 import FileManager from "@/components/admin/maintenance/FileManager";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
   actions?: AIAction[];
-  imagePreview?: string;
+  filePreview?: string;
+  fileName?: string;
 }
 
 const quickActions = [
@@ -35,8 +42,8 @@ const AdminMaintenance = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,28 +53,30 @@ const AdminMaintenance = () => {
     }
   }, [messages]);
 
-  const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const isImageFile = (file: File) => file.type.startsWith("image/");
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    if (!file.type.startsWith("image/")) {
-      toast.error("Sadece görsel dosyaları yüklenebilir");
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Dosya boyutu 10MB'dan küçük olmalı");
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error("Dosya boyutu 20MB'dan küçük olmalı");
       return;
     }
 
-    setSelectedImage(file);
-    const reader = new FileReader();
-    reader.onload = (ev) => setImagePreview(ev.target?.result as string);
-    reader.readAsDataURL(file);
+    setSelectedFile(file);
+    if (isImageFile(file)) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setFilePreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
+    }
   }, []);
 
-  const removeImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
+  const removeFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -76,7 +85,6 @@ const AdminMaintenance = () => {
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result as string;
-        // Remove the data:image/...;base64, prefix
         resolve(result.split(",")[1]);
       };
       reader.onerror = reject;
@@ -84,36 +92,52 @@ const AdminMaintenance = () => {
     });
   };
 
+  const getFileIcon = (file: File) => {
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    const typeMap: Record<string, string> = {
+      pdf: "📄", doc: "📝", docx: "📝", xls: "📊", xlsx: "📊",
+      csv: "📊", txt: "📃", json: "🔧", xml: "🔧", html: "🌐",
+      css: "🎨", js: "⚡", ts: "⚡", zip: "📦", rar: "📦",
+      mp3: "🎵", mp4: "🎬", svg: "🖼️", psd: "🎨", ai: "🎨",
+    };
+    if (isImageFile(file)) return "🖼️";
+    return typeMap[ext] || "📎";
+  };
+
   const sendMessage = async (text?: string) => {
     const messageText = text || input;
-    if ((!messageText.trim() && !selectedImage) || isLoading) return;
+    if ((!messageText.trim() && !selectedFile) || isLoading) return;
+
+    const currentFile = selectedFile;
+    const currentFilePreview = filePreview;
 
     const userMsg: Message = { 
       role: "user", 
-      content: messageText || (selectedImage ? "📸 Görsel gönderildi" : ""),
+      content: messageText || (currentFile ? `📎 ${currentFile.name}` : ""),
       timestamp: new Date(),
-      imagePreview: imagePreview || undefined,
+      filePreview: currentFilePreview || undefined,
+      fileName: currentFile?.name,
     };
     const allMessages = [...messages, userMsg];
     setMessages(allMessages);
     setInput("");
     setIsLoading(true);
-
-    const currentImage = selectedImage;
-    const currentImagePreview = imagePreview;
-    removeImage();
+    removeFile();
 
     try {
       let data: any;
       let error: any;
 
-      if (currentImage) {
-        // Send with image for analysis
-        const base64 = await fileToBase64(currentImage);
+      if (currentFile) {
+        const base64 = await fileToBase64(currentFile);
+        const isImage = isImageFile(currentFile);
+        
         const result = await supabase.functions.invoke("maintenance-ai", {
           body: {
-            imageBase64: base64,
-            imageContext: messageText || "Bu görseli analiz et. Ürün görseli ise ürün oluşturma öner.",
+            ...(isImage ? { imageBase64: base64 } : { fileBase64: base64, fileName: currentFile.name, fileType: currentFile.type }),
+            imageContext: messageText || (isImage 
+              ? "Bu görseli analiz et. Ürün görseli ise ürün oluşturma öner."
+              : `Bu dosyayı analiz et: ${currentFile.name}`),
           },
         });
         data = result.data;
@@ -122,7 +146,7 @@ const AdminMaintenance = () => {
         const result = await supabase.functions.invoke("maintenance-ai", {
           body: {
             messages: allMessages
-              .filter(m => !m.imagePreview || m.role === "user")
+              .filter(m => !m.filePreview || m.role === "user")
               .map((m) => ({ role: m.role, content: m.content })),
           },
         });
@@ -174,11 +198,19 @@ const AdminMaintenance = () => {
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      setSelectedImage(file);
-      const reader = new FileReader();
-      reader.onload = (ev) => setImagePreview(ev.target?.result as string);
-      reader.readAsDataURL(file);
+    if (file) {
+      if (file.size > 20 * 1024 * 1024) {
+        toast.error("Dosya boyutu 20MB'dan küçük olmalı");
+        return;
+      }
+      setSelectedFile(file);
+      if (isImageFile(file)) {
+        const reader = new FileReader();
+        reader.onload = (ev) => setFilePreview(ev.target?.result as string);
+        reader.readAsDataURL(file);
+      } else {
+        setFilePreview(null);
+      }
     }
   }, []);
 
@@ -240,7 +272,7 @@ const AdminMaintenance = () => {
                     <h2 className="text-xl font-semibold text-foreground">MEDEA AI Komuta Merkezi</h2>
                     <p className="text-muted-foreground max-w-lg text-sm">
                       Tam yetkili AI asistan. Ürün oluştur, mesajlara yanıt ver, siparişleri yönet, 
-                      SEO optimize et, görsel analiz yap. Görsel sürükle-bırak veya yapıştır.
+                      SEO optimize et, dosya analiz et. Tüm dosya türleri desteklenir.
                     </p>
                   </div>
 
@@ -281,13 +313,19 @@ const AdminMaintenance = () => {
                           : "bg-muted text-foreground rounded-bl-sm"
                       )}
                     >
-                      {/* Image preview in message */}
-                      {msg.imagePreview && (
+                      {/* File preview in message */}
+                      {msg.filePreview && (
                         <img 
-                          src={msg.imagePreview} 
+                          src={msg.filePreview} 
                           alt="Yüklenen görsel" 
                           className="rounded-lg mb-2 max-h-48 object-cover"
                         />
+                      )}
+                      {msg.fileName && !msg.filePreview && (
+                        <div className="flex items-center gap-2 mb-2 p-2 rounded-lg bg-background/20 border border-border/30">
+                          <Paperclip className="h-4 w-4 shrink-0" />
+                          <span className="text-xs truncate">{msg.fileName}</span>
+                        </div>
                       )}
                       {msg.role === "assistant" ? (
                         <>
@@ -330,13 +368,23 @@ const AdminMaintenance = () => {
               )}
             </div>
 
-            {/* Image Preview */}
-            {imagePreview && (
+            {/* File Preview */}
+            {selectedFile && (
               <div className="px-4 pt-2 border-t border-border">
-                <div className="relative inline-block">
-                  <img src={imagePreview} alt="Seçilen görsel" className="h-20 rounded-lg border border-border" />
+                <div className="relative inline-flex items-center gap-2 p-2 rounded-lg bg-muted border border-border">
+                  {filePreview ? (
+                    <img src={filePreview} alt="Seçilen görsel" className="h-16 rounded-lg" />
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">{getFileIcon(selectedFile)}</span>
+                      <div>
+                        <p className="text-xs font-medium text-foreground truncate max-w-[200px]">{selectedFile.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{(selectedFile.size / 1024).toFixed(1)} KB</p>
+                      </div>
+                    </div>
+                  )}
                   <button
-                    onClick={removeImage}
+                    onClick={removeFile}
                     className="absolute -top-2 -right-2 h-5 w-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
                   >
                     <X className="h-3 w-3" />
@@ -347,12 +395,35 @@ const AdminMaintenance = () => {
 
             {/* Input */}
             <div className="border-t border-border p-4">
-              <div className="flex gap-3 max-w-4xl mx-auto">
+              <div className="flex gap-3 max-w-4xl mx-auto items-start">
+                {/* Hamburger menu for quick actions (visible when chat has messages) */}
+                {messages.length > 0 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon" className="shrink-0 h-[44px] w-[44px]" title="Hızlı komutlar">
+                        <Menu className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-64">
+                      {quickActions.map((action) => (
+                        <DropdownMenuItem 
+                          key={action.label}
+                          onClick={() => sendMessage(action.prompt)}
+                          className="gap-2"
+                        >
+                          <action.icon className="h-4 w-4 text-primary" />
+                          <span>{action.label}</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
-                  onChange={handleImageSelect}
+                  accept="*/*"
+                  onChange={handleFileSelect}
                   className="hidden"
                 />
                 <Button
@@ -360,28 +431,28 @@ const AdminMaintenance = () => {
                   size="icon"
                   onClick={() => fileInputRef.current?.click()}
                   className="shrink-0 h-[44px] w-[44px]"
-                  title="Görsel yükle"
+                  title="Dosya yükle"
                 >
-                  <ImagePlus className="h-4 w-4" />
+                  <Paperclip className="h-4 w-4" />
                 </Button>
                 <Textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Komut ver: 'Ürün oluştur', 'Mesajlara yanıt ver', 'Görseli analiz et'..."
+                  placeholder="Komut ver: 'Ürün oluştur', 'Mesajlara yanıt ver', 'Dosyayı analiz et'..."
                   className="min-h-[44px] max-h-[120px] resize-none text-sm"
                   rows={1}
                 />
                 <Button
                   onClick={() => sendMessage()}
-                  disabled={(!input.trim() && !selectedImage) || isLoading}
+                  disabled={(!input.trim() && !selectedFile) || isLoading}
                   className="shrink-0 h-[44px] px-5"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
               <p className="text-[11px] text-muted-foreground text-center mt-2">
-                🔓 Tam yetkili AI • Ürün, sipariş, mesaj, SEO, ayarlar • Görsel sürükle-bırak destekli
+                🔓 Tam yetkili AI • Tüm dosya türleri • Sürükle-bırak destekli
               </p>
             </div>
           </Card>
