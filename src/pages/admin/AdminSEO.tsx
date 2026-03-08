@@ -23,6 +23,7 @@ interface SEOSettings {
 const AdminSEO = () => {
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState<string | null>(null);
+  const [isAutoGenerating, setIsAutoGenerating] = useState<string | null>(null);
   const { data: products } = useProducts();
   const { data: categories } = useCategories();
 
