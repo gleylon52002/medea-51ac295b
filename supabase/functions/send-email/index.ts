@@ -13,7 +13,9 @@ type EmailType =
   | "shipping_notification"
   | "contact_form"
   | "newsletter_welcome"
-  | "low_stock_alert";
+  | "low_stock_alert"
+  | "newsletter_broadcast"
+  | "test_email";
 
 interface EmailRequest {
   type: EmailType;
