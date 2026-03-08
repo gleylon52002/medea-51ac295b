@@ -62,6 +62,14 @@ const Products = () => {
     if (featuredOnly && !product.is_featured) {
       return false;
     }
+
+    // Tag filter
+    if (selectedTags.length > 0) {
+      const productTagList = allTags?.filter(t => t.product_id === product.id).map(t => t.tag) || [];
+      if (!selectedTags.some(tag => productTagList.includes(tag))) {
+        return false;
+      }
+    }
     
     return true;
   }) || [];
