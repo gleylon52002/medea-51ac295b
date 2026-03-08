@@ -151,7 +151,7 @@ serve(async (req) => {
           buyer_id_nr: "",
           buyer_ip: "",
           module_version: "1.0",
-          website_index: returnUrl.split("/siparis")[0] || "https://medea.lovable.app",
+          website_index: returnUrl.split("/siparis")[0] || "https://medea.tr",
           random_nr: randomNr,
           callback: callbackUrl,
           success_url: `${returnUrl}?status=success&order=${orderNumber}`,
