@@ -76,6 +76,7 @@ const Checkout = () => {
   const { data: wallet } = useWallet();
   const { data: siteSettings } = useSiteSettings();
   const [referralCode, setReferralCode] = useState<string | null>(null);
+  const { data: personalDiscounts } = usePersonalDiscounts();
 
   // Load referral code from session
   useEffect(() => {
@@ -89,8 +90,16 @@ const Checkout = () => {
   const computedShipping = total >= freeShippingThreshold ? 0 : defaultShippingCost;
   const { data: bulkRules } = useBulkDiscounts();
   const bulkResult = bulkRules ? calculateBulkDiscount(items, bulkRules) : { discount: 0, appliedRule: null };
-  const walletAmount = useWalletBalance && wallet ? Math.min(wallet.balance, total - (appliedCoupon?.discount || 0) - bulkResult.discount) : 0;
-  const finalTotal = Math.max(0, total - (appliedCoupon?.discount || 0) - bulkResult.discount - walletAmount + computedShipping);
+
+  // Calculate personal discounts total
+  const personalDiscountTotal = personalDiscounts?.reduce((sum, pd) => {
+    const matchingItem = items.find(i => i.product.id === pd.product_id);
+    if (matchingItem) return sum + pd.personal_discount;
+    return sum;
+  }, 0) || 0;
+
+  const walletAmount = useWalletBalance && wallet ? Math.min(wallet.balance, total - (appliedCoupon?.discount || 0) - bulkResult.discount - personalDiscountTotal) : 0;
+  const finalTotal = Math.max(0, total - (appliedCoupon?.discount || 0) - bulkResult.discount - personalDiscountTotal - walletAmount + computedShipping);
 
   const [identityNumber, setIdentityNumber] = useState("");
   const [formData, setFormData] = useState({
