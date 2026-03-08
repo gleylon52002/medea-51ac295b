@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingBag, Menu, X, Search, User, LogOut, Settings, Store, BookOpen } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import TranslatedText from "@/components/TranslatedText";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,6 +18,7 @@ import { useGeneralSettings } from "@/hooks/useSiteSettings";
 import { useSellerStatus } from "@/hooks/useSeller";
 import { toast } from "sonner";
 import SearchDialog from "@/components/search/SearchDialog";
+import { useAITranslation, categoryKey } from "@/hooks/useTranslation";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -27,6 +29,14 @@ const Header = () => {
   const { data: categories } = useCategories();
   const { data: generalSettings } = useGeneralSettings();
   const { data: sellerStatus } = useSellerStatus();
+  const { t, queueTranslation, isSourceLang } = useAITranslation();
+
+  // Queue category translations
+  if (!isSourceLang && categories) {
+    categories.forEach(cat => {
+      queueTranslation(categoryKey(cat.id, "name"), cat.name);
+    });
+  }
 
   const handleSignOut = async () => {
     await signOut();
@@ -65,7 +75,7 @@ const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-8">
             <Link to="/urunler" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Tüm Ürünler
+              <TranslatedText textKey="nav.all_products" originalText="Tüm Ürünler" />
             </Link>
             {categories?.slice(0, 4).map((category) => (
               <Link
@@ -73,7 +83,7 @@ const Header = () => {
                 to={`/kategori/${category.slug}`}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                {category.name}
+                {t(categoryKey(category.id, "name"), category.name)}
               </Link>
             ))}
             <Link to="/blog" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
@@ -100,14 +110,14 @@ const Header = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/hesabim" className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
-                      Hesabım
+                      <TranslatedText textKey="nav.my_account" originalText="Hesabım" />
                     </Link>
                   </DropdownMenuItem>
                   {isAdmin && (
                     <DropdownMenuItem asChild>
                       <Link to="/admin" className="cursor-pointer">
                         <Settings className="mr-2 h-4 w-4" />
-                        Admin Paneli
+                        <TranslatedText textKey="nav.admin_panel" originalText="Admin Paneli" />
                       </Link>
                     </DropdownMenuItem>
                   )}
@@ -115,21 +125,21 @@ const Header = () => {
                     <DropdownMenuItem asChild>
                       <Link to="/satici" className="cursor-pointer">
                         <Store className="mr-2 h-4 w-4" />
-                        Satıcı Paneli
+                        <TranslatedText textKey="nav.seller_panel" originalText="Satıcı Paneli" />
                       </Link>
                     </DropdownMenuItem>
                   ) : (
                     <DropdownMenuItem asChild>
                       <Link to="/giris?tab=seller" className="cursor-pointer">
                         <Store className="mr-2 h-4 w-4" />
-                        Satıcı Ol
+                        <TranslatedText textKey="nav.become_seller" originalText="Satıcı Ol" />
                       </Link>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
-                    Çıkış Yap
+                    <TranslatedText textKey="nav.logout" originalText="Çıkış Yap" />
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -163,7 +173,7 @@ const Header = () => {
         <div className="lg:hidden border-t border-border bg-background animate-fade-in">
           <nav className="container-main py-4 space-y-1">
             <Link to="/urunler" className="block py-3 text-base font-medium text-foreground" onClick={() => setIsMenuOpen(false)}>
-              Tüm Ürünler
+              <TranslatedText textKey="nav.all_products" originalText="Tüm Ürünler" />
             </Link>
             {categories?.map((category) => (
               <Link
@@ -172,7 +182,7 @@ const Header = () => {
                 className="block py-3 text-base text-muted-foreground hover:text-foreground"
                 onClick={() => setIsMenuOpen(false)}
               >
-                {category.name}
+                {t(categoryKey(category.id, "name"), category.name)}
               </Link>
             ))}
             <div className="pt-4 border-t border-border">
@@ -180,14 +190,14 @@ const Header = () => {
                 Blog
               </Link>
               <Link to="/hakkimizda" className="block py-3 text-base text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>
-                Hakkımızda
+                <TranslatedText textKey="nav.about" originalText="Hakkımızda" />
               </Link>
               <Link to="/iletisim" className="block py-3 text-base text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>
-                İletişim
+                <TranslatedText textKey="nav.contact" originalText="İletişim" />
               </Link>
               {isAdmin && (
                 <Link to="/admin" className="block py-3 text-base text-primary font-medium" onClick={() => setIsMenuOpen(false)}>
-                  Admin Paneli
+                  <TranslatedText textKey="nav.admin_panel" originalText="Admin Paneli" />
                 </Link>
               )}
             </div>

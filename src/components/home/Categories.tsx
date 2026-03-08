@@ -1,9 +1,13 @@
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
+import TranslatedText from "@/components/TranslatedText";
+import { categoryKey } from "@/hooks/useTranslation";
+import { useAITranslation } from "@/hooks/useTranslation";
 
 const Categories = () => {
   const { data: categories, isLoading } = useCategories();
+  const { t, queueTranslation, isSourceLang } = useAITranslation();
 
   if (isLoading) {
     return (
@@ -19,15 +23,22 @@ const Categories = () => {
     return null;
   }
 
+  // Queue category name translations
+  if (!isSourceLang) {
+    categories.forEach(cat => {
+      queueTranslation(categoryKey(cat.id, "name"), cat.name);
+    });
+  }
+
   return (
     <section className="py-16 lg:py-24 bg-secondary/30">
       <div className="container-main">
         <div className="text-center mb-12">
           <h2 className="font-serif text-3xl lg:text-4xl font-medium text-foreground">
-            Kategoriler
+            <TranslatedText textKey="categories.title" originalText="Kategoriler" />
           </h2>
           <p className="mt-2 text-muted-foreground">
-            İhtiyacınıza uygun ürünleri keşfedin
+            <TranslatedText textKey="categories.subtitle" originalText="İhtiyacınıza uygun ürünleri keşfedin" />
           </p>
         </div>
 
@@ -52,7 +63,7 @@ const Categories = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-foreground/20 to-transparent" />
                 <div className="absolute inset-0 flex flex-col items-center justify-end p-4 text-center">
                   <h3 className="font-serif text-lg font-medium text-white mb-1">
-                    {category.name}
+                    {t(categoryKey(category.id, "name"), category.name)}
                   </h3>
                 </div>
               </div>
