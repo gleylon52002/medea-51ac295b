@@ -136,6 +136,10 @@ const AdminMaintenance = () => {
           <ScheduledTasks onRunTask={handleRunTask} />
         </TabsContent>
 
+        <TabsContent value="files" className="flex-1 mt-0 min-h-0">
+          <FileManager />
+        </TabsContent>
+
         <TabsContent value="chat" className="flex-1 flex flex-col mt-0 min-h-0">
           <Card className="flex-1 flex flex-col overflow-hidden border-border">
             {/* Messages */}
