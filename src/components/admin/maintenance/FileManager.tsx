@@ -363,15 +363,19 @@ const FileManager = () => {
 
   const isStorage = selectedNode?.source === "storage";
   const isStorageFolder = !!selectedNode && isStorage && selectedNode.type !== "file";
-  const selectedStorageItems = contentItems.filter((c) => selectedFiles.has(c.path) && c.source === "storage");
+  const checkedStorageItems = contentItems.filter((c) => selectedFiles.has(c.path) && c.source === "storage");
   const hasSelection = selectedFiles.size > 0;
 
-  // Resolve the "active" file for edit/view: checkbox selection takes priority, then highlighted item
-  const activeFile = selectedStorageItems.length === 1 && selectedStorageItems[0].type === "file"
-    ? selectedStorageItems[0]
-    : highlightedItem?.source === "storage" && highlightedItem?.type === "file"
-      ? highlightedItem
-      : null;
+  // Effective selection: checkbox items take priority, fallback to highlighted item
+  const effectiveItems: TreeNode[] = checkedStorageItems.length > 0
+    ? checkedStorageItems
+    : (highlightedItem?.source === "storage" ? [highlightedItem] : []);
+
+  const effectiveFiles = effectiveItems.filter((i) => i.type === "file");
+  const hasEffective = effectiveItems.length > 0;
+
+  // Resolve the "active" file for edit/view
+  const activeFile = effectiveFiles.length === 1 ? effectiveFiles[0] : null;
 
   // ═══════════ OPERATIONS ═══════════
 
@@ -464,14 +468,14 @@ const FileManager = () => {
 
   // Copy / Cut to clipboard
   const handleCopy = () => {
-    if (selectedStorageItems.length === 0) return;
-    setClipboard({ nodes: selectedStorageItems, action: "copy" });
-    toast.success(`${selectedStorageItems.length} öğe kopyalandı`);
+    if (effectiveItems.length === 0) return;
+    setClipboard({ nodes: effectiveItems, action: "copy" });
+    toast.success(`${effectiveItems.length} öğe kopyalandı`);
   };
   const handleCut = () => {
-    if (selectedStorageItems.length === 0) return;
-    setClipboard({ nodes: selectedStorageItems, action: "cut" });
-    toast.success(`${selectedStorageItems.length} öğe kesildi`);
+    if (effectiveItems.length === 0) return;
+    setClipboard({ nodes: effectiveItems, action: "cut" });
+    toast.success(`${effectiveItems.length} öğe kesildi`);
   };
 
   // Paste
@@ -510,8 +514,8 @@ const FileManager = () => {
 
   // Move
   const handleMove = async () => {
-    if (!moveDest.trim() || selectedStorageItems.length === 0) { setMoveOpen(false); return; }
-    for (const node of selectedStorageItems) {
+    if (!moveDest.trim() || effectiveItems.length === 0) { setMoveOpen(false); return; }
+    for (const node of effectiveItems) {
       const bucket = getStorageBucket(node);
       if (!bucket) continue;
       const srcPath = getStoragePath(node);
@@ -613,19 +617,19 @@ const FileManager = () => {
           <ToolBtn icon={FilePlus} label="Dosya" onClick={() => { setNewFileOpen(true); setNewFileName(""); }} disabled={!isStorageFolder} />
           <ToolBtn icon={FolderPlus} label="Klasör" onClick={() => { setNewFolderOpen(true); setNewFolderName(""); }} disabled={!isStorageFolder} />
           <Separator orientation="vertical" className="h-8 mx-0.5" />
-          <ToolBtn icon={Copy} label="Kopyala" onClick={handleCopy} disabled={selectedStorageItems.length === 0} />
-          <ToolBtn icon={Scissors} label="Kes" onClick={handleCut} disabled={selectedStorageItems.length === 0} />
+          <ToolBtn icon={Copy} label="Kopyala" onClick={handleCopy} disabled={!hasEffective} />
+          <ToolBtn icon={Scissors} label="Kes" onClick={handleCut} disabled={!hasEffective} />
           <ToolBtn icon={Move} label="Yapıştır" onClick={handlePaste} disabled={!clipboard || !isStorageFolder} />
-          <ToolBtn icon={Move} label="Taşı" onClick={() => { setMoveOpen(true); setMoveDest(""); }} disabled={selectedStorageItems.length === 0} />
+          <ToolBtn icon={Move} label="Taşı" onClick={() => { setMoveOpen(true); setMoveDest(""); }} disabled={!hasEffective} />
           <Separator orientation="vertical" className="h-8 mx-0.5" />
           <label className="cursor-pointer">
             <input ref={fileInputRef} type="file" multiple onChange={handleUpload} className="hidden" />
             <ToolBtn icon={Upload} label={uploading ? "..." : "Yükle"} onClick={() => fileInputRef.current?.click()} disabled={!isStorageFolder || uploading} />
           </label>
-          <ToolBtn icon={Download} label="İndir" onClick={() => selectedStorageItems.forEach(handleDownload)} disabled={selectedStorageItems.filter(s => s.type === "file").length === 0} />
+          <ToolBtn icon={Download} label="İndir" onClick={() => effectiveFiles.forEach(handleDownload)} disabled={effectiveFiles.length === 0} />
           <Separator orientation="vertical" className="h-8 mx-0.5" />
-          <ToolBtn icon={Trash2} label="Sil" onClick={() => handleDeleteNodes(selectedStorageItems)} disabled={selectedStorageItems.length === 0} destructive />
-          <ToolBtn icon={Edit3} label="Adlandır" onClick={() => selectedStorageItems.length === 1 && openRenameFor(selectedStorageItems[0])} disabled={selectedStorageItems.length !== 1} />
+          <ToolBtn icon={Trash2} label="Sil" onClick={() => handleDeleteNodes(effectiveItems)} disabled={!hasEffective} destructive />
+          <ToolBtn icon={Edit3} label="Adlandır" onClick={() => effectiveItems.length === 1 && openRenameFor(effectiveItems[0])} disabled={effectiveItems.length !== 1} />
           <ToolBtn icon={Edit3} label="Düzenle" onClick={() => activeFile && isEditable(activeFile.name) && openEditor(activeFile)} disabled={!activeFile || !isEditable(activeFile?.name || "")} />
           <ToolBtn icon={Eye} label="Görüntüle" onClick={() => activeFile && isPreviewable(activeFile.name) && openPreview(activeFile)} disabled={!activeFile || !isPreviewable(activeFile?.name || "")} />
 
@@ -700,7 +704,7 @@ const FileManager = () => {
                         highlightedItem?.path === item.path && !isChecked && "bg-accent/60"
                       )}
                       onClick={() => {
-                        if (item.type === "file" && isStorageItem) setHighlightedItem(item);
+                        if (isStorageItem) setHighlightedItem(item);
                         else setHighlightedItem(null);
                       }}
                       onDoubleClick={() => {
@@ -794,7 +798,7 @@ const FileManager = () => {
       <Dialog open={moveOpen} onOpenChange={setMoveOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle className="text-sm">Dosyaları Taşı</DialogTitle></DialogHeader>
-          <p className="text-xs text-muted-foreground">{selectedStorageItems.length} öğe taşınacak. Hedef yol girin:</p>
+          <p className="text-xs text-muted-foreground">{effectiveItems.length} öğe taşınacak. Hedef yol girin:</p>
           <Input value={moveDest} onChange={(e) => setMoveDest(e.target.value)} placeholder="hedef/klasor/yolu" onKeyDown={(e) => e.key === "Enter" && handleMove()} />
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setMoveOpen(false)}>İptal</Button>
