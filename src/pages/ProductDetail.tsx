@@ -218,7 +218,8 @@ const ProductDetail = () => {
                 {product.categories?.name}
               </Link>
               <h1 className="font-serif text-3xl lg:text-4xl font-medium text-foreground mt-2">
-                {product.name}
+                {pt.name}
+                {pt.isTranslating && <TranslateLoader className="inline-block ml-2 h-4 w-4 animate-spin text-muted-foreground" />}
               </h1>
             </div>
 
