@@ -419,28 +419,6 @@ const AdminMaintenance = () => {
             {/* Input */}
             <div className="border-t border-border p-4">
               <div className="flex gap-3 max-w-4xl mx-auto items-start">
-                {/* Hamburger menu for quick actions (visible when chat has messages) */}
-                {messages.length > 0 && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon" className="shrink-0 h-[44px] w-[44px]" title="Hızlı komutlar">
-                        <Menu className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-64">
-                      {quickActions.map((action) => (
-                        <DropdownMenuItem 
-                          key={action.label}
-                          onClick={() => sendMessage(action.prompt)}
-                          className="gap-2"
-                        >
-                          <action.icon className="h-4 w-4 text-primary" />
-                          <span>{action.label}</span>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
 
                 <input
                   ref={fileInputRef}
