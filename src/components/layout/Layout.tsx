@@ -1,4 +1,5 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import CartDrawer from "@/components/cart/CartDrawer";
@@ -11,6 +12,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useCartSync } from "@/hooks/useUserCart";
 import { useActivityLogger } from "@/hooks/useActivityLog";
 import { useHeatmapTracking } from "@/hooks/useHeatmap";
+import { trackPageView, initScrollDepthTracker, resetScrollTracker } from "@/lib/analytics";
 
 interface LayoutProps {
   children: ReactNode;
