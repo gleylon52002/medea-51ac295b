@@ -418,8 +418,21 @@ const AdminProducts = () => {
                       required
                     />
                   </div>
-                  
-                   <div className="col-span-2">
+
+                  <div className="col-span-2">
+                    <Label htmlFor="video_url">Video URL</Label>
+                    <Input
+                      id="video_url"
+                      value={formData.video_url}
+                      onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                      placeholder="https://www.youtube.com/watch?v=... veya https://example.com/video.mp4"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      YouTube linki veya mp4/webm/ogg dosya linki ekleyebilirsiniz.
+                    </p>
+                  </div>
+
+                  <div className="col-span-2">
                     <div className="flex items-center gap-1">
                       <Label htmlFor="short_description">Kısa Açıklama</Label>
                       <AIFillButton
