@@ -577,6 +577,62 @@ const AdminSettings = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="analytics">
+          <Card>
+            <CardHeader>
+              <CardTitle>Google Analytics (GA4)</CardTitle>
+              <CardDescription>GA4 takip kodunu yapılandırın. Measurement ID'nizi girerek e-ticaret olaylarını otomatik takip edin.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="ga4_id">GA4 Measurement ID</Label>
+                <Input
+                  id="ga4_id"
+                  placeholder="G-XXXXXXXXXX"
+                  value={(() => {
+                    const s = settings?.find(s => s.key === "ga4_measurement_id");
+                    return s ? String(s.value) : "";
+                  })()}
+                  onChange={(e) => {
+                    // Managed via saveMutation below
+                    const val = e.target.value;
+                    (document.getElementById("ga4_id") as HTMLInputElement).dataset.value = val;
+                  }}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Google Analytics 4 &gt; Yönetici &gt; Veri Akışları &gt; Web akışı seçin &gt; Ölçüm Kimliği
+                </p>
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Otomatik Takip Edilen Olaylar</h4>
+                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> Sayfa Görüntüleme</div>
+                  <div className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> Ürün Görüntüleme</div>
+                  <div className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> Sepete Ekleme</div>
+                  <div className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> Sepet Görüntüleme</div>
+                  <div className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> Ödeme Başlatma</div>
+                  <div className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> Satın Alma</div>
+                  <div className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> Arama</div>
+                  <div className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> Scroll Derinliği</div>
+                  <div className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> Favorilere Ekleme</div>
+                  <div className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" /> Kayıt / Giriş</div>
+                </div>
+              </div>
+              <Button
+                onClick={() => {
+                  const el = document.getElementById("ga4_id") as HTMLInputElement;
+                  const val = el?.value || "";
+                  saveMutation.mutate({ key: "ga4_measurement_id", value: val as any });
+                }}
+                disabled={saveMutation.isPending}
+                className="w-full sm:w-auto"
+              >
+                Kaydet
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="app">
           <Card>
             <CardHeader>
