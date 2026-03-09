@@ -252,6 +252,9 @@ const App = () => (
                   <Route path="kampanya-takvimi" element={<AdminCampaignCalendar />} />
                   <Route path="hakkimizda" element={<AdminAbout />} />
                   <Route path="analitik" element={<AdminAnalytics />} />
+                  <Route path="depolar" element={<AdminWarehouses />} />
+                  <Route path="fiyatlandirma" element={<AdminPricingRules />} />
+                  <Route path="whatsapp" element={<AdminWhatsApp />} />
                 </Route>
 
                 {/* Seller Routes */}
