@@ -247,6 +247,7 @@ const App = () => (
                   <Route path="email-otomasyon" element={<AdminEmailAutomation />} />
                   <Route path="kampanya-takvimi" element={<AdminCampaignCalendar />} />
                   <Route path="hakkimizda" element={<AdminAbout />} />
+                  <Route path="analitik" element={<AdminAnalytics />} />
                 </Route>
 
                 {/* Seller Routes */}

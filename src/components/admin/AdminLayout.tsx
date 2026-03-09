@@ -132,6 +132,7 @@ const menuGroups: MenuGroup[] = [
   {
     title: "Analitik",
     items: [
+      { icon: BarChart3, label: "Analitik Dashboard", path: "/admin/analitik" },
       { icon: Activity, label: "Aktivite Logları", path: "/admin/aktivite" },
       { icon: TrendingDown, label: "Dönüşüm Hunisi", path: "/admin/donusum-hunisi" },
       { icon: BarChart3, label: "Cohort Analizi", path: "/admin/cohort" },
