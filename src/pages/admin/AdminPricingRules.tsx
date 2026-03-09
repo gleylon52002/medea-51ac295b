@@ -56,10 +56,10 @@ const AdminPricingRules = () => {
   const saveMutation = useMutation({
     mutationFn: async (rule: Partial<PricingRule>) => {
       if (editingRule) {
-        const { error } = await supabase.from("pricing_rules").update(rule).eq("id", editingRule.id);
+        const { error } = await supabase.from("pricing_rules").update(rule as any).eq("id", editingRule.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("pricing_rules").insert(rule);
+        const { error } = await supabase.from("pricing_rules").insert(rule as any);
         if (error) throw error;
       }
     },

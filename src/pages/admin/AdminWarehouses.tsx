@@ -54,11 +54,11 @@ const AdminWarehouses = () => {
       if (editingWarehouse) {
         const { error } = await supabase
           .from("warehouses")
-          .update(warehouse)
+          .update(warehouse as any)
           .eq("id", editingWarehouse.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("warehouses").insert(warehouse);
+        const { error } = await supabase.from("warehouses").insert(warehouse as any);
         if (error) throw error;
       }
     },
