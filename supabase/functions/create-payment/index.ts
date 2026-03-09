@@ -129,7 +129,7 @@ serve(async (req) => {
       case "shopier": {
         const shopierApiKey = providerConfig.api_key;
         const shopierSecret = providerConfig.secret;
-        const shopierApiUser = providerConfig.api_user;
+        const shopierWebsiteIndex = providerConfig.website_index || "1";
         if (!shopierApiKey || !shopierSecret) {
           return new Response(JSON.stringify({ error: "Shopier API credentials not configured" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -137,22 +137,40 @@ serve(async (req) => {
         
         // Build Shopier payment form data
         const randomNr = Math.random().toString(36).substring(2, 15);
+        const currency = "TRY";
+        const totalOrderValue = amount.toFixed(2);
+        
+        // Signature: hash_hmac('SHA256', random_nr + platform_order_id + total_order_value + currency, secret)
+        const signData = `${randomNr}${orderNumber}${totalOrderValue}${currency}`;
+        const encoder = new TextEncoder();
+        const key = await crypto.subtle.importKey(
+          "raw", encoder.encode(shopierSecret),
+          { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+        );
+        const sigBuf = await crypto.subtle.sign("HMAC", key, encoder.encode(signData));
+        const signature = btoa(String.fromCharCode(...new Uint8Array(sigBuf)));
+        
+        const buyerName = customerName.split(" ")[0] || customerName;
+        const buyerSurname = customerName.split(" ").slice(1).join(" ") || customerName;
+        
         paymentData = {
-          API_key: shopierApiUser || shopierApiKey,
-          API_secret: shopierSecret,
+          API_key: shopierApiKey,
+          website_index: shopierWebsiteIndex,
           platform_order_id: orderNumber,
           product_name: `Sipariş #${orderNumber}`,
-          product_price: amount.toFixed(2),
-          product_type: "1",
-          buyer_name: customerName.split(" ")[0] || customerName,
-          buyer_surname: customerName.split(" ").slice(1).join(" ") || customerName,
+          product_type: 1,
+          total_order_value: totalOrderValue,
+          currency: currency,
+          buyer_name: buyerName,
+          buyer_surname: buyerSurname,
           buyer_email: customerEmail,
           buyer_phone: customerPhone.replace(/\s/g, ""),
+          buyer_account_age: 1,
           buyer_id_nr: "",
           buyer_ip: "",
           module_version: "1.0",
-          website_index: returnUrl.split("/siparis")[0] || "https://medea.tr",
           random_nr: randomNr,
+          signature: signature,
           callback: callbackUrl,
           success_url: `${returnUrl}?status=success&order=${orderNumber}`,
           fail_url: `${returnUrl}?status=failed&order=${orderNumber}`,
