@@ -88,6 +88,7 @@ const AdminSegments = lazy(() => import("./pages/admin/AdminSegments"));
 const AdminEmailAutomation = lazy(() => import("./pages/admin/AdminEmailAutomation"));
 const AdminCampaignCalendar = lazy(() => import("./pages/admin/AdminCampaignCalendar"));
 const AdminAbout = lazy(() => import("./pages/admin/AdminAbout"));
+const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 
 
 // Seller Pages (lazy)
@@ -246,6 +247,7 @@ const App = () => (
                   <Route path="email-otomasyon" element={<AdminEmailAutomation />} />
                   <Route path="kampanya-takvimi" element={<AdminCampaignCalendar />} />
                   <Route path="hakkimizda" element={<AdminAbout />} />
+                  <Route path="analitik" element={<AdminAnalytics />} />
                 </Route>
 
                 {/* Seller Routes */}
