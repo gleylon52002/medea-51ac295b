@@ -49,6 +49,7 @@ const AdminProducts = () => {
     name: "",
     short_description: "",
     description: "",
+    video_url: "",
     price: "",
     sale_price: "",
     stock: "0",
