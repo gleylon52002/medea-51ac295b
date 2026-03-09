@@ -527,6 +527,50 @@ export type Database = {
           },
         ]
       }
+      cargo_shipments: {
+        Row: {
+          created_at: string | null
+          id: string
+          label_url: string | null
+          order_id: string | null
+          provider: string
+          shipment_data: Json | null
+          status: string
+          tracking_number: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          label_url?: string | null
+          order_id?: string | null
+          provider: string
+          shipment_data?: Json | null
+          status?: string
+          tracking_number?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          label_url?: string | null
+          order_id?: string | null
+          provider?: string
+          shipment_data?: Json | null
+          status?: string
+          tracking_number?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cargo_shipments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -861,6 +905,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      einvoice_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          invoice_id: string | null
+          provider: string
+          request_data: Json | null
+          response_data: Json | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          invoice_id?: string | null
+          provider: string
+          request_data?: Json | null
+          response_data?: Json | null
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          invoice_id?: string | null
+          provider?: string
+          request_data?: Json | null
+          response_data?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "einvoice_logs_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_automations: {
         Row: {
@@ -1352,6 +1437,36 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_logs: {
+        Row: {
+          channel: string
+          created_at: string | null
+          id: string
+          message_type: string
+          metadata: Json | null
+          recipient: string
+          status: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string | null
+          id?: string
+          message_type: string
+          metadata?: Json | null
+          recipient: string
+          status?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string | null
+          id?: string
+          message_type?: string
+          metadata?: Json | null
+          recipient?: string
+          status?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string
@@ -1588,6 +1703,88 @@ export type Database = {
           },
         ]
       }
+      pricing_rules: {
+        Row: {
+          adjustment_type: string
+          adjustment_value: number
+          applies_to: string
+          category_id: string | null
+          condition_type: string | null
+          condition_value: number | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          max_price: number | null
+          min_price: number | null
+          name: string
+          priority: number | null
+          product_ids: string[] | null
+          rule_type: string
+          seller_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          adjustment_type?: string
+          adjustment_value?: number
+          applies_to?: string
+          category_id?: string | null
+          condition_type?: string | null
+          condition_value?: number | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_price?: number | null
+          min_price?: number | null
+          name: string
+          priority?: number | null
+          product_ids?: string[] | null
+          rule_type?: string
+          seller_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          adjustment_type?: string
+          adjustment_value?: number
+          applies_to?: string
+          category_id?: string | null
+          condition_type?: string | null
+          condition_value?: number | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_price?: number | null
+          min_price?: number | null
+          name?: string
+          priority?: number | null
+          product_ids?: string[] | null
+          rule_type?: string
+          seller_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_rules_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricing_rules_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricing_rules_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_comparisons: {
         Row: {
           created_at: string | null
@@ -1818,6 +2015,48 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_warehouse_stock: {
+        Row: {
+          id: string
+          product_id: string
+          reserved: number
+          stock: number
+          updated_at: string | null
+          warehouse_id: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          reserved?: number
+          stock?: number
+          updated_at?: string | null
+          warehouse_id: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          reserved?: number
+          stock?: number
+          updated_at?: string | null
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_warehouse_stock_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_warehouse_stock_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
             referencedColumns: ["id"]
           },
         ]
@@ -3520,6 +3759,60 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      warehouses: {
+        Row: {
+          address: string | null
+          city: string | null
+          code: string
+          created_at: string | null
+          district: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          name: string
+          seller_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          code: string
+          created_at?: string | null
+          district?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name: string
+          seller_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          code?: string
+          created_at?: string | null
+          district?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name?: string
+          seller_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouses_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warehouses_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

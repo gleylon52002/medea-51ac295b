@@ -89,6 +89,10 @@ const AdminEmailAutomation = lazy(() => import("./pages/admin/AdminEmailAutomati
 const AdminCampaignCalendar = lazy(() => import("./pages/admin/AdminCampaignCalendar"));
 const AdminAbout = lazy(() => import("./pages/admin/AdminAbout"));
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
+const AdminWarehouses = lazy(() => import("./pages/admin/AdminWarehouses"));
+const AdminPricingRules = lazy(() => import("./pages/admin/AdminPricingRules"));
+const AdminWhatsApp = lazy(() => import("./pages/admin/AdminWhatsApp"));
+const SellerScorecard = lazy(() => import("./pages/seller/SellerScorecard"));
 
 
 // Seller Pages (lazy)
@@ -248,6 +252,9 @@ const App = () => (
                   <Route path="kampanya-takvimi" element={<AdminCampaignCalendar />} />
                   <Route path="hakkimizda" element={<AdminAbout />} />
                   <Route path="analitik" element={<AdminAnalytics />} />
+                  <Route path="depolar" element={<AdminWarehouses />} />
+                  <Route path="fiyatlandirma" element={<AdminPricingRules />} />
+                  <Route path="whatsapp" element={<AdminWhatsApp />} />
                 </Route>
 
                 {/* Seller Routes */}
@@ -266,6 +273,7 @@ const App = () => (
                   <Route path="sorular" element={<SellerQuestions />} />
                   <Route path="kargo" element={<SellerCargo />} />
                   <Route path="stok-tahmini" element={<SellerStockForecast />} />
+                  <Route path="performans" element={<SellerScorecard />} />
                   <Route path="ayarlar" element={<SellerSettings />} />
                 </Route>
 

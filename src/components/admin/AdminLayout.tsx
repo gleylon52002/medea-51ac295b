@@ -145,6 +145,9 @@ const menuGroups: MenuGroup[] = [
       { icon: Search, label: "SEO", path: "/admin/seo" },
       { icon: Settings, label: "Genel Ayarlar", path: "/admin/ayarlar" },
       { icon: Wrench, label: "Bakım Merkezi", path: "/admin/bakim" },
+      { icon: MessageSquare, label: "WhatsApp", path: "/admin/whatsapp" },
+      { icon: Package, label: "Depolar", path: "/admin/depolar" },
+      { icon: Tag, label: "Fiyatlandırma", path: "/admin/fiyatlandirma" },
     ],
   },
 ];
