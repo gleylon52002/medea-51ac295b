@@ -89,6 +89,10 @@ const AdminEmailAutomation = lazy(() => import("./pages/admin/AdminEmailAutomati
 const AdminCampaignCalendar = lazy(() => import("./pages/admin/AdminCampaignCalendar"));
 const AdminAbout = lazy(() => import("./pages/admin/AdminAbout"));
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
+const AdminWarehouses = lazy(() => import("./pages/admin/AdminWarehouses"));
+const AdminPricingRules = lazy(() => import("./pages/admin/AdminPricingRules"));
+const AdminWhatsApp = lazy(() => import("./pages/admin/AdminWhatsApp"));
+const SellerScorecard = lazy(() => import("./pages/seller/SellerScorecard"));
 
 
 // Seller Pages (lazy)
