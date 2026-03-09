@@ -219,6 +219,7 @@ const AdminProducts = () => {
       slug: generateSlug(formData.name),
       description: formData.description.trim() || null,
       short_description: formData.short_description.trim() || null,
+      video_url: formData.video_url.trim() || null,
       price: parseFloat(formData.price),
       sale_price: formData.sale_price ? parseFloat(formData.sale_price) : null,
       stock: parseInt(formData.stock) || 0,
