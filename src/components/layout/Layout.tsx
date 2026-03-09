@@ -19,10 +19,17 @@ interface LayoutProps {
 }
 
 const Layout = ({ children }: LayoutProps) => {
+  const location = useLocation();
   useTheme();
   useCartSync();
   useActivityLogger();
   useHeatmapTracking();
+
+  useEffect(() => {
+    trackPageView(location.pathname);
+    resetScrollTracker();
+    initScrollDepthTracker();
+  }, [location.pathname]);
   
   return (
     <div className="flex min-h-screen flex-col">
