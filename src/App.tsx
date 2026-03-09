@@ -273,6 +273,7 @@ const App = () => (
                   <Route path="sorular" element={<SellerQuestions />} />
                   <Route path="kargo" element={<SellerCargo />} />
                   <Route path="stok-tahmini" element={<SellerStockForecast />} />
+                  <Route path="performans" element={<SellerScorecard />} />
                   <Route path="ayarlar" element={<SellerSettings />} />
                 </Route>
 
