@@ -242,6 +242,7 @@ const AdminSettings = () => {
             <TabsTrigger value="contact">İletişim</TabsTrigger>
             <TabsTrigger value="shipping">Kargo</TabsTrigger>
             <TabsTrigger value="email">E-posta</TabsTrigger>
+            <TabsTrigger value="analytics">Analitik</TabsTrigger>
             <TabsTrigger value="legal">Hukuki</TabsTrigger>
             <TabsTrigger value="app">Mobil Uygulama</TabsTrigger>
           </TabsList>
