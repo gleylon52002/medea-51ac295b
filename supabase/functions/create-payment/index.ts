@@ -159,7 +159,7 @@ serve(async (req) => {
           website_index: shopierWebsiteIndex,
           platform_order_id: orderNumber,
           product_name: `Sipariş #${orderNumber}`,
-          product_type: 1,
+          product_type: 0,          // 0 = fiziksel ürün
           total_order_value: totalOrderValue,
           currency: currency,
           buyer_name: buyerName,
