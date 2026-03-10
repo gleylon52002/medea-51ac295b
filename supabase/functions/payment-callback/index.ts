@@ -133,7 +133,7 @@ serve(async (req) => {
               });
             }
             const signData = `${body.orderId || body.order_id || ""}${body.amount || ""}${body.resultCode || body.status || ""}`;
-            const expectedSignature = await computeHmacSha256(signData, token);
+            const expectedSignature = await computeHmacSha256Base64(signData, token);
             if (receivedSignature !== expectedSignature) {
               console.error("ShopiNext signature mismatch");
               return new Response(JSON.stringify({ error: "Invalid signature" }), {
