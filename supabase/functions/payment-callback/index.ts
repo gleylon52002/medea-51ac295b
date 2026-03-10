@@ -61,47 +61,34 @@ serve(async (req) => {
         orderId = body.platform_order_id || body.order_id;
         transactionId = body.payment_id;
         status = body.status === "1" || body.status === "success" ? "success" : "failed";
-        amount = parseFloat(body.product_price || "0");
+        amount = parseFloat(body.product_price || body.total_order_value || "0");
         
-        // Verify Shopier signature
-        const { data: shopierConfig } = await supabase
-          .from("payment_settings")
-          .select("config")
-          .eq("method", "shopier")
-          .single();
-        
-        if (shopierConfig?.config) {
-          const secret = (shopierConfig.config as Record<string, string>).secret;
-          if (secret) {
-            const receivedSignature = body.signature || body.hash;
-            if (!receivedSignature) {
-              console.error("Shopier callback missing signature");
-              return new Response(JSON.stringify({ error: "Missing signature" }), {
-                status: 401,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-              });
-            }
-            // Compute HMAC from relevant fields: random_nr + platform_order_id + total_order_value + currency
-            const signData = `${body.random_nr || ""}${body.platform_order_id || ""}${body.total_order_value || body.product_price || ""}${body.currency || "TRY"}`;
-            const expectedSignature = await computeHmacSha256Base64(signData, secret);
-            if (receivedSignature !== expectedSignature) {
-              console.error("Shopier signature mismatch");
-              return new Response(JSON.stringify({ error: "Invalid signature" }), {
-                status: 401,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-              });
-            }
-          } else {
-            console.error("Shopier secret not configured - rejecting callback");
-            return new Response(JSON.stringify({ error: "Provider not configured" }), {
-              status: 500,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
-          }
-        } else {
-          console.error("Shopier config not found");
+        // Verify Shopier signature using environment variable
+        const shopierSecret = Deno.env.get("SHOPIER_API_SECRET");
+        if (!shopierSecret) {
+          console.error("SHOPIER_API_SECRET not configured");
           return new Response(JSON.stringify({ error: "Provider not configured" }), {
             status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const receivedSignature = body.signature || body.hash;
+        if (!receivedSignature) {
+          console.error("Shopier callback missing signature");
+          return new Response(JSON.stringify({ error: "Missing signature" }), {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        
+        // HMAC: random_nr + platform_order_id + total_order_value + currency
+        const signData = `${body.random_nr || ""}${body.platform_order_id || ""}${body.total_order_value || body.product_price || ""}${body.currency || "TRY"}`;
+        const expectedSignature = await computeHmacSha256Base64(signData, shopierSecret);
+        if (receivedSignature !== expectedSignature) {
+          console.error("Shopier signature mismatch", { received: receivedSignature, expected: expectedSignature });
+          return new Response(JSON.stringify({ error: "Invalid signature" }), {
+            status: 401,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
