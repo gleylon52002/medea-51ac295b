@@ -127,8 +127,9 @@ serve(async (req) => {
 
     switch (effectiveProvider) {
       case "shopier": {
-        const shopierApiKey = providerConfig.api_key;
-        const shopierSecret = providerConfig.secret;
+        // Use environment variables for Shopier credentials
+        const shopierApiKey = Deno.env.get("SHOPIER_API_KEY") || providerConfig.api_key;
+        const shopierSecret = Deno.env.get("SHOPIER_API_SECRET") || providerConfig.secret;
         const shopierWebsiteIndex = providerConfig.website_index || "1";
         if (!shopierApiKey || !shopierSecret) {
           return new Response(JSON.stringify({ error: "Shopier API credentials not configured" }),
