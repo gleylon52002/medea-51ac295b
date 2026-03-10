@@ -83,7 +83,7 @@ serve(async (req) => {
             }
             // Compute HMAC from relevant fields: random_nr + platform_order_id + total_order_value + currency
             const signData = `${body.random_nr || ""}${body.platform_order_id || ""}${body.total_order_value || body.product_price || ""}${body.currency || "TRY"}`;
-            const expectedSignature = await computeHmacSha256(signData, secret);
+            const expectedSignature = await computeHmacSha256Base64(signData, secret);
             if (receivedSignature !== expectedSignature) {
               console.error("Shopier signature mismatch");
               return new Response(JSON.stringify({ error: "Invalid signature" }), {
