@@ -176,7 +176,7 @@ serve(async (req) => {
               });
             }
             const signData = `${body.merchant_order_id || body.order_id || ""}${body.amount || ""}${body.status || body.result || ""}`;
-            const expectedSignature = await computeHmacSha256(signData, secretKey);
+            const expectedSignature = await computeHmacSha256Base64(signData, secretKey);
             if (receivedSignature !== expectedSignature) {
               console.error("Payizone signature mismatch");
               return new Response(JSON.stringify({ error: "Invalid signature" }), {
