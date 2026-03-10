@@ -6,8 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// HMAC-SHA256 signature computation
-async function computeHmacSha256(data: string, secret: string): Promise<string> {
+// HMAC-SHA256 signature computation (base64 encoded to match Shopier format)
+async function computeHmacSha256Base64(data: string, secret: string): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -17,9 +17,7 @@ async function computeHmacSha256(data: string, secret: string): Promise<string> 
     ["sign"]
   );
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
-  return Array.from(new Uint8Array(signature))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  return btoa(String.fromCharCode(...new Uint8Array(signature)));
 }
 
 serve(async (req) => {
@@ -83,9 +81,9 @@ serve(async (req) => {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
               });
             }
-            // Compute HMAC from relevant fields
-            const signData = `${body.platform_order_id || ""}${body.product_price || ""}${body.status || ""}`;
-            const expectedSignature = await computeHmacSha256(signData, secret);
+            // Compute HMAC from relevant fields: random_nr + platform_order_id + total_order_value + currency
+            const signData = `${body.random_nr || ""}${body.platform_order_id || ""}${body.total_order_value || body.product_price || ""}${body.currency || "TRY"}`;
+            const expectedSignature = await computeHmacSha256Base64(signData, secret);
             if (receivedSignature !== expectedSignature) {
               console.error("Shopier signature mismatch");
               return new Response(JSON.stringify({ error: "Invalid signature" }), {
@@ -135,7 +133,7 @@ serve(async (req) => {
               });
             }
             const signData = `${body.orderId || body.order_id || ""}${body.amount || ""}${body.resultCode || body.status || ""}`;
-            const expectedSignature = await computeHmacSha256(signData, token);
+            const expectedSignature = await computeHmacSha256Base64(signData, token);
             if (receivedSignature !== expectedSignature) {
               console.error("ShopiNext signature mismatch");
               return new Response(JSON.stringify({ error: "Invalid signature" }), {
@@ -178,7 +176,7 @@ serve(async (req) => {
               });
             }
             const signData = `${body.merchant_order_id || body.order_id || ""}${body.amount || ""}${body.status || body.result || ""}`;
-            const expectedSignature = await computeHmacSha256(signData, secretKey);
+            const expectedSignature = await computeHmacSha256Base64(signData, secretKey);
             if (receivedSignature !== expectedSignature) {
               console.error("Payizone signature mismatch");
               return new Response(JSON.stringify({ error: "Invalid signature" }), {

@@ -164,7 +164,7 @@ serve(async (req) => {
           buyer_name: buyerName,
           buyer_surname: buyerSurname,
           buyer_email: customerEmail,
-          buyer_phone: customerPhone.replace(/\s/g, ""),
+          buyer_phone: customerPhone.replace(/\D/g, ""),
           buyer_account_age: 1,
           buyer_id_nr: "",
           buyer_ip: "",
@@ -172,10 +172,13 @@ serve(async (req) => {
           random_nr: randomNr,
           signature: signature,
           callback: callbackUrl,
+          platform: "0",
+          is_in_frame: "0",
+          language: "tr",
           success_url: `${returnUrl}?status=success&order=${orderNumber}`,
           fail_url: `${returnUrl}?status=failed&order=${orderNumber}`,
         };
-        paymentUrl = "https://www.shopier.com/ShowProduct/api_pay3.php";
+        paymentUrl = "https://www.shopier.com/ShowProduct/api_pay4.php";
         break;
       }
       case "shopinext": {
