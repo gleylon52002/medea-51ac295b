@@ -6,8 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// HMAC-SHA256 signature computation
-async function computeHmacSha256(data: string, secret: string): Promise<string> {
+// HMAC-SHA256 signature computation (base64 encoded to match Shopier format)
+async function computeHmacSha256Base64(data: string, secret: string): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -17,9 +17,7 @@ async function computeHmacSha256(data: string, secret: string): Promise<string> 
     ["sign"]
   );
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
-  return Array.from(new Uint8Array(signature))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  return btoa(String.fromCharCode(...new Uint8Array(signature)));
 }
 
 serve(async (req) => {
