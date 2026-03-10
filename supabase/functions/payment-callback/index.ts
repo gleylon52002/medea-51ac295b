@@ -83,8 +83,8 @@ serve(async (req) => {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
               });
             }
-            // Compute HMAC from relevant fields
-            const signData = `${body.platform_order_id || ""}${body.product_price || ""}${body.status || ""}`;
+            // Compute HMAC from relevant fields: random_nr + platform_order_id + total_order_value + currency
+            const signData = `${body.random_nr || ""}${body.platform_order_id || ""}${body.total_order_value || body.product_price || ""}${body.currency || "TRY"}`;
             const expectedSignature = await computeHmacSha256(signData, secret);
             if (receivedSignature !== expectedSignature) {
               console.error("Shopier signature mismatch");
