@@ -130,7 +130,7 @@ serve(async (req) => {
         // Use environment variables for Shopier credentials
         const shopierApiKey = Deno.env.get("SHOPIER_API_KEY") || providerConfig.api_key;
         const shopierSecret = Deno.env.get("SHOPIER_API_SECRET") || providerConfig.secret;
-        const shopierWebsiteIndex = providerConfig.website_index || "1";
+        const shopierWebsiteIndex = providerConfig.website_index || "0";
         if (!shopierApiKey || !shopierSecret) {
           return new Response(JSON.stringify({ error: "Shopier API credentials not configured" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -159,7 +159,7 @@ serve(async (req) => {
           website_index: shopierWebsiteIndex,
           platform_order_id: orderNumber,
           product_name: `Sipariş #${orderNumber}`,
-          product_type: 1,
+          product_type: 0,          // 0 = fiziksel ürün
           total_order_value: totalOrderValue,
           currency: currency,
           buyer_name: buyerName,
