@@ -18,7 +18,7 @@ interface SmsHistoryItem {
   errorMessage?: string;
 }
 
-const SMS_HISTORY_KEY = "vatansms_history";
+const SMS_HISTORY_KEY = "twilio_sms_history";
 
 const getHistory = (): SmsHistoryItem[] => {
   try {
@@ -63,11 +63,11 @@ const SmsSend = () => {
   const validPhones = parsedPhones.filter(validatePhone);
   const invalidPhones = parsedPhones.filter((p) => p && !validatePhone(p));
 
-  const settingsComplete = settings.apiId && settings.apiKey && settings.sender;
+  const settingsComplete = settings.accountSid && settings.authToken && settings.fromNumber;
 
   const handleSend = async () => {
     if (!settingsComplete) {
-      toast.error("API ayarlarını önce tamamlayın");
+      toast.error("Twilio API ayarlarını önce tamamlayın");
       return;
     }
     if (validPhones.length === 0) {
@@ -84,12 +84,11 @@ const SmsSend = () => {
     try {
       const { data, error } = await supabase.functions.invoke("ileti-merkezi-sms", {
         body: {
-          api_id: settings.apiId,
-          api_key: settings.apiKey,
-          sender: settings.sender,
-          message: message,
-          phones: validPhones,
-          message_content_type: settings.messageContentType,
+          accountSid: settings.accountSid,
+          authToken: settings.authToken,
+          from: settings.fromNumber,
+          to: validPhones,
+          body: message,
         },
       });
 
@@ -107,7 +106,7 @@ const SmsSend = () => {
       }
 
       if (data?.success) {
-        toast.success("SMS başarıyla gönderildi!", { duration: 5000 });
+        toast.success(data.message || "SMS başarıyla gönderildi!", { duration: 5000 });
         addToHistory({
           id: crypto.randomUUID(),
           date: new Date().toISOString(),
@@ -119,14 +118,15 @@ const SmsSend = () => {
         setMessage("");
         setShowPreview(false);
       } else {
-        toast.error(`Hata: ${data?.error}`, { duration: 8000 });
+        const errMsg = data?.results?.[0]?.error || data?.message || "SMS gönderilemedi";
+        toast.error(`Hata: ${errMsg}`, { duration: 8000 });
         addToHistory({
           id: crypto.randomUUID(),
           date: new Date().toISOString(),
           recipients: validPhones,
           message,
           status: "error",
-          errorMessage: data?.error,
+          errorMessage: errMsg,
         });
       }
     } catch (err: any) {
@@ -142,9 +142,9 @@ const SmsSend = () => {
         <div className="flex items-start gap-2 p-4 bg-destructive/10 rounded-lg border border-destructive/20">
           <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-destructive">API Ayarları Eksik</p>
+            <p className="text-sm font-medium text-destructive">Twilio Ayarları Eksik</p>
             <p className="text-xs text-destructive/80">
-              SMS göndermek için önce "Ayarlar" sekmesinden VatanSMS API bilgilerinizi girin.
+              SMS göndermek için önce "Ayarlar" sekmesinden Twilio bilgilerinizi girin.
             </p>
           </div>
         </div>
@@ -215,8 +215,8 @@ const SmsSend = () => {
           <CardContent className="space-y-3 text-sm">
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label className="text-xs text-muted-foreground">Gönderici</Label>
-                <p className="font-medium">{settings.sender || "—"}</p>
+                <Label className="text-xs text-muted-foreground">Gönderici Numara</Label>
+                <p className="font-medium">{settings.fromNumber || "—"}</p>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Alıcı Sayısı</Label>
@@ -224,11 +224,13 @@ const SmsSend = () => {
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">SMS Adedi</Label>
-                <p className="font-medium">{smsCount} × {validPhones.length} = {smsCount * validPhones.length} SMS</p>
+                <p className="font-medium">
+                  {smsCount} × {validPhones.length} = {smsCount * validPhones.length} SMS
+                </p>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Mesaj Tipi</Label>
-                <p className="font-medium">{settings.messageContentType === "bilgi" ? "Bilgi" : "Ticari"}</p>
+                <Label className="text-xs text-muted-foreground">Sağlayıcı</Label>
+                <p className="font-medium">Twilio</p>
               </div>
             </div>
             <div>
