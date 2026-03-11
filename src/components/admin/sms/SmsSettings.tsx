@@ -15,6 +15,11 @@ export interface TwilioSettings {
 
 const STORAGE_KEY = "twilio_settings";
 
+const normalizeIntlPhone = (phone: string): string => {
+  const cleaned = String(phone || "").replace(/\D/g, "");
+  return cleaned ? `+${cleaned}` : "";
+};
+
 export const getSettings = (): TwilioSettings => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -35,15 +40,28 @@ const SmsSettings = () => {
   }, []);
 
   const handleSave = () => {
-    if (!settings.accountSid || !settings.authToken || !settings.fromNumber) {
+    const normalizedFrom = normalizeIntlPhone(settings.fromNumber);
+
+    if (!settings.accountSid || !settings.authToken || !normalizedFrom) {
       toast.error("Tüm alanları doldurun");
       return;
     }
+
     if (!settings.accountSid.startsWith("AC")) {
       toast.error("Account SID 'AC' ile başlamalıdır");
       return;
     }
-    saveSettings(settings);
+
+    saveSettings({
+      ...settings,
+      fromNumber: normalizedFrom,
+    });
+
+    setSettings((prev) => ({
+      ...prev,
+      fromNumber: normalizedFrom,
+    }));
+
     toast.success("Twilio ayarları kaydedildi");
   };
 
@@ -67,6 +85,7 @@ const SmsSettings = () => {
             </a>
           </CardDescription>
         </CardHeader>
+
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Account SID</Label>

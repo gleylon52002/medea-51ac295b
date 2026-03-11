@@ -39,7 +39,13 @@ serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ success: false, error: "Sadece POST desteklenir." }, 405);
+    return jsonResponse(
+      {
+        success: false,
+        error: "Sadece POST desteklenir.",
+      },
+      200,
+    );
   }
 
   try {
@@ -65,18 +71,37 @@ serve(async (req) => {
       return jsonResponse(
         {
           success: false,
+          allSuccess: false,
+          successCount: 0,
+          failCount: toNumbers.length || 0,
+          from: formatIntlPhone(from),
+          results: [],
+          message: "Eksik parametreler",
           error: "Eksik parametreler",
           required: ["accountSid", "authToken", "from", "to", "body"],
         },
-        400,
+        200,
       );
     }
 
     if (!accountSid.startsWith("AC")) {
-      return jsonResponse({ success: false, error: "Geçersiz Account SID" }, 400);
+      return jsonResponse(
+        {
+          success: false,
+          allSuccess: false,
+          successCount: 0,
+          failCount: toNumbers.length,
+          from: formatIntlPhone(from),
+          results: [],
+          message: "Geçersiz Account SID",
+          error: "Geçersiz Account SID",
+        },
+        200,
+      );
     }
 
     const formattedFrom = formatIntlPhone(from);
+
     const results: Array<{
       phone: string;
       ok: boolean;
@@ -165,31 +190,37 @@ serve(async (req) => {
 
     const successCount = results.filter((r) => r.ok && r.sid).length;
     const failCount = results.length - successCount;
+    const success = successCount > 0;
+    const allSuccess = failCount === 0;
 
     return jsonResponse(
       {
-        success: successCount > 0,
-        allSuccess: failCount === 0,
+        success,
+        allSuccess,
         successCount,
         failCount,
         from: formattedFrom,
         results,
-        message:
-          failCount === 0
-            ? "Tüm SMS'ler başarıyla gönderildi"
-            : successCount > 0
-              ? "Bazı SMS'ler gönderildi, bazıları başarısız oldu"
-              : "Hiçbir SMS gönderilemedi",
+        message: allSuccess
+          ? "Tüm SMS'ler başarıyla gönderildi"
+          : success
+            ? "Bazı SMS'ler gönderildi, bazıları başarısız oldu"
+            : "Hiçbir SMS gönderilemedi",
       },
-      failCount === 0 ? 200 : 400,
+      200,
     );
   } catch (error: any) {
     return jsonResponse(
       {
         success: false,
+        allSuccess: false,
+        successCount: 0,
+        failCount: 0,
+        results: [],
+        message: error?.message || "Beklenmeyen sunucu hatası",
         error: error?.message || "Beklenmeyen sunucu hatası",
       },
-      500,
+      200,
     );
   }
 });

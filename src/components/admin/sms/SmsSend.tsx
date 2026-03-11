@@ -63,17 +63,19 @@ const SmsSend = () => {
   const validPhones = parsedPhones.filter(validatePhone);
   const invalidPhones = parsedPhones.filter((p) => p && !validatePhone(p));
 
-  const settingsComplete = settings.accountSid && settings.authToken && settings.fromNumber;
+  const settingsComplete = Boolean(settings.accountSid && settings.authToken && settings.fromNumber);
 
   const handleSend = async () => {
     if (!settingsComplete) {
       toast.error("Twilio API ayarlarını önce tamamlayın");
       return;
     }
+
     if (validPhones.length === 0) {
       toast.error("Geçerli telefon numarası giriniz");
       return;
     }
+
     if (!message.trim()) {
       toast.error("Mesaj metni boş olamaz");
       return;
@@ -88,25 +90,28 @@ const SmsSend = () => {
           authToken: settings.authToken,
           from: settings.fromNumber,
           to: validPhones,
-          body: message,
+          body: message.trim(),
         },
       });
 
       if (error) {
-        toast.error(`Hata: ${error.message}`);
+        const errText = error.message || "Edge function hatası";
+        toast.error(`Hata: ${errText}`, { duration: 10000 });
+
         addToHistory({
           id: crypto.randomUUID(),
           date: new Date().toISOString(),
           recipients: validPhones,
           message,
           status: "error",
-          errorMessage: error.message,
+          errorMessage: errText,
         });
         return;
       }
 
       if (data?.success) {
         toast.success(data.message || "SMS başarıyla gönderildi!", { duration: 5000 });
+
         addToHistory({
           id: crypto.randomUUID(),
           date: new Date().toISOString(),
@@ -114,23 +119,47 @@ const SmsSend = () => {
           message,
           status: "success",
         });
+
         setPhones("");
         setMessage("");
         setShowPreview(false);
-      } else {
-        const errMsg = data?.results?.[0]?.error || data?.message || "SMS gönderilemedi";
-        toast.error(`Hata: ${errMsg}`, { duration: 8000 });
-        addToHistory({
-          id: crypto.randomUUID(),
-          date: new Date().toISOString(),
-          recipients: validPhones,
-          message,
-          status: "error",
-          errorMessage: errMsg,
-        });
+        return;
       }
+
+      const detailedErrors =
+        Array.isArray(data?.results) && data.results.length > 0
+          ? data.results
+              .map((r: any) => {
+                const code = r?.errorCode ? ` [${r.errorCode}]` : "";
+                const msg = r?.errorMessage || r?.message || "Bilinmeyen hata";
+                const moreInfo = r?.moreInfo ? ` - ${r.moreInfo}` : "";
+                return `${r.phone}: ${msg}${code}${moreInfo}`;
+              })
+              .join(" | ")
+          : data?.error || data?.message || "SMS gönderilemedi";
+
+      toast.error(`Hata: ${detailedErrors}`, { duration: 12000 });
+
+      addToHistory({
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        recipients: validPhones,
+        message,
+        status: "error",
+        errorMessage: detailedErrors,
+      });
     } catch (err: any) {
-      toast.error(`Beklenmeyen hata: ${err.message}`);
+      const errText = err?.message || "Beklenmeyen hata";
+      toast.error(`Beklenmeyen hata: ${errText}`, { duration: 10000 });
+
+      addToHistory({
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        recipients: validPhones,
+        message,
+        status: "error",
+        errorMessage: errText,
+      });
     } finally {
       setSending(false);
     }
@@ -231,7 +260,7 @@ const SmsSend = () => {
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Mesaj</Label>
-              <p className="mt-1 p-3 bg-background rounded border text-sm">{message}</p>
+              <p className="mt-1 p-3 bg-background rounded border text-sm whitespace-pre-wrap">{message}</p>
             </div>
           </CardContent>
         </Card>
@@ -246,6 +275,7 @@ const SmsSend = () => {
           <Eye className="h-4 w-4 mr-2" />
           {showPreview ? "Önizlemeyi Kapat" : "Önizle"}
         </Button>
+
         <Button
           onClick={handleSend}
           disabled={sending || !settingsComplete || validPhones.length === 0 || !message.trim()}
