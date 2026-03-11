@@ -3,50 +3,48 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Save, Settings } from "lucide-react";
+import { Save, Settings, Phone } from "lucide-react";
 import { toast } from "sonner";
 
-export interface VatanSmsSettings {
-  apiId: string;
-  apiKey: string;
-  sender: string;
-  messageContentType: "bilgi" | "ticari";
+export interface TwilioSettings {
+  accountSid: string;
+  authToken: string;
+  fromNumber: string;
 }
 
-const STORAGE_KEY = "vatansms_settings";
+const STORAGE_KEY = "twilio_settings";
 
-export const getSettings = (): VatanSmsSettings => {
+export const getSettings = (): TwilioSettings => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) return JSON.parse(stored);
   } catch {}
-  return { apiId: "", apiKey: "", sender: "", messageContentType: "bilgi" };
+  return { accountSid: "", authToken: "", fromNumber: "" };
 };
 
-export const saveSettings = (settings: VatanSmsSettings) => {
+export const saveSettings = (settings: TwilioSettings) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
 };
 
 const SmsSettings = () => {
-  const [settings, setSettings] = useState<VatanSmsSettings>(getSettings);
+  const [settings, setSettings] = useState<TwilioSettings>(getSettings);
 
   useEffect(() => {
     setSettings(getSettings());
   }, []);
 
   const handleSave = () => {
-    if (!settings.apiId || !settings.apiKey || !settings.sender) {
+    if (!settings.accountSid || !settings.authToken || !settings.fromNumber) {
       toast.error("Tüm alanları doldurun");
       return;
     }
-    if (settings.sender.length > 11) {
-      toast.error("Gönderici adı en fazla 11 karakter olabilir");
+    if (!settings.accountSid.startsWith("AC")) {
+      toast.error("Account SID 'AC' ile başlamalıdır");
       return;
     }
     saveSettings(settings);
-    toast.success("Ayarlar kaydedildi");
+    toast.success("Twilio ayarları kaydedildi");
   };
 
   return (
@@ -55,69 +53,71 @@ const SmsSettings = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            VatanSMS API Ayarları
+            Twilio SMS Ayarları
           </CardTitle>
           <CardDescription>
-            vatansms.net hesabınızdan aldığınız API bilgilerini girin.
-            <a href="https://vatansms.net" target="_blank" rel="noopener noreferrer" className="text-primary ml-1 underline">
-              Hesap Oluştur →
+            console.twilio.com adresinden aldığınız bilgileri girin.
+            <a
+              href="https://console.twilio.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary ml-1 underline"
+            >
+              Twilio Console →
             </a>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>API ID</Label>
-              <Input
-                type="password"
-                value={settings.apiId}
-                onChange={(e) => setSettings({ ...settings, apiId: e.target.value })}
-                placeholder="API ID'niz"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>API Key</Label>
-              <Input
-                type="password"
-                value={settings.apiKey}
-                onChange={(e) => setSettings({ ...settings, apiKey: e.target.value })}
-                placeholder="API Key'iniz"
-              />
-            </div>
-          </div>
-
           <div className="space-y-2">
-            <Label>Gönderici Adı (Başlık)</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                value={settings.sender}
-                onChange={(e) => setSettings({ ...settings, sender: e.target.value.slice(0, 11) })}
-                placeholder="MEDEA"
-                maxLength={11}
-                className="max-w-xs"
-              />
-              <Badge variant="outline">{settings.sender.length}/11</Badge>
-            </div>
+            <Label>Account SID</Label>
+            <Input
+              type="password"
+              value={settings.accountSid}
+              onChange={(e) => setSettings({ ...settings, accountSid: e.target.value })}
+              placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            />
             <p className="text-xs text-muted-foreground">
-              VatanSMS panelinde tanımlı başlık adınızı yazın.
+              Twilio Console ana sayfasında "Account SID" bölümünden kopyalayın.
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label>Mesaj Tipi</Label>
-            <Select
-              value={settings.messageContentType}
-              onValueChange={(val) => setSettings({ ...settings, messageContentType: val as "bilgi" | "ticari" })}
-            >
-              <SelectTrigger className="max-w-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bilgi">Bilgi (Bilgilendirme SMS)</SelectItem>
-                <SelectItem value="ticari">Ticari (Kampanya SMS)</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Auth Token</Label>
+            <Input
+              type="password"
+              value={settings.authToken}
+              onChange={(e) => setSettings({ ...settings, authToken: e.target.value })}
+              placeholder="Auth Token"
+            />
+            <p className="text-xs text-muted-foreground">
+              Twilio Console ana sayfasında "Auth Token" bölümünden kopyalayın.
+            </p>
           </div>
+
+          <div className="space-y-2">
+            <Label>Twilio Telefon Numarası</Label>
+            <div className="flex items-center gap-2">
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <Input
+                value={settings.fromNumber}
+                onChange={(e) => setSettings({ ...settings, fromNumber: e.target.value })}
+                placeholder="+15017122661"
+                className="max-w-xs"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Twilio'dan aldığınız telefon numarası. E.164 formatında olmalı: +1xxxxxxxxxx
+            </p>
+          </div>
+
+          {settings.accountSid && settings.authToken && settings.fromNumber && (
+            <div className="flex items-center gap-2 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+              <Badge variant="outline" className="text-green-600 border-green-500">
+                ✓ Ayarlar Tamamlandı
+              </Badge>
+              <p className="text-xs text-green-600">SMS gönderimine hazırsınız.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
