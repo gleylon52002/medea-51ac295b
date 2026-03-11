@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface WhatsAppPayload {
@@ -17,8 +17,6 @@ interface WhatsAppPayload {
   };
 }
 
-const WHATSAPP_API_URL = "https://graph.facebook.com/v22.0/1027325807129390/messages";
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -30,12 +28,16 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get WhatsApp settings
-    const { data: waSettings } = await supabase
+    // Get WhatsApp settings from database
+    const { data: waSettings, error: settingsError } = await supabase
       .from("site_settings")
       .select("value")
       .eq("key", "whatsapp_settings")
       .maybeSingle();
+
+    if (settingsError) {
+      console.error("Failed to fetch WhatsApp settings:", settingsError);
+    }
 
     const settings = waSettings?.value as {
       enabled?: boolean;
@@ -43,10 +45,21 @@ Deno.serve(async (req) => {
       access_token?: string;
     } | null;
 
-    if (!settings?.enabled || !settings?.access_token) {
-      console.error("WhatsApp not configured. Enabled:", settings?.enabled, "Token present:", !!settings?.access_token);
+    console.log("WhatsApp settings loaded:", {
+      enabled: settings?.enabled,
+      hasPhoneNumberId: !!settings?.phone_number_id,
+      hasAccessToken: !!settings?.access_token,
+      phoneNumberId: settings?.phone_number_id,
+    });
+
+    if (!settings?.enabled || !settings?.phone_number_id || !settings?.access_token) {
+      const missing = [];
+      if (!settings?.enabled) missing.push("enabled=false");
+      if (!settings?.phone_number_id) missing.push("phone_number_id missing");
+      if (!settings?.access_token) missing.push("access_token missing");
+      console.error("WhatsApp not configured. Missing:", missing.join(", "));
       return new Response(
-        JSON.stringify({ success: false, message: "WhatsApp not configured" }),
+        JSON.stringify({ success: false, message: "WhatsApp yapılandırılmamış: " + missing.join(", ") }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -54,20 +67,20 @@ Deno.serve(async (req) => {
     const payload: WhatsAppPayload = await req.json();
     const { type, phone, data } = payload;
 
-    // Format phone number (remove leading 0, add country code if needed)
+    // Format phone number: digits only, with country code, no + sign
     let formattedPhone = phone.replace(/\D/g, "");
     if (formattedPhone.startsWith("0")) {
       formattedPhone = "90" + formattedPhone.slice(1);
-    } else if (!formattedPhone.startsWith("90")) {
+    } else if (!formattedPhone.startsWith("90") && formattedPhone.length === 10) {
       formattedPhone = "90" + formattedPhone;
     }
 
-    console.log(`Sending WhatsApp ${type} to ${formattedPhone}`);
+    // Build the API URL dynamically using the stored Phone Number ID
+    const apiUrl = `https://graph.facebook.com/v22.0/${settings.phone_number_id}/messages`;
 
-    // Send via WhatsApp Cloud API using template message
+    // Use template message format as required by WhatsApp Business API
     const requestBody = {
       messaging_product: "whatsapp",
-      recipient_type: "individual",
       to: formattedPhone,
       type: "template",
       template: {
@@ -78,13 +91,16 @@ Deno.serve(async (req) => {
       },
     };
 
-    console.log("WhatsApp API Request URL:", WHATSAPP_API_URL);
-    console.log("WhatsApp API Request Body:", JSON.stringify(requestBody));
+    console.log("=== WhatsApp API Request ===");
+    console.log("URL:", apiUrl);
+    console.log("Phone:", formattedPhone);
+    console.log("Type:", type);
+    console.log("Body:", JSON.stringify(requestBody));
 
-    const response = await fetch(WHATSAPP_API_URL, {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${settings.access_token}`,
+        "Authorization": `Bearer ${settings.access_token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(requestBody),
@@ -92,52 +108,54 @@ Deno.serve(async (req) => {
 
     const result = await response.json();
 
-    console.log("WhatsApp API Response Status:", response.status);
-    console.log("WhatsApp API Response Body:", JSON.stringify(result));
+    console.log("=== WhatsApp API Response ===");
+    console.log("Status:", response.status, response.statusText);
+    console.log("Response:", JSON.stringify(result, null, 2));
 
     if (!response.ok) {
-      console.error("WhatsApp API Error:", JSON.stringify({
-        status: response.status,
-        statusText: response.statusText,
-        error: result?.error,
-        errorMessage: result?.error?.message,
-        errorCode: result?.error?.code,
-        errorType: result?.error?.type,
-        errorFbtraceId: result?.error?.fbtrace_id,
-      }));
+      console.error("=== WhatsApp API ERROR ===");
+      console.error("HTTP Status:", response.status);
+      console.error("Error Type:", result?.error?.type);
+      console.error("Error Code:", result?.error?.code);
+      console.error("Error Message:", result?.error?.message);
+      console.error("Error Subcode:", result?.error?.error_subcode);
+      console.error("FB Trace ID:", result?.error?.fbtrace_id);
+      console.error("Full Error:", JSON.stringify(result?.error, null, 2));
     }
 
-    // Log the notification
+    // Log the notification to database
     await supabase.from("notification_logs").insert({
       channel: "whatsapp",
       recipient: formattedPhone,
       message_type: type,
       status: response.ok ? "sent" : "failed",
-      metadata: { 
-        result, 
+      metadata: {
+        result,
         data,
         api_status: response.status,
-        api_url: WHATSAPP_API_URL,
+        api_url: apiUrl,
+        phone_number_id: settings.phone_number_id,
         error_details: !response.ok ? result?.error : null,
       },
     } as any);
 
     return new Response(
-      JSON.stringify({ 
-        success: response.ok, 
+      JSON.stringify({
+        success: response.ok,
         result,
-        ...(! response.ok && { 
+        ...(!response.ok && {
           error_message: result?.error?.message,
           error_code: result?.error?.code,
+          error_type: result?.error?.type,
         }),
       }),
-      { 
+      {
         status: response.ok ? 200 : 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   } catch (error: any) {
-    console.error("WhatsApp function error:", error.message, error.stack);
+    console.error("WhatsApp function exception:", error.message, error.stack);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

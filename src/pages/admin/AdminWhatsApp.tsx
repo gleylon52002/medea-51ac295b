@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,15 +10,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { MessageSquare, Settings, Send, Loader2, Phone, CheckCircle, XCircle } from "lucide-react";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { MessageSquare, Settings, Send, Loader2, CheckCircle, XCircle } from "lucide-react";
 
 const AdminWhatsApp = () => {
   const queryClient = useQueryClient();
   const [testPhone, setTestPhone] = useState("");
   const [sending, setSending] = useState(false);
 
-  const { data: settings } = useQuery({
+  const { data: settings, isLoading } = useQuery({
     queryKey: ["admin", "whatsapp-settings"],
     queryFn: async () => {
       const { data } = await supabase
@@ -34,6 +33,23 @@ const AdminWhatsApp = () => {
     },
   });
 
+  const [form, setForm] = useState({
+    enabled: false,
+    phone_number_id: "",
+    access_token: "",
+  });
+
+  // Sync form with loaded settings
+  useEffect(() => {
+    if (settings) {
+      setForm({
+        enabled: settings.enabled || false,
+        phone_number_id: settings.phone_number_id || "",
+        access_token: settings.access_token || "",
+      });
+    }
+  }, [settings]);
+
   const { data: logs } = useQuery({
     queryKey: ["admin", "whatsapp-logs"],
     queryFn: async () => {
@@ -47,29 +63,33 @@ const AdminWhatsApp = () => {
     },
   });
 
-  const [form, setForm] = useState({
-    enabled: settings?.enabled || false,
-    phone_number_id: settings?.phone_number_id || "",
-    access_token: settings?.access_token || "",
-  });
-
   const saveMutation = useMutation({
     mutationFn: async (values: typeof form) => {
       const { data: existing } = await supabase
         .from("site_settings")
         .select("id")
         .eq("key", "whatsapp_settings")
-        .single();
+        .maybeSingle();
 
       if (existing) {
-        await supabase.from("site_settings").update({ value: values }).eq("key", "whatsapp_settings");
+        const { error } = await supabase
+          .from("site_settings")
+          .update({ value: values as any })
+          .eq("key", "whatsapp_settings");
+        if (error) throw error;
       } else {
-        await supabase.from("site_settings").insert({ key: "whatsapp_settings", value: values });
+        const { error } = await supabase
+          .from("site_settings")
+          .insert({ key: "whatsapp_settings", value: values as any });
+        if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "whatsapp-settings"] });
       toast.success("WhatsApp ayarları kaydedildi");
+    },
+    onError: (err: any) => {
+      toast.error("Kaydetme hatası: " + err.message);
     },
   });
 
@@ -91,19 +111,32 @@ const AdminWhatsApp = () => {
           },
         },
       });
+
       if (error) throw error;
+
       if (data?.success) {
         toast.success("Test mesajı gönderildi!");
-        queryClient.invalidateQueries({ queryKey: ["admin", "whatsapp-logs"] });
       } else {
-        toast.error(data?.message || "Mesaj gönderilemedi");
+        const errMsg = data?.error_message || data?.result?.error?.message || "Mesaj gönderilemedi";
+        console.error("WhatsApp API Error:", JSON.stringify(data, null, 2));
+        toast.error(`Hata: ${errMsg}`);
       }
+      queryClient.invalidateQueries({ queryKey: ["admin", "whatsapp-logs"] });
     } catch (err: any) {
+      console.error("WhatsApp send error:", err);
       toast.error(err.message || "Hata oluştu");
     } finally {
       setSending(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-4 lg:p-8 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 lg:p-8 space-y-6">
@@ -149,7 +182,7 @@ const AdminWhatsApp = () => {
                 <Input
                   value={form.phone_number_id}
                   onChange={(e) => setForm({ ...form, phone_number_id: e.target.value })}
-                  placeholder="123456789012345"
+                  placeholder="1027325807129390"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Meta Business Suite → WhatsApp → API Setup → Phone Number ID
@@ -179,11 +212,12 @@ const AdminWhatsApp = () => {
           <Card>
             <CardHeader>
               <CardTitle>Test Gönderimi</CardTitle>
+              <CardDescription>Ülke kodu ile birlikte numara girin (ör: 905350582392)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2">
                 <Input
-                  placeholder="0532 XXX XX XX"
+                  placeholder="905350582392"
                   value={testPhone}
                   onChange={(e) => setTestPhone(e.target.value)}
                 />
@@ -192,7 +226,7 @@ const AdminWhatsApp = () => {
                 </Button>
               </div>
               {!form.enabled && (
-                <p className="text-xs text-yellow-600">WhatsApp bildirimleri kapalı</p>
+                <p className="text-xs text-yellow-600">WhatsApp bildirimleri kapalı. Önce ayarları kaydedin.</p>
               )}
             </CardContent>
           </Card>
