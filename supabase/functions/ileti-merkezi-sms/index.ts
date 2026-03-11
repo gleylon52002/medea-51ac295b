@@ -14,13 +14,12 @@ serve(async (req) => {
     const { accountSid, authToken, from, to, body } = await req.json();
 
     if (!accountSid || !authToken || !from || !to || !body) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Eksik parametreler" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ success: false, error: "Eksik parametreler" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Telefon numaralarını +90 formatına çevir
     const formatPhone = (phone: string): string => {
       let cleaned = phone.replace(/\D/g, "");
       if (cleaned.startsWith("90")) return `+${cleaned}`;
@@ -30,12 +29,10 @@ serve(async (req) => {
     };
 
     const toNumbers = Array.isArray(to) ? to : to.split(",").map((p: string) => p.trim());
-    
     const results = [];
 
     for (const phone of toNumbers) {
       const formattedPhone = formatPhone(phone);
-      
       const params = new URLSearchParams({
         From: from,
         To: formattedPhone,
@@ -48,15 +45,13 @@ serve(async (req) => {
       const response = await fetch(url, {
         method: "POST",
         headers: {
-          "Authorization": `Basic ${credentials}`,
+          Authorization: `Basic ${credentials}`,
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: params.toString(),
       });
 
       const result = await response.json();
-      console.log(`Twilio response for ${formattedPhone}:`, JSON.stringify(result));
-
       results.push({
         phone: formattedPhone,
         sid: result.sid,
@@ -76,17 +71,16 @@ serve(async (req) => {
         message: allSuccess
           ? "Tüm SMS'ler başarıyla gönderildi!"
           : anySuccess
-          ? "Bazı SMS'ler gönderilemedi"
-          : "SMS gönderilemedi",
+            ? "Bazı SMS'ler gönderilemedi"
+            : "SMS gönderilemedi",
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
-
   } catch (error) {
     console.error("Twilio SMS Error:", error);
-    return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ success: false, error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
