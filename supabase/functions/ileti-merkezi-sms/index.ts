@@ -11,63 +11,79 @@ serve(async (req) => {
   }
 
   try {
-    const { api_id, api_key, sender, message, phones, message_content_type } = await req.json();
+    const { accountSid, authToken, from, to, body } = await req.json();
 
-    if (!api_id || !api_key || !sender || !message || !phones) {
+    if (!accountSid || !authToken || !from || !to || !body) {
       return new Response(
         JSON.stringify({ success: false, error: "Eksik parametreler" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Telefon numaralarını diziye çevir
-    const phoneList = Array.isArray(phones)
-      ? phones
-      : phones.split(",").map((p) => p.trim());
-
-    const body = {
-      api_id,
-      api_key,
-      sender,
-      message_type: "normal",
-      message,
-      message_content_type: message_content_type || "bilgi",
-      phones: phoneList,
+    // Telefon numaralarını +90 formatına çevir
+    const formatPhone = (phone: string): string => {
+      let cleaned = phone.replace(/\D/g, "");
+      if (cleaned.startsWith("90")) return `+${cleaned}`;
+      if (cleaned.startsWith("0")) return `+90${cleaned.slice(1)}`;
+      if (cleaned.startsWith("5")) return `+90${cleaned}`;
+      return `+${cleaned}`;
     };
 
-    console.log("VatanSMS API Request:", JSON.stringify({ ...body, api_key: "***", api_id: "***" }));
+    const toNumbers = Array.isArray(to) ? to : to.split(",").map((p: string) => p.trim());
+    
+    const results = [];
 
-    const response = await fetch("https://api.vatansms.net/api/v1/1toN", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    for (const phone of toNumbers) {
+      const formattedPhone = formatPhone(phone);
+      
+      const params = new URLSearchParams({
+        From: from,
+        To: formattedPhone,
+        Body: body,
+      });
 
-    const result = await response.json();
+      const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+      const credentials = btoa(`${accountSid}:${authToken}`);
 
-    console.log("VatanSMS API Response:", JSON.stringify(result));
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Authorization": `Basic ${credentials}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: params.toString(),
+      });
 
-    if (result.status === "success" || result.code === 200 || response.ok) {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "SMS başarıyla gönderildi!",
-          data: result,
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    } else {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: result.message || result.description || "SMS gönderilemedi",
-          data: result,
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      const result = await response.json();
+      console.log(`Twilio response for ${formattedPhone}:`, JSON.stringify(result));
+
+      results.push({
+        phone: formattedPhone,
+        sid: result.sid,
+        status: result.status,
+        error: result.message || result.code || null,
+      });
     }
+
+    const allSuccess = results.every((r) => r.sid && !r.error);
+    const anySuccess = results.some((r) => r.sid && !r.error);
+
+    return new Response(
+      JSON.stringify({
+        success: anySuccess,
+        allSuccess,
+        results,
+        message: allSuccess
+          ? "Tüm SMS'ler başarıyla gönderildi!"
+          : anySuccess
+          ? "Bazı SMS'ler gönderilemedi"
+          : "SMS gönderilemedi",
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+
   } catch (error) {
-    console.error("VatanSMS Error:", error);
+    console.error("Twilio SMS Error:", error);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
