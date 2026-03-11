@@ -112,19 +112,48 @@ const AdminWhatsApp = () => {
         },
       });
 
+      // Log complete Meta API response to browser console
+      console.log("=== WhatsApp Meta API Full Response ===");
+      console.log("Edge Function Error:", error);
+      console.log("Response Data:", JSON.stringify(data, null, 2));
+      console.log("Success:", data?.success);
+      console.log("API Status Code:", data?.result?.statusCode || (data?.success ? 200 : "error"));
+      console.log("API Result:", data?.result);
+      if (data?.result?.error) {
+        console.log("Meta Error Type:", data.result.error.type);
+        console.log("Meta Error Code:", data.result.error.code);
+        console.log("Meta Error Message:", data.result.error.message);
+        console.log("Meta Error Subcode:", data.result.error.error_subcode);
+        console.log("Meta FB Trace ID:", data.result.error.fbtrace_id);
+      }
+      console.log("======================================");
+
       if (error) throw error;
 
       if (data?.success) {
-        toast.success("Test mesajı gönderildi!");
+        toast.success("Test mesajı başarıyla gönderildi! ✅");
       } else {
-        const errMsg = data?.error_message || data?.result?.error?.message || "Mesaj gönderilemedi";
-        console.error("WhatsApp API Error:", JSON.stringify(data, null, 2));
-        toast.error(`Hata: ${errMsg}`);
+        const metaError = data?.result?.error;
+        const errMsg = metaError?.message || data?.error_message || "Bilinmeyen hata";
+        const errCode = metaError?.code || data?.error_code || "";
+        const errType = metaError?.type || data?.error_type || "";
+        
+        console.error("WhatsApp API Error Details:", {
+          message: errMsg,
+          code: errCode,
+          type: errType,
+          full_response: data,
+        });
+
+        toast.error(
+          `WhatsApp Hatası: ${errMsg}${errCode ? ` (Kod: ${errCode})` : ""}${errType ? ` [${errType}]` : ""}`,
+          { duration: 10000 }
+        );
       }
       queryClient.invalidateQueries({ queryKey: ["admin", "whatsapp-logs"] });
     } catch (err: any) {
-      console.error("WhatsApp send error:", err);
-      toast.error(err.message || "Hata oluştu");
+      console.error("WhatsApp send exception:", err);
+      toast.error("Bağlantı hatası: " + (err.message || "Bilinmeyen hata"), { duration: 8000 });
     } finally {
       setSending(false);
     }
