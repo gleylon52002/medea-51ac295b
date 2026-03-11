@@ -15,12 +15,10 @@ interface SmsHistoryItem {
   recipients: string[];
   message: string;
   status: "success" | "error";
-  orderId?: string;
-  errorCode?: number;
   errorMessage?: string;
 }
 
-const SMS_HISTORY_KEY = "ileti_merkezi_history";
+const SMS_HISTORY_KEY = "vatansms_history";
 
 const getHistory = (): SmsHistoryItem[] => {
   try {
@@ -33,7 +31,6 @@ const getHistory = (): SmsHistoryItem[] => {
 const addToHistory = (item: SmsHistoryItem) => {
   const history = getHistory();
   history.unshift(item);
-  // Keep last 100 entries
   localStorage.setItem(SMS_HISTORY_KEY, JSON.stringify(history.slice(0, 100)));
 };
 
@@ -59,14 +56,14 @@ const SmsSend = () => {
   const smsCount = charCount === 0 ? 0 : charCount <= 160 ? 1 : Math.ceil(charCount / 153);
 
   const parsedPhones = phones
-    .split(/[, \n]+/)
+    .split(/[,\s\n]+/)
     .map((p) => formatPhoneNumber(p.trim()))
     .filter(Boolean);
 
   const validPhones = parsedPhones.filter(validatePhone);
   const invalidPhones = parsedPhones.filter((p) => p && !validatePhone(p));
 
-  const settingsComplete = settings.apiKey && settings.apiHash && settings.sender;
+  const settingsComplete = settings.apiId && settings.apiKey && settings.sender;
 
   const handleSend = async () => {
     if (!settingsComplete) {
@@ -87,20 +84,16 @@ const SmsSend = () => {
     try {
       const { data, error } = await supabase.functions.invoke("ileti-merkezi-sms", {
         body: {
-          key: settings.apiKey,
-          hash: settings.apiHash,
-          text: message,
-          receipents: validPhones.join(","),
+          api_id: settings.apiId,
+          api_key: settings.apiKey,
           sender: settings.sender,
-          iys: settings.iysEnabled ? 1 : 0,
-          iysList: settings.iysList,
+          message: message,
+          phones: validPhones,
+          message_content_type: settings.messageContentType,
         },
       });
 
-      console.log("=== İleti Merkezi API Response ===", data);
-
       if (error) {
-        console.error("Edge function error:", error);
         toast.error(`Hata: ${error.message}`);
         addToHistory({
           id: crypto.randomUUID(),
@@ -114,32 +107,29 @@ const SmsSend = () => {
       }
 
       if (data?.success) {
-        toast.success(`SMS gönderildi! Sipariş ID: ${data.orderId}`, { duration: 5000 });
+        toast.success("SMS başarıyla gönderildi!", { duration: 5000 });
         addToHistory({
           id: crypto.randomUUID(),
           date: new Date().toISOString(),
           recipients: validPhones,
           message,
           status: "success",
-          orderId: data.orderId,
         });
         setPhones("");
         setMessage("");
         setShowPreview(false);
       } else {
-        toast.error(`Hata (${data?.code}): ${data?.error}`, { duration: 8000 });
+        toast.error(`Hata: ${data?.error}`, { duration: 8000 });
         addToHistory({
           id: crypto.randomUUID(),
           date: new Date().toISOString(),
           recipients: validPhones,
           message,
           status: "error",
-          errorCode: data?.code,
           errorMessage: data?.error,
         });
       }
     } catch (err: any) {
-      console.error("SMS send error:", err);
       toast.error(`Beklenmeyen hata: ${err.message}`);
     } finally {
       setSending(false);
@@ -154,7 +144,7 @@ const SmsSend = () => {
           <div>
             <p className="text-sm font-medium text-destructive">API Ayarları Eksik</p>
             <p className="text-xs text-destructive/80">
-              SMS göndermek için önce "Ayarlar" sekmesinden API bilgilerinizi girin.
+              SMS göndermek için önce "Ayarlar" sekmesinden VatanSMS API bilgilerinizi girin.
             </p>
           </div>
         </div>
@@ -237,10 +227,8 @@ const SmsSend = () => {
                 <p className="font-medium">{smsCount} × {validPhones.length} = {smsCount * validPhones.length} SMS</p>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">IYS</Label>
-                <p className="font-medium">
-                  {settings.iysEnabled ? `Açık (${settings.iysList})` : "Kapalı"}
-                </p>
+                <Label className="text-xs text-muted-foreground">Mesaj Tipi</Label>
+                <p className="font-medium">{settings.messageContentType === "bilgi" ? "Bilgi" : "Ticari"}</p>
               </div>
             </div>
             <div>
