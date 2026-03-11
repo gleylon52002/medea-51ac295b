@@ -17,6 +17,8 @@ interface WhatsAppPayload {
   };
 }
 
+const WHATSAPP_API_URL = "https://graph.facebook.com/v22.0/1027325807129390/messages";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -41,7 +43,8 @@ Deno.serve(async (req) => {
       access_token?: string;
     } | null;
 
-    if (!settings?.enabled || !settings?.phone_number_id || !settings?.access_token) {
+    if (!settings?.enabled || !settings?.access_token) {
+      console.error("WhatsApp not configured. Enabled:", settings?.enabled, "Token present:", !!settings?.access_token);
       return new Response(
         JSON.stringify({ success: false, message: "WhatsApp not configured" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -59,40 +62,50 @@ Deno.serve(async (req) => {
       formattedPhone = "90" + formattedPhone;
     }
 
-    // Build message based on type
-    let message = "";
-    switch (type) {
-      case "order_confirmation":
-        message = `🛍️ *Siparişiniz Alındı!*\n\nMerhaba ${data.customerName || ""},\n\nSipariş No: *${data.orderNumber}*\nToplam: *${data.total}*\n\nSiparişiniz en kısa sürede hazırlanacaktır. Teşekkür ederiz!`;
-        break;
-      case "shipping_update":
-        message = `📦 *Kargonuz Yola Çıktı!*\n\nSipariş No: *${data.orderNumber}*\nKargo Firması: *${data.shippingCompany || "-"}*\nTakip No: *${data.trackingNumber || "-"}*\n\nKargonuzu takip edebilirsiniz.`;
-        break;
-      case "delivery_complete":
-        message = `✅ *Teslimat Tamamlandı!*\n\nSipariş No: *${data.orderNumber}*\n\nÜrünlerimizi beğeneceğinizi umuyoruz. Bizi değerlendirmeyi unutmayın! 💚`;
-        break;
-    }
+    console.log(`Sending WhatsApp ${type} to ${formattedPhone}`);
 
-    // Send via WhatsApp Cloud API
-    const response = await fetch(
-      `https://graph.facebook.com/v18.0/${settings.phone_number_id}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${settings.access_token}`,
-          "Content-Type": "application/json",
+    // Send via WhatsApp Cloud API using template message
+    const requestBody = {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: formattedPhone,
+      type: "template",
+      template: {
+        name: "hello_world",
+        language: {
+          code: "en_US",
         },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          recipient_type: "individual",
-          to: formattedPhone,
-          type: "text",
-          text: { body: message },
-        }),
-      }
-    );
+      },
+    };
+
+    console.log("WhatsApp API Request URL:", WHATSAPP_API_URL);
+    console.log("WhatsApp API Request Body:", JSON.stringify(requestBody));
+
+    const response = await fetch(WHATSAPP_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${settings.access_token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
 
     const result = await response.json();
+
+    console.log("WhatsApp API Response Status:", response.status);
+    console.log("WhatsApp API Response Body:", JSON.stringify(result));
+
+    if (!response.ok) {
+      console.error("WhatsApp API Error:", JSON.stringify({
+        status: response.status,
+        statusText: response.statusText,
+        error: result?.error,
+        errorMessage: result?.error?.message,
+        errorCode: result?.error?.code,
+        errorType: result?.error?.type,
+        errorFbtraceId: result?.error?.fbtrace_id,
+      }));
+    }
 
     // Log the notification
     await supabase.from("notification_logs").insert({
@@ -100,14 +113,31 @@ Deno.serve(async (req) => {
       recipient: formattedPhone,
       message_type: type,
       status: response.ok ? "sent" : "failed",
-      metadata: { result, data },
+      metadata: { 
+        result, 
+        data,
+        api_status: response.status,
+        api_url: WHATSAPP_API_URL,
+        error_details: !response.ok ? result?.error : null,
+      },
     } as any);
 
     return new Response(
-      JSON.stringify({ success: response.ok, result }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ 
+        success: response.ok, 
+        result,
+        ...(! response.ok && { 
+          error_message: result?.error?.message,
+          error_code: result?.error?.code,
+        }),
+      }),
+      { 
+        status: response.ok ? 200 : 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
     );
   } catch (error: any) {
+    console.error("WhatsApp function error:", error.message, error.stack);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
