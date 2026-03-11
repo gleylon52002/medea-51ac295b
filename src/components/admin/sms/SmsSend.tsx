@@ -196,12 +196,8 @@ const SmsSend = () => {
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>{charCount} karakter</span>
             <div className="flex gap-3">
-              <Badge variant={smsCount <= 1 ? "secondary" : "outline"}>
-                {smsCount} SMS
-              </Badge>
-              {smsCount > 1 && (
-                <span className="text-orange-500">Uzun mesaj: {smsCount} SMS olarak gönderilecek</span>
-              )}
+              <Badge variant={smsCount <= 1 ? "secondary" : "outline"}>{smsCount} SMS</Badge>
+              {smsCount > 1 && <span className="text-orange-500">Uzun mesaj: {smsCount} SMS olarak gönderilecek</span>}
             </div>
           </div>
         </CardContent>
@@ -255,11 +251,7 @@ const SmsSend = () => {
           disabled={sending || !settingsComplete || validPhones.length === 0 || !message.trim()}
           size="lg"
         >
-          {sending ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4 mr-2" />
-          )}
+          {sending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
           {sending ? "Gönderiliyor..." : "SMS Gönder"}
         </Button>
       </div>
