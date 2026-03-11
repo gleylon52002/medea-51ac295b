@@ -34,10 +34,15 @@ serve(async (req) => {
       );
     }
 
+    // 451 hatasını önlemek için mesaja zaman damgası ekle
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+    const textWithTimestamp = `${text} [${timestamp}]`;
+
     const params = new URLSearchParams({
       key,
       hash,
-      text,
+      text: textWithTimestamp,
       receipents,
       sender,
       iys: String(iys ?? 1),
