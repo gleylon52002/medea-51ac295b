@@ -5,94 +5,69 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const errorMessages: Record<number, string> = {
-  400: "İstek çözümlenemedi. Parametreleri kontrol edin.",
-  401: "Üyelik bilgileri hatalı. API Key ve Hash değerlerini kontrol edin.",
-  402: "Bakiye yetersiz. Lütfen hesabınıza bakiye yükleyin.",
-  450: "Gönderilen başlık (sender) sistemde tanımlı değil.",
-  451: "Tekrarlanan sipariş. Aynı mesaj daha önce gönderilmiş.",
-  452: "Mesaj alıcıları hatalı. Telefon numaralarını kontrol edin.",
-  453: "Sipariş boyutu aşıldı. Daha az alıcıyla tekrar deneyin.",
-  454: "Mesaj metni boş. Lütfen bir mesaj yazın.",
-  468: "IYS sorgulanamadı. IYS ayarlarınızı kontrol edin.",
-  469: "IYS üzerinden doğrulanamayan numaralar var.",
-  470: "IYS ile ilgili genel bir hata oluştu. Ayarları kontrol edin.",
-};
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { key, hash, text, receipents, sender, iys, iysList } = await req.json();
+    const { api_id, api_key, sender, message, phones, message_content_type } = await req.json();
 
-    if (!key || !hash || !text || !receipents || !sender) {
+    if (!api_id || !api_key || !sender || !message || !phones) {
       return new Response(
         JSON.stringify({ success: false, error: "Eksik parametreler" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 451 hatasını önlemek için mesaja zaman damgası ekle
-    const now = new Date();
-    const timestamp = now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
-    const textWithTimestamp = `${text} [${timestamp}]`;
+    // Telefon numaralarını diziye çevir
+    const phoneList = Array.isArray(phones)
+      ? phones
+      : phones.split(",").map((p) => p.trim());
 
-    const params = new URLSearchParams({
-      key,
-      hash,
-      text: textWithTimestamp,
-      receipents,
+    const body = {
+      api_id,
+      api_key,
       sender,
-      iys: String(iys ?? 1),
-      iysList: iysList || "BIREYSEL",
+      message_type: "normal",
+      message,
+      message_content_type: message_content_type || "bilgi",
+      phones: phoneList,
+    };
+
+    console.log("VatanSMS API Request:", JSON.stringify({ ...body, api_key: "***", api_id: "***" }));
+
+    const response = await fetch("https://api.vatansms.net/api/v1/1toN", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
 
-    const apiUrl = `https://api.iletimerkezi.com/v1/send-sms/get/?${params.toString()}`;
-    
-    console.log("İleti Merkezi API Request URL:", apiUrl.replace(key, "***").replace(hash, "***"));
+    const result = await response.json();
 
-    const response = await fetch(apiUrl, { method: "GET" });
-    const xmlText = await response.text();
+    console.log("VatanSMS API Response:", JSON.stringify(result));
 
-    console.log("İleti Merkezi API Response:", xmlText);
-
-    // Parse XML response
-    const codeMatch = xmlText.match(/<code>(\d+)<\/code>/);
-    const descMatch = xmlText.match(/<description>(.*?)<\/description>/);
-    const orderIdMatch = xmlText.match(/<id>(\d+)<\/id>/);
-
-    const code = codeMatch ? parseInt(codeMatch[1]) : 0;
-    const description = descMatch ? descMatch[1] : "";
-    const orderId = orderIdMatch ? orderIdMatch[1] : null;
-
-    if (code === 200) {
+    if (result.status === "success" || result.code === 200 || response.ok) {
       return new Response(
         JSON.stringify({
           success: true,
-          code,
-          description,
-          orderId,
           message: "SMS başarıyla gönderildi!",
+          data: result,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } else {
-      const errorMsg = errorMessages[code] || description || "Bilinmeyen bir hata oluştu.";
       return new Response(
         JSON.stringify({
           success: false,
-          code,
-          description,
-          error: errorMsg,
-          rawResponse: xmlText,
+          error: result.message || result.description || "SMS gönderilemedi",
+          data: result,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
   } catch (error) {
-    console.error("İleti Merkezi SMS Error:", error);
+    console.error("VatanSMS Error:", error);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
