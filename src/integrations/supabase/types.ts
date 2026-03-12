@@ -3952,6 +3952,7 @@ export type Database = {
         | "shopier"
         | "shopinext"
         | "payizone"
+        | "paytr"
       payment_status: "pending" | "paid" | "failed" | "refunded"
       variant_type: "color" | "weight" | "scent"
     }
@@ -4097,6 +4098,7 @@ export const Constants = {
         "shopier",
         "shopinext",
         "payizone",
+        "paytr",
       ],
       payment_status: ["pending", "paid", "failed", "refunded"],
       variant_type: ["color", "weight", "scent"],

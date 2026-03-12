@@ -47,6 +47,7 @@ const paymentMethodMap: Record<PaymentMethod, string> = {
   shopier: "Shopier",
   shopinext: "ShopiNext",
   payizone: "Payizone",
+  paytr: "PayTR",
 };
 
 const cargoTrackingUrls: Record<string, string> = {

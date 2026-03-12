@@ -45,8 +45,8 @@ const CookiePolicy = lazy(() => import("./pages/legal/CookiePolicy"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const SellerRules = lazy(() => import("./pages/legal/SellerRules"));
 const Compare = lazy(() => import("./pages/Compare"));
+const PayTRPayment = lazy(() => import("./pages/PayTRPayment"));
 
-// Admin Pages (lazy)
 const AdminGuard = lazy(() => import("./components/admin/AdminGuard"));
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -173,6 +173,7 @@ const App = () => (
                 <Route path="/urun/:slug" element={<ProductDetail />} />
                 <Route path="/kategori/:slug" element={<Category />} />
                 <Route path="/odeme" element={<Checkout />} />
+                <Route path="/odeme/paytr" element={<PayTRPayment />} />
                 <Route path="/siparis-basarili" element={<OrderSuccess />} />
                 <Route path="/giris" element={<Auth />} />
                 <Route path="/hakkimizda" element={<About />} />
