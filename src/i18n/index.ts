@@ -25,10 +25,13 @@ i18n
       ko: { translation: emptyTranslation },
     },
     fallbackLng: 'tr',
+    supportedLngs: ['tr', 'en', 'de', 'fr', 'es', 'ar', 'ru', 'zh', 'ja', 'ko'],
     interpolation: { escapeValue: false },
     detection: {
-      order: ['localStorage', 'navigator'],
+      order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
+      lookupLocalStorage: 'i18nextLng',
+      checkWhitelist: true,
     },
   });
 

@@ -9,7 +9,7 @@ const AdminSMS = () => {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">SMS Yönetimi</h1>
-        <p className="text-muted-foreground">İleti Merkezi API ile SMS gönderimi ve yönetimi</p>
+        <p className="text-muted-foreground">Twilio ile SMS gönderimi ve yönetimi</p>
       </div>
 
       <Tabs defaultValue="send">
