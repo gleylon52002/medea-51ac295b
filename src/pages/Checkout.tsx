@@ -49,6 +49,7 @@ interface PaymentMethodConfig {
 
 const allPaymentMethods: PaymentMethodConfig[] = [
   { key: "credit-card", dbKey: "credit_card", title: "Kredi / Banka Kartı", description: "Güvenli ödeme ile anında onay", icon: <CreditCard className="h-5 w-5 text-muted-foreground" /> },
+  { key: "paytr", dbKey: "paytr", title: "PayTR ile Öde", description: "3D Secure güvenli kredi kartı ödemesi", icon: <CreditCard className="h-5 w-5 text-muted-foreground" /> },
   { key: "bank-transfer", dbKey: "bank_transfer", title: "Havale / EFT", description: "Banka havalesi ile ödeme", icon: <Building2 className="h-5 w-5 text-muted-foreground" /> },
   { key: "cash-on-delivery", dbKey: "cash_on_delivery", title: "Kapıda Ödeme", description: "Teslimat sırasında nakit veya kart ile ödeme", icon: <Truck className="h-5 w-5 text-muted-foreground" /> },
   { key: "shopier", dbKey: "shopier", title: "Shopier", description: "Shopier ile güvenli ödeme", icon: <ShoppingBag className="h-5 w-5 text-muted-foreground" /> },
