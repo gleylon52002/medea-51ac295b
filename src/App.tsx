@@ -173,6 +173,7 @@ const App = () => (
                 <Route path="/urun/:slug" element={<ProductDetail />} />
                 <Route path="/kategori/:slug" element={<Category />} />
                 <Route path="/odeme" element={<Checkout />} />
+                <Route path="/odeme/paytr" element={<PayTRPayment />} />
                 <Route path="/siparis-basarili" element={<OrderSuccess />} />
                 <Route path="/giris" element={<Auth />} />
                 <Route path="/hakkimizda" element={<About />} />
