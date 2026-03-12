@@ -241,6 +241,66 @@ const Checkout = () => {
         });
       }
 
+      if (paymentMethod === "paytr") {
+        try {
+          const userBasket = btoa(JSON.stringify(
+            items.map(item => [
+              item.product.name,
+              ((item.product.salePrice || item.product.price) + (item.priceAdjustment || 0)).toFixed(2),
+              item.quantity
+            ])
+          ));
+
+          const { data, error } = await supabase.functions.invoke("paytr-get-token", {
+            body: {
+              merchant_oid: result.orderNumber,
+              email: formData.email,
+              payment_amount: Math.round(finalTotal * 100),
+              user_basket: userBasket,
+              user_name: `${formData.firstName} ${formData.lastName}`,
+              user_address: `${formData.address}, ${formData.district}, ${formData.city}`,
+              user_phone: formData.phone,
+              user_ip: "",
+              merchant_ok_url: `${window.location.origin}/siparis-basarili`,
+              merchant_fail_url: `${window.location.origin}/odeme`,
+              no_installment: "0",
+              max_installment: "0",
+              currency: "TL",
+              test_mode: "0",
+              lang: "tr",
+            },
+          });
+
+          if (error) throw error;
+
+          if (data?.success && data?.token) {
+            clearCart();
+            setAppliedCoupon(null);
+            // Redirect to PayTR iframe page
+            const paytrUrl = `/odeme/paytr?token=${data.token}`;
+            navigate(paytrUrl);
+            return;
+          } else {
+            toast({
+              title: "PayTR Hatası",
+              description: data?.error || "Token alınamadı",
+              variant: "destructive",
+            });
+            setIsSubmitting(false);
+            return;
+          }
+        } catch (paytrError: any) {
+          console.error("PayTR error:", paytrError);
+          toast({
+            title: "PayTR Ödeme Başlatılamadı",
+            description: paytrError?.message || "Lütfen farklı bir ödeme yöntemi deneyin.",
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       // Handle external payment providers
       if (["credit-card", "shopier", "shopinext", "payizone"].includes(paymentMethod)) {
         try {
@@ -260,7 +320,6 @@ const Checkout = () => {
           if (error) throw error;
 
           if (data?.redirect && data?.paymentUrl) {
-            // Direct redirect to payment page
             toast({
               title: "Ödeme Sayfasına Yönlendiriliyorsunuz",
               description: "Lütfen bekleyin...",
@@ -270,7 +329,6 @@ const Checkout = () => {
             window.location.href = data.paymentUrl;
             return;
           } else if (data?.formPost && data?.paymentUrl && data?.paymentData) {
-            // Form-based POST redirect (e.g., Shopier)
             const form = document.createElement("form");
             form.method = "POST";
             form.action = data.paymentUrl;
@@ -290,7 +348,6 @@ const Checkout = () => {
             form.submit();
             return;
           } else {
-            // Fallback: no redirect URL available from provider
             toast({
               title: "Ödeme Başlatılamadı",
               description: "Ödeme sağlayıcısından yanıt alınamadı. Lütfen farklı bir yöntem deneyin.",
