@@ -63,11 +63,11 @@ const SmsSend = () => {
   const validPhones = parsedPhones.filter(validatePhone);
   const invalidPhones = parsedPhones.filter((p) => p && !validatePhone(p));
 
-  const settingsComplete = Boolean(settings.accountSid && settings.authToken && settings.fromNumber);
+  const settingsComplete = Boolean(settings.fromNumber);
 
   const handleSend = async () => {
     if (!settingsComplete) {
-      toast.error("Twilio API ayarlarını önce tamamlayın");
+      toast.error("Twilio gönderici numarasını ayarlardan girin");
       return;
     }
 
@@ -84,10 +84,8 @@ const SmsSend = () => {
     setSending(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("ileti-merkezi-sms", {
+      const { data, error } = await supabase.functions.invoke("twilio-sms", {
         body: {
-          accountSid: settings.accountSid,
-          authToken: settings.authToken,
           from: settings.fromNumber,
           to: validPhones,
           body: message.trim(),
@@ -97,29 +95,13 @@ const SmsSend = () => {
       if (error) {
         const errText = error.message || "Edge function hatası";
         toast.error(`Hata: ${errText}`, { duration: 10000 });
-
-        addToHistory({
-          id: crypto.randomUUID(),
-          date: new Date().toISOString(),
-          recipients: validPhones,
-          message,
-          status: "error",
-          errorMessage: errText,
-        });
+        addToHistory({ id: crypto.randomUUID(), date: new Date().toISOString(), recipients: validPhones, message, status: "error", errorMessage: errText });
         return;
       }
 
       if (data?.success) {
         toast.success(data.message || "SMS başarıyla gönderildi!", { duration: 5000 });
-
-        addToHistory({
-          id: crypto.randomUUID(),
-          date: new Date().toISOString(),
-          recipients: validPhones,
-          message,
-          status: "success",
-        });
-
+        addToHistory({ id: crypto.randomUUID(), date: new Date().toISOString(), recipients: validPhones, message, status: "success" });
         setPhones("");
         setMessage("");
         setShowPreview(false);
@@ -131,35 +113,18 @@ const SmsSend = () => {
           ? data.results
               .map((r: any) => {
                 const code = r?.errorCode ? ` [${r.errorCode}]` : "";
-                const msg = r?.errorMessage || r?.message || "Bilinmeyen hata";
-                const moreInfo = r?.moreInfo ? ` - ${r.moreInfo}` : "";
-                return `${r.phone}: ${msg}${code}${moreInfo}`;
+                const msg = r?.errorMessage || "Bilinmeyen hata";
+                return `${r.phone}: ${msg}${code}`;
               })
               .join(" | ")
           : data?.error || data?.message || "SMS gönderilemedi";
 
       toast.error(`Hata: ${detailedErrors}`, { duration: 12000 });
-
-      addToHistory({
-        id: crypto.randomUUID(),
-        date: new Date().toISOString(),
-        recipients: validPhones,
-        message,
-        status: "error",
-        errorMessage: detailedErrors,
-      });
+      addToHistory({ id: crypto.randomUUID(), date: new Date().toISOString(), recipients: validPhones, message, status: "error", errorMessage: detailedErrors });
     } catch (err: any) {
       const errText = err?.message || "Beklenmeyen hata";
       toast.error(`Beklenmeyen hata: ${errText}`, { duration: 10000 });
-
-      addToHistory({
-        id: crypto.randomUUID(),
-        date: new Date().toISOString(),
-        recipients: validPhones,
-        message,
-        status: "error",
-        errorMessage: errText,
-      });
+      addToHistory({ id: crypto.randomUUID(), date: new Date().toISOString(), recipients: validPhones, message, status: "error", errorMessage: errText });
     } finally {
       setSending(false);
     }
@@ -173,7 +138,7 @@ const SmsSend = () => {
           <div>
             <p className="text-sm font-medium text-destructive">Twilio Ayarları Eksik</p>
             <p className="text-xs text-destructive/80">
-              SMS göndermek için önce "Ayarlar" sekmesinden Twilio bilgilerinizi girin.
+              SMS göndermek için önce "Ayarlar" sekmesinden Twilio gönderici numaranızı girin.
             </p>
           </div>
         </div>
