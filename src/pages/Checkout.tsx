@@ -26,7 +26,7 @@ import { usePersonalDiscounts } from "@/hooks/useUserCart";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useBulkDiscounts, calculateBulkDiscount } from "@/hooks/useBulkDiscounts";
 
-type PaymentMethodType = "credit-card" | "bank-transfer" | "cash-on-delivery" | "shopier" | "shopinext" | "payizone";
+type PaymentMethodType = "credit-card" | "bank-transfer" | "cash-on-delivery" | "shopier" | "shopinext" | "payizone" | "paytr";
 type DbPaymentMethod = Database["public"]["Enums"]["payment_method"];
 
 const paymentMethodMap: Record<PaymentMethodType, DbPaymentMethod> = {
@@ -36,6 +36,7 @@ const paymentMethodMap: Record<PaymentMethodType, DbPaymentMethod> = {
   "shopier": "shopier",
   "shopinext": "shopinext",
   "payizone": "payizone",
+  "paytr": "paytr",
 };
 
 interface PaymentMethodConfig {
