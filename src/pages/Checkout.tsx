@@ -264,7 +264,7 @@ const Checkout = () => {
               user_name: `${formData.firstName} ${formData.lastName}`,
               user_address: `${formData.address}, ${formData.district}, ${formData.city}`,
               user_phone: formData.phone,
-              user_ip: "",
+              user_ip: "", // Will be detected server-side from request headers
               merchant_ok_url: `${window.location.origin}/siparis-basarili`,
               merchant_fail_url: `${window.location.origin}/odeme`,
               no_installment: "0",
@@ -383,6 +383,25 @@ const Checkout = () => {
         });
       } catch (emailErr) {
         console.error("Order confirmation email failed:", emailErr);
+      }
+
+      // Send order confirmation SMS
+      try {
+        if (formData.phone) {
+          supabase.functions.invoke("auto-sms", {
+            body: {
+              type: "order_confirmed",
+              phone: formData.phone,
+              variables: {
+                order_number: result.orderNumber,
+                total: finalTotal.toFixed(2),
+                name: `${formData.firstName} ${formData.lastName}`,
+              },
+            },
+          }).catch((err: any) => console.error("Order SMS failed:", err));
+        }
+      } catch (smsErr) {
+        console.error("Order SMS failed:", smsErr);
       }
 
       // Auto-generate invoice

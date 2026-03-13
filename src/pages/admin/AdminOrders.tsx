@@ -79,13 +79,44 @@ const AdminOrders = () => {
         if (order) {
           const shippingAddress = order.shipping_address as any;
           const emailTo = shippingAddress?.email;
+          const phone = shippingAddress?.phone;
           if (emailTo) {
             await supabase.functions.invoke("send-email", {
               body: { type: status === "shipped" ? "shipping_notification" : "order_status_update", to: emailTo, orderId: id },
             });
           }
+          // Auto SMS for shipped/delivered
+          if (phone && (status === "shipped" || status === "delivered")) {
+            const smsType = status === "shipped" ? "order_shipped" : "order_delivered";
+            supabase.functions.invoke("auto-sms", {
+              body: {
+                type: smsType,
+                phone,
+                variables: {
+                  order_number: order.order_number,
+                  tracking_number: order.tracking_number || "-",
+                  name: shippingAddress?.full_name || "",
+                },
+              },
+            }).catch((err: any) => console.error("Status SMS failed:", err));
+          }
+          // Send review request SMS 3 days after delivery
+          if (phone && status === "delivered") {
+            setTimeout(() => {
+              supabase.functions.invoke("auto-sms", {
+                body: {
+                  type: "review_request",
+                  phone,
+                  variables: {
+                    name: shippingAddress?.full_name || "",
+                    product_name: "siparişinizdeki ürünler",
+                  },
+                },
+              }).catch((err: any) => console.error("Review SMS failed:", err));
+            }, 0); // Will be sent immediately for now; consider a scheduled task for delayed delivery
+          }
         }
-      } catch (emailErr) { console.error("Status update email failed:", emailErr); }
+      } catch (emailErr) { console.error("Status update notification failed:", emailErr); }
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin", "orders"] }); toast.success("Sipariş durumu güncellendi"); },
     onError: () => { toast.error("Güncelleme başarısız"); },

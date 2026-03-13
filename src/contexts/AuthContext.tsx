@@ -8,7 +8,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -84,20 +84,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, phone?: string) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
+            phone,
           },
         },
       });
+
+      // Send welcome SMS if phone provided
+      if (!error && phone) {
+        supabase.functions.invoke("auto-sms", {
+          body: {
+            type: "welcome",
+            phone,
+            variables: { name: fullName },
+          },
+        }).catch((err: any) => console.error("Welcome SMS failed:", err));
+      }
+
       return { error: error as Error | null };
     } catch (error) {
       return { error: error as Error };
