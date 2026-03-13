@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +17,19 @@ async function hmacSha256Base64(data: string, key: string): Promise<string> {
   );
   const signature = await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(data));
   return btoa(String.fromCharCode(...new Uint8Array(signature)));
+}
+
+function getClientIp(req: Request): string {
+  // Try common headers for real IP behind proxies
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+  const cfIp = req.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp.trim();
+  return "127.0.0.1";
 }
 
 serve(async (req) => {
@@ -41,12 +53,11 @@ serve(async (req) => {
     const {
       merchant_oid,
       email,
-      payment_amount, // already multiplied by 100
-      user_basket,    // base64 encoded JSON array
+      payment_amount,
+      user_basket,
       user_name,
       user_address,
       user_phone,
-      user_ip,
       merchant_ok_url,
       merchant_fail_url,
       no_installment = "0",
@@ -64,13 +75,20 @@ serve(async (req) => {
       );
     }
 
-    // Build hash string: merchant_id + user_ip + merchant_oid + email + payment_amount + user_basket + no_installment + max_installment + currency + test_mode
+    // Get real client IP from request headers
+    const user_ip = body.user_ip || getClientIp(req);
+    console.log("Detected user_ip:", user_ip);
+
+    // Notification URL for PayTR callback
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+    const merchant_notify_url = `${SUPABASE_URL}/functions/v1/paytr-callback`;
+
     const hashStr = `${MERCHANT_ID}${user_ip}${merchant_oid}${email}${payment_amount}${user_basket}${no_installment}${max_installment}${currency}${test_mode}`;
     const paytrToken = await hmacSha256Base64(hashStr + MERCHANT_SALT, MERCHANT_KEY);
 
     const postData = new URLSearchParams({
       merchant_id: MERCHANT_ID,
-      user_ip: user_ip || "",
+      user_ip,
       merchant_oid,
       email,
       payment_amount: String(payment_amount),
@@ -84,13 +102,14 @@ serve(async (req) => {
       user_phone: user_phone || "",
       merchant_ok_url: merchant_ok_url || "",
       merchant_fail_url: merchant_fail_url || "",
+      merchant_notify_url,
       timeout_limit: String(timeout_limit),
       currency,
       test_mode: String(test_mode),
       lang,
     });
 
-    console.log("PayTR token request for order:", merchant_oid);
+    console.log("PayTR token request for order:", merchant_oid, "notify_url:", merchant_notify_url);
 
     const response = await fetch("https://www.paytr.com/odeme/api/get-token", {
       method: "POST",

@@ -264,7 +264,7 @@ const Checkout = () => {
               user_name: `${formData.firstName} ${formData.lastName}`,
               user_address: `${formData.address}, ${formData.district}, ${formData.city}`,
               user_phone: formData.phone,
-              user_ip: "",
+              user_ip: "", // Will be detected server-side from request headers
               merchant_ok_url: `${window.location.origin}/siparis-basarili`,
               merchant_fail_url: `${window.location.origin}/odeme`,
               no_installment: "0",
