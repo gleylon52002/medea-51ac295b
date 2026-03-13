@@ -270,7 +270,7 @@ const Checkout = () => {
               no_installment: "0",
               max_installment: "0",
               currency: "TL",
-              test_mode: "0",
+              test_mode: "1",
               lang: "tr",
             },
           });
