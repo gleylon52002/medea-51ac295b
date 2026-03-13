@@ -243,13 +243,17 @@ const Checkout = () => {
 
       if (paymentMethod === "paytr") {
         try {
-          const userBasket = btoa(JSON.stringify(
+          const basketJson = JSON.stringify(
             items.map(item => [
               item.product.name,
               ((item.product.salePrice || item.product.price) + (item.priceAdjustment || 0)).toFixed(2),
               item.quantity
             ])
-          ));
+          );
+          // Use TextEncoder to handle non-Latin1 (Turkish) characters
+          const userBasket = btoa(
+            Array.from(new TextEncoder().encode(basketJson), b => String.fromCharCode(b)).join('')
+          );
 
           const { data, error } = await supabase.functions.invoke("paytr-get-token", {
             body: {
@@ -266,7 +270,7 @@ const Checkout = () => {
               no_installment: "0",
               max_installment: "0",
               currency: "TL",
-              test_mode: "0",
+              test_mode: "1",
               lang: "tr",
             },
           });
