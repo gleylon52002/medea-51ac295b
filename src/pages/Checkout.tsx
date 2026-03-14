@@ -257,7 +257,7 @@ const Checkout = () => {
 
           const { data, error } = await supabase.functions.invoke("paytr-get-token", {
             body: {
-              merchant_oid: result.orderNumber,
+              merchant_oid: result.orderNumber.replace(/[^a-zA-Z0-9]/g, ''),
               email: formData.email,
               payment_amount: Math.round(finalTotal * 100),
               user_basket: userBasket,
