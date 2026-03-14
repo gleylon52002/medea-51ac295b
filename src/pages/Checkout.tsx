@@ -577,9 +577,9 @@ const Checkout = () => {
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6 lg:gap-12">
+        <div className="grid lg:grid-cols-3 gap-6 lg:gap-12 items-start">
           {/* Form Section */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-8 min-h-[400px]">
             {step === 1 && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
