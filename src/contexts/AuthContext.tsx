@@ -74,10 +74,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+
+      // Send login notification SMS if enabled
+      if (!error && data?.user) {
+        const phone = data.user.user_metadata?.phone;
+        const name = data.user.user_metadata?.full_name;
+        if (phone) {
+          supabase.functions.invoke("auto-sms", {
+            body: {
+              type: "login_welcome",
+              phone,
+              variables: { name: name || "" },
+            },
+          }).catch((err: any) => console.error("Login SMS failed:", err));
+        }
+      }
+
       return { error: error as Error | null };
     } catch (error) {
       return { error: error as Error };

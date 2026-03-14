@@ -3097,6 +3097,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_automation_settings: {
+        Row: {
+          created_at: string
+          id: string
+          is_enabled: boolean
+          message_template: string
+          sort_order: number
+          trigger_label: string
+          trigger_type: string
+          updated_at: string
+          variables: string[]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          message_template: string
+          sort_order?: number
+          trigger_label: string
+          trigger_type: string
+          updated_at?: string
+          variables?: string[]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          message_template?: string
+          sort_order?: number
+          trigger_label?: string
+          trigger_type?: string
+          updated_at?: string
+          variables?: string[]
+        }
+        Relationships: []
+      }
       sms_logs: {
         Row: {
           content: string
