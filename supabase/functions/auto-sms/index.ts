@@ -18,30 +18,6 @@ function formatTrPhone(phone: string): string {
   return `+${cleaned}`;
 }
 
-// SMS message templates
-const templates: Record<string, (vars: Record<string, string>) => string> = {
-  welcome: (v) =>
-    `Merhaba ${v.name || ""}! 🎉 Medea'ya hoş geldiniz. İlk siparişinizde %10 indirim için HOSGELDIN kodunu kullanabilirsiniz. medea.tr`,
-
-  order_confirmed: (v) =>
-    `Siparişiniz alındı! 🛒 Sipariş No: ${v.order_number || ""}. Toplam: ₺${v.total || "0"}. Siparişinizi hesabınızdan takip edebilirsiniz. medea.tr`,
-
-  order_shipped: (v) =>
-    `Siparişiniz kargoya verildi! 🚚 Sipariş No: ${v.order_number || ""}. Kargo Takip: ${v.tracking_number || "-"}. medea.tr`,
-
-  order_delivered: (v) =>
-    `Siparişiniz teslim edildi! ✅ Deneyiminizi paylaşır mısınız? Ürünlerimizi değerlendirerek diğer müşterilere yardımcı olun: medea.tr/hesabim/siparisler`,
-
-  review_request: (v) =>
-    `Merhaba ${v.name || ""}! Aldığınız "${v.product_name || "ürün"}" hakkında ne düşünüyorsunuz? 🌟 Yorumunuz bizim için çok değerli: medea.tr/hesabim/siparisler`,
-
-  promotion: (v) =>
-    `🎁 ${v.title || "Özel Kampanya"}! ${v.message || "Kaçırmayın!"} medea.tr`,
-
-  abandoned_cart: (v) =>
-    `Sepetinizde ürünler sizi bekliyor! 🛍️ Siparişinizi tamamlamayı unutmayın. medea.tr/odeme`,
-};
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -72,6 +48,21 @@ serve(async (req) => {
       );
     }
 
+    // Check if this automation type is enabled
+    const { data: automationSetting } = await supabase
+      .from("sms_automation_settings")
+      .select("is_enabled, message_template")
+      .eq("trigger_type", type)
+      .single();
+
+    if (automationSetting && !automationSetting.is_enabled) {
+      console.log(`SMS automation '${type}' is disabled, skipping.`);
+      return new Response(
+        JSON.stringify({ success: true, skipped: true, message: "Bu otomasyon devre dışı" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Get SMS settings for 'from' number
     let fromNumber = from;
     if (!fromNumber) {
@@ -91,18 +82,37 @@ serve(async (req) => {
       );
     }
 
-    // Generate message from template
-    const templateFn = templates[type];
-    if (!templateFn) {
-      return new Response(
-        JSON.stringify({ success: false, error: `Bilinmeyen şablon tipi: ${type}` }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // Use template from DB if available, otherwise use fallback
+    let message = "";
+    if (automationSetting?.message_template) {
+      message = automationSetting.message_template;
+      // Replace variables like {name}, {order_number}, etc.
+      for (const [key, value] of Object.entries(variables)) {
+        message = message.replace(new RegExp(`\\{${key}\\}`, "g"), String(value));
+      }
+    } else {
+      // Fallback templates
+      const templates: Record<string, (vars: Record<string, string>) => string> = {
+        welcome: (v) => `Merhaba ${v.name || ""}! Medea'ya hoş geldiniz. İlk siparişinizde %10 indirim için HOSGELDIN kodunu kullanabilirsiniz.`,
+        order_confirmed: (v) => `Siparişiniz alındı! Sipariş No: ${v.order_number || ""}. Toplam: ₺${v.total || "0"}.`,
+        order_shipped: (v) => `Siparişiniz kargoya verildi! Sipariş No: ${v.order_number || ""}. Kargo Takip: ${v.tracking_number || "-"}.`,
+        order_delivered: (v) => `Siparişiniz teslim edildi! Deneyiminizi paylaşır mısınız?`,
+        review_request: (v) => `Merhaba ${v.name || ""}! Aldığınız "${v.product_name || "ürün"}" hakkında ne düşünüyorsunuz?`,
+        promotion: (v) => `${v.title || "Özel Kampanya"}! ${v.message || "Kaçırmayın!"}`,
+        abandoned_cart: () => `Sepetinizde ürünler sizi bekliyor! Siparişinizi tamamlamayı unutmayın.`,
+        login_welcome: (v) => `Merhaba ${v.name || ""}! Hesabınıza başarıyla giriş yapıldı.`,
+      };
+      const templateFn = templates[type];
+      if (!templateFn) {
+        return new Response(
+          JSON.stringify({ success: false, error: `Bilinmeyen şablon tipi: ${type}` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      message = templateFn(variables);
     }
 
-    const message = templateFn(variables);
     const formattedPhone = formatTrPhone(phone);
-
     if (!formattedPhone) {
       return new Response(
         JSON.stringify({ success: false, error: "Geçersiz telefon numarası" }),
