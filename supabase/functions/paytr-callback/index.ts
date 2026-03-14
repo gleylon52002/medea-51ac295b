@@ -53,12 +53,33 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Find order by order_number (merchant_oid)
-    const { data: order, error: findError } = await supabase
+    // Find order by order_number - merchant_oid has special chars stripped, so we need to search
+    // Try exact match first, then try matching stripped version
+    let order: any = null;
+    let findError: any = null;
+    
+    const { data: exactMatch, error: exactErr } = await supabase
       .from("orders")
-      .select("id, payment_status")
+      .select("id, payment_status, order_number")
       .eq("order_number", merchant_oid)
-      .single();
+      .maybeSingle();
+    
+    if (exactMatch) {
+      order = exactMatch;
+    } else {
+      // Search recent pending orders and match by stripped order_number
+      const { data: pendingOrders, error: searchErr } = await supabase
+        .from("orders")
+        .select("id, payment_status, order_number")
+        .eq("payment_status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      
+      findError = searchErr;
+      if (pendingOrders) {
+        order = pendingOrders.find(o => o.order_number.replace(/[^a-zA-Z0-9]/g, '') === merchant_oid);
+      }
+    }
 
     if (findError || !order) {
       console.error("PayTR callback: Order not found:", merchant_oid, findError);
