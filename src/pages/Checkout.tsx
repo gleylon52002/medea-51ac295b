@@ -933,7 +933,7 @@ const Checkout = () => {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-muted/30 rounded-xl p-4 sm:p-6 border border-border">
+            <div className="sticky top-24 bg-muted/30 rounded-xl p-4 sm:p-6 border border-border will-change-auto">
               <h3 className="font-serif text-lg font-medium mb-4">Sepet Özeti</h3>
 
               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
