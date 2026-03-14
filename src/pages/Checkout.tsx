@@ -577,9 +577,9 @@ const Checkout = () => {
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6 lg:gap-12">
+        <div className="grid lg:grid-cols-3 gap-6 lg:gap-12 items-start">
           {/* Form Section */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-8 min-h-[400px]">
             {step === 1 && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
@@ -933,7 +933,7 @@ const Checkout = () => {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-muted/30 rounded-xl p-4 sm:p-6 border border-border">
+            <div className="sticky top-24 bg-muted/30 rounded-xl p-4 sm:p-6 border border-border will-change-auto">
               <h3 className="font-serif text-lg font-medium mb-4">Sepet Özeti</h3>
 
               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
