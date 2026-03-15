@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
+const ADMIN_PHONE = "+905350582392";
 
 function formatTrPhone(phone: string): string {
   let cleaned = String(phone || "").replace(/\D/g, "");
@@ -16,6 +17,30 @@ function formatTrPhone(phone: string): string {
   if (cleaned.startsWith("0")) return `+90${cleaned.slice(1)}`;
   if (cleaned.startsWith("5")) return `+90${cleaned}`;
   return `+${cleaned}`;
+}
+
+async function sendSms(
+  fromNumber: string,
+  toPhone: string,
+  message: string,
+  lovableApiKey: string,
+  twilioApiKey: string,
+): Promise<{ ok: boolean; data: any }> {
+  const response = await fetch(`${GATEWAY_URL}/Messages.json`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${lovableApiKey}`,
+      "X-Connection-Api-Key": twilioApiKey,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      To: toPhone,
+      From: fromNumber,
+      Body: message,
+    }),
+  });
+  const data = await response.json();
+  return { ok: response.ok, data };
 }
 
 serve(async (req) => {
@@ -82,16 +107,14 @@ serve(async (req) => {
       );
     }
 
-    // Use template from DB if available, otherwise use fallback
+    // Build user message from template or fallback
     let message = "";
     if (automationSetting?.message_template) {
       message = automationSetting.message_template;
-      // Replace variables like {name}, {order_number}, etc.
       for (const [key, value] of Object.entries(variables)) {
         message = message.replace(new RegExp(`\\{${key}\\}`, "g"), String(value));
       }
     } else {
-      // Fallback templates
       const templates: Record<string, (vars: Record<string, string>) => string> = {
         welcome: (v) => `Merhaba ${v.name || ""}! Medea'ya hoş geldiniz. İlk siparişinizde %10 indirim için HOSGELDIN kodunu kullanabilirsiniz.`,
         order_confirmed: (v) => `Siparişiniz alındı! Sipariş No: ${v.order_number || ""}. Toplam: ₺${v.total || "0"}.`,
@@ -120,48 +143,66 @@ serve(async (req) => {
       );
     }
 
-    // Send via Twilio gateway
-    const response = await fetch(`${GATEWAY_URL}/Messages.json`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "X-Connection-Api-Key": TWILIO_API_KEY,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        To: formattedPhone,
-        From: fromNumber,
-        Body: message,
-      }),
-    });
+    // ---- Send SMS to the USER ----
+    const userResult = await sendSms(fromNumber, formattedPhone, message, LOVABLE_API_KEY, TWILIO_API_KEY);
 
-    const data = await response.json();
-
-    // Log the SMS
+    // Log user SMS
     try {
       await supabase.from("sms_logs").insert({
         phone: formattedPhone,
         content: message,
         provider: "twilio",
-        status: response.ok ? "sent" : "failed",
-        error_message: response.ok ? null : (data?.message || "Gönderim hatası"),
-        metadata: { type, variables, sid: data?.sid },
-        sent_at: response.ok ? new Date().toISOString() : null,
+        status: userResult.ok ? "sent" : "failed",
+        error_message: userResult.ok ? null : (userResult.data?.message || "Gönderim hatası"),
+        metadata: { type, variables, sid: userResult.data?.sid },
+        sent_at: userResult.ok ? new Date().toISOString() : null,
       });
     } catch (logErr) {
       console.error("SMS log error:", logErr);
     }
 
-    if (!response.ok) {
-      console.error(`Auto SMS error for ${formattedPhone}:`, JSON.stringify(data));
+    // ---- Send notification SMS to ADMIN for key events ----
+    const adminNotifyTypes = ["welcome", "order_confirmed", "order_shipped", "order_delivered"];
+    if (adminNotifyTypes.includes(type)) {
+      try {
+        const adminMessages: Record<string, string> = {
+          welcome: `🆕 Yeni üye kaydı: ${variables.name || "Bilinmiyor"} (${formattedPhone})`,
+          order_confirmed: `🛒 Yeni sipariş! No: ${variables.order_number || "-"}, Tutar: ₺${variables.total || "0"}, Müşteri: ${variables.name || formattedPhone}`,
+          order_shipped: `📦 Sipariş kargoya verildi. No: ${variables.order_number || "-"}, Takip: ${variables.tracking_number || "-"}`,
+          order_delivered: `✅ Sipariş teslim edildi. Müşteri: ${formattedPhone}`,
+        };
+        const adminMsg = adminMessages[type] || `Bildirim: ${type}`;
+        const adminResult = await sendSms(fromNumber, ADMIN_PHONE, adminMsg, LOVABLE_API_KEY, TWILIO_API_KEY);
+        
+        // Log admin SMS
+        await supabase.from("sms_logs").insert({
+          phone: ADMIN_PHONE,
+          content: adminMsg,
+          provider: "twilio",
+          status: adminResult.ok ? "sent" : "failed",
+          error_message: adminResult.ok ? null : (adminResult.data?.message || "Admin SMS hatası"),
+          metadata: { type: `admin_${type}`, sid: adminResult.data?.sid },
+          sent_at: adminResult.ok ? new Date().toISOString() : null,
+        });
+
+        if (!adminResult.ok) {
+          console.error("Admin SMS failed:", JSON.stringify(adminResult.data));
+        }
+      } catch (adminErr) {
+        console.error("Admin SMS error:", adminErr);
+      }
+    }
+
+    if (!userResult.ok) {
+      console.error(`Auto SMS error for ${formattedPhone}:`, JSON.stringify(userResult.data));
       return new Response(
-        JSON.stringify({ success: false, error: data?.message || "SMS gönderilemedi" }),
+        JSON.stringify({ success: false, error: userResult.data?.message || "SMS gönderilemedi" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     return new Response(
-      JSON.stringify({ success: true, sid: data.sid, message: "SMS gönderildi" }),
+      JSON.stringify({ success: true, sid: userResult.data.sid, message: "SMS gönderildi" }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {

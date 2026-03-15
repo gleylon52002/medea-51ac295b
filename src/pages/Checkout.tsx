@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronRight, CreditCard, Truck, MapPin, Check, Loader2, ShoppingBag, Wallet, Banknote, Building2, Plus } from "lucide-react";
 import Layout from "@/components/layout/Layout";
@@ -80,7 +80,11 @@ const Checkout = () => {
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const { data: personalDiscounts } = usePersonalDiscounts();
 
-  // Load referral code from session
+  // Refs to prevent re-running effects
+  const profileFilledRef = useRef(false);
+  const paymentMethodSetRef = useRef(false);
+
+  // Load referral code from session - only once
   useEffect(() => {
     const code = sessionStorage.getItem("referral_code");
     if (code) setReferralCode(code);
@@ -91,14 +95,14 @@ const Checkout = () => {
   const defaultShippingCost = shippingSettings?.default_shipping_cost ?? 29.90;
   const computedShipping = total >= freeShippingThreshold ? 0 : defaultShippingCost;
   const { data: bulkRules } = useBulkDiscounts();
-  const bulkResult = bulkRules ? calculateBulkDiscount(items, bulkRules) : { discount: 0, appliedRule: null };
+  const bulkResult = useMemo(() => bulkRules ? calculateBulkDiscount(items, bulkRules) : { discount: 0, appliedRule: null }, [items, bulkRules]);
 
   // Calculate personal discounts total
-  const personalDiscountTotal = personalDiscounts?.reduce((sum, pd) => {
+  const personalDiscountTotal = useMemo(() => personalDiscounts?.reduce((sum, pd) => {
     const matchingItem = items.find(i => i.product.id === pd.product_id);
     if (matchingItem) return sum + pd.personal_discount;
     return sum;
-  }, 0) || 0;
+  }, 0) || 0, [personalDiscounts, items]);
 
   const walletAmount = useWalletBalance && wallet ? Math.min(wallet.balance, total - (appliedCoupon?.discount || 0) - bulkResult.discount - personalDiscountTotal) : 0;
   const finalTotal = Math.max(0, total - (appliedCoupon?.discount || 0) - bulkResult.discount - personalDiscountTotal - walletAmount + computedShipping);
@@ -115,39 +119,41 @@ const Checkout = () => {
     postalCode: "",
   });
 
-  // Pre-fill form from profile
+  // Pre-fill form from profile - only ONCE
   useEffect(() => {
-    if (profile && !formData.firstName && !formData.lastName) {
+    if (profile && !profileFilledRef.current) {
+      profileFilledRef.current = true;
       const names = (profile.full_name || "").split(" ");
       setFormData(prev => ({
         ...prev,
-        firstName: names[0] || "",
-        lastName: names.slice(1).join(" ") || "",
-        email: profile.email || prev.email,
-        phone: profile.phone || prev.phone,
+        firstName: prev.firstName || names[0] || "",
+        lastName: prev.lastName || names.slice(1).join(" ") || "",
+        email: prev.email || profile.email || "",
+        phone: prev.phone || profile.phone || "",
       }));
     }
   }, [profile]);
 
   // Handle address selection
-  useEffect(() => {
-    if (selectedAddressId && userAddresses) {
-      const addr = userAddresses.find(a => a.id === selectedAddressId);
+  const handleAddressSelect = useCallback((addressId: string | null) => {
+    setSelectedAddressId(addressId);
+    if (addressId && userAddresses) {
+      const addr = userAddresses.find(a => a.id === addressId);
       if (addr) {
         const names = (addr.full_name || "").split(" ");
-        setFormData({
+        setFormData(prev => ({
           firstName: names[0] || "",
           lastName: names.slice(1).join(" ") || "",
-          email: formData.email, // Keep email from profile/initial
+          email: prev.email,
           phone: addr.phone || "",
           address: addr.address || "",
           city: addr.city || "",
           district: addr.district || "",
           postalCode: addr.postal_code || "",
-        });
+        }));
       }
     }
-  }, [selectedAddressId, userAddresses]);
+  }, [userAddresses]);
 
   // Fetch active payment methods
   const { data: paymentSettings } = useQuery({
@@ -159,13 +165,14 @@ const Checkout = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 60000, // Cache for 60s to prevent refetches
   });
 
-  // Check if cart has seller products (require credit card only)
-  const hasSellerProducts = items.some(item => item.product.sellerId);
+  // Check if cart has seller products
+  const hasSellerProducts = useMemo(() => items.some(item => item.product.sellerId), [items]);
 
-  // Filter available payment methods (memoized to prevent infinite loops)
-  const availablePaymentMethods = React.useMemo(() => {
+  // Filter available payment methods (memoized)
+  const availablePaymentMethods = useMemo(() => {
     return allPaymentMethods.filter(method => {
       const isActive = paymentSettings?.some(ps => ps.method === method.dbKey && ps.is_active);
       if (!isActive) return false;
@@ -176,24 +183,26 @@ const Checkout = () => {
     });
   }, [paymentSettings, hasSellerProducts]);
 
-  // Set first available payment method as default
+  // Set first available payment method as default - only ONCE
   useEffect(() => {
-    if (availablePaymentMethods.length > 0 && !availablePaymentMethods.find(m => m.key === paymentMethod)) {
-      setPaymentMethod(availablePaymentMethods[0].key);
+    if (availablePaymentMethods.length > 0 && !paymentMethodSetRef.current) {
+      const currentIsAvailable = availablePaymentMethods.find(m => m.key === paymentMethod);
+      if (!currentIsAvailable) {
+        setPaymentMethod(availablePaymentMethods[0].key);
+      }
+      paymentMethodSetRef.current = true;
     }
-  }, [availablePaymentMethods, paymentMethod]);
+  }, [availablePaymentMethods]);
 
-  // Get bank transfer config
-  // Bank transfer config is fetched separately only for admin display
-  // For checkout, we just show a generic message
   const hasBankTransfer = paymentSettings?.some(ps => ps.method === "bank_transfer");
 
   const shippingCost = total >= freeShippingThreshold ? 0 : defaultShippingCost;
   const discountAmount = appliedCoupon?.discount || 0;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  }, []);
 
   const handleSubmitOrder = async () => {
     if (!termsAccepted) {
@@ -250,7 +259,6 @@ const Checkout = () => {
               item.quantity
             ])
           );
-          // Use TextEncoder to handle non-Latin1 (Turkish) characters
           const userBasket = btoa(
             Array.from(new TextEncoder().encode(basketJson), b => String.fromCharCode(b)).join('')
           );
@@ -264,7 +272,7 @@ const Checkout = () => {
               user_name: `${formData.firstName} ${formData.lastName}`,
               user_address: `${formData.address}, ${formData.district}, ${formData.city}`,
               user_phone: formData.phone,
-              user_ip: "", // Will be detected server-side from request headers
+              user_ip: "",
               merchant_ok_url: `${window.location.origin}/siparis-basarili`,
               merchant_fail_url: `${window.location.origin}/odeme`,
               no_installment: "0",
@@ -280,7 +288,6 @@ const Checkout = () => {
           if (data?.success && data?.token) {
             clearCart();
             setAppliedCoupon(null);
-            // Redirect to PayTR iframe page
             const paytrUrl = `/odeme/paytr?token=${data.token}`;
             navigate(paytrUrl);
             return;
@@ -385,7 +392,7 @@ const Checkout = () => {
         console.error("Order confirmation email failed:", emailErr);
       }
 
-      // Send order confirmation SMS
+      // Send order confirmation SMS (to user + admin automatically via auto-sms)
       try {
         if (formData.phone) {
           supabase.functions.invoke("auto-sms", {
@@ -578,8 +585,8 @@ const Checkout = () => {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6 lg:gap-12 items-start">
-          {/* Form Section */}
-          <div className="lg:col-span-2 space-y-8 min-h-[400px]">
+          {/* Form Section - fixed min-height prevents layout shift on step change */}
+          <div className="lg:col-span-2 min-h-[500px]">
             {step === 1 && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
@@ -594,8 +601,8 @@ const Checkout = () => {
                       {userAddresses.map((addr) => (
                         <div
                           key={addr.id}
-                          onClick={() => setSelectedAddressId(addr.id)}
-                          className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedAddressId === addr.id
+                          onClick={() => handleAddressSelect(addr.id)}
+                          className={`p-3 border rounded-lg cursor-pointer transition-colors ${selectedAddressId === addr.id
                             ? "border-primary bg-primary/5 ring-1 ring-primary"
                             : "border-border hover:border-primary/50"
                             }`}
@@ -609,8 +616,8 @@ const Checkout = () => {
                         </div>
                       ))}
                       <div
-                        onClick={() => setSelectedAddressId(null)}
-                        className={`p-3 border border-dashed rounded-lg cursor-pointer flex items-center justify-center gap-2 hover:bg-muted/50 transition-all ${selectedAddressId === null ? "border-primary bg-primary/5" : "border-border"
+                        onClick={() => handleAddressSelect(null)}
+                        className={`p-3 border border-dashed rounded-lg cursor-pointer flex items-center justify-center gap-2 hover:bg-muted/50 transition-colors ${selectedAddressId === null ? "border-primary bg-primary/5" : "border-border"
                           }`}
                       >
                         <Plus className="h-4 w-4 text-muted-foreground" />
@@ -712,7 +719,6 @@ const Checkout = () => {
                 </div>
 
                 <Button onClick={() => {
-                  // Validate shipping form
                   if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.address.trim() || !formData.city.trim() || !formData.district.trim()) {
                     toast({
                       title: "Eksik Bilgi",
@@ -721,7 +727,6 @@ const Checkout = () => {
                     });
                     return;
                   }
-                  // Basic email validation
                   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
                     toast({
                       title: "Geçersiz E-posta",
@@ -931,9 +936,9 @@ const Checkout = () => {
             )}
           </div>
 
-          {/* Order Summary */}
+          {/* Order Summary - stable sticky sidebar */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-muted/30 rounded-xl p-4 sm:p-6 border border-border will-change-auto">
+            <div className="sticky top-24 bg-muted/30 rounded-xl p-4 sm:p-6 border border-border transform-gpu">
               <h3 className="font-serif text-lg font-medium mb-4">Sepet Özeti</h3>
 
               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
