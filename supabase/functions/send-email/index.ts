@@ -275,6 +275,59 @@ serve(async (req) => {
         `;
         break;
 
+      case "welcome_user":
+        subject = `${senderName}'a Hoş Geldiniz`;
+        html = `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+            <div style="background: #8B7355; padding: 20px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0;">${senderName}</h1>
+            </div>
+            <div style="padding: 30px 20px;">
+              <h2>Aramıza hoş geldiniz!</h2>
+              <p>Merhaba ${data?.customerName || ""},</p>
+              <p>Üyeliğiniz başarıyla oluşturuldu. Artık hesabınız üzerinden siparişlerinizi takip edebilir ve kampanyalardan haberdar olabilirsiniz.</p>
+              <p>İhtiyacınız olursa bize her zaman ulaşabilirsiniz.</p>
+            </div>
+          </div>
+        `;
+        break;
+
+      case "admin_new_signup":
+        recipientEmail = adminRecipient || recipientEmail;
+        subject = `Yeni üyelik bildirimi${data?.customerName ? ` - ${data.customerName}` : ""}`;
+        html = `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+            <div style="background: #8B7355; padding: 20px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0;">${senderName} - Yeni Üyelik</h1>
+            </div>
+            <div style="padding: 30px 20px;">
+              <p><strong>Ad Soyad:</strong> ${data?.customerName || "-"}</p>
+              <p><strong>E-posta:</strong> ${data?.email || "-"}</p>
+              <p><strong>Telefon:</strong> ${data?.phone || "-"}</p>
+            </div>
+          </div>
+        `;
+        break;
+
+      case "admin_new_order":
+        recipientEmail = adminRecipient || recipientEmail;
+        subject = `Yeni sipariş bildirimi - ${order?.order_number || data?.orderNumber || "-"}`;
+        html = `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+            <div style="background: #8B7355; padding: 20px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0;">${senderName} - Yeni Sipariş</h1>
+            </div>
+            <div style="padding: 30px 20px;">
+              <p><strong>Sipariş No:</strong> ${order?.order_number || data?.orderNumber || "-"}</p>
+              <p><strong>Müşteri:</strong> ${shippingAddress?.full_name || data?.customerName || "-"}</p>
+              <p><strong>E-posta:</strong> ${data?.email || "-"}</p>
+              <p><strong>Telefon:</strong> ${shippingAddress?.phone || data?.phone || "-"}</p>
+              <p><strong>Tutar:</strong> ${order ? `${Number(order.total).toFixed(2)}₺` : `${data?.total || "-"}₺`}</p>
+            </div>
+          </div>
+        `;
+        break;
+
       case "low_stock_alert":
         subject = `⚠️ Düşük Stok Uyarısı - ${data?.productName || "Ürün"}`;
         html = `
