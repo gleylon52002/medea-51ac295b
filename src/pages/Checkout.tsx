@@ -251,6 +251,15 @@ const Checkout = () => {
         });
       }
 
+      await notifyOrderCreated({
+        orderId: result.order.id,
+        orderNumber: result.orderNumber,
+        email: formData.email,
+        phone: formData.phone,
+        customerName: `${formData.firstName} ${formData.lastName}`.trim(),
+        total: finalTotal,
+      });
+
       if (paymentMethod === "paytr") {
         try {
           const basketJson = JSON.stringify(
