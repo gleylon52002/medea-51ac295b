@@ -26,6 +26,7 @@ const Auth = () => {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
   });
