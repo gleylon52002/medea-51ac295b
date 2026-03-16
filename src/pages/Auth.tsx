@@ -78,7 +78,7 @@ const Auth = () => {
     setIsLoading(true);
 
     const fullName = `${registerData.firstName} ${registerData.lastName}`.trim();
-    const { error } = await signUp(registerData.email, registerData.password, fullName);
+    const { error } = await signUp(registerData.email, registerData.password, fullName, registerData.phone);
 
     if (error) {
       if (error.message.includes("already registered")) {
