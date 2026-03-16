@@ -40,17 +40,19 @@ serve(async (req) => {
 
     const { type, to, orderId, data } = await req.json() as EmailRequest;
 
-    // Get email settings from site_settings
-    const { data: emailSettingsRow } = await supabase
+    const { data: settingsRows } = await supabase
       .from("site_settings")
-      .select("value")
-      .eq("key", "email")
-      .single();
+      .select("key, value")
+      .in("key", ["email", "contact"]);
 
-    const emailSettings = (emailSettingsRow?.value as Record<string, any>) || {};
+    const settingsMap = Object.fromEntries((settingsRows || []).map((row) => [row.key, row.value]));
+    const emailSettings = (settingsMap.email as Record<string, any>) || {};
+    const contactSettings = (settingsMap.contact as Record<string, any>) || {};
     const senderName = emailSettings.sender_name || "MEDEA";
     // Use Resend's default sender unless a verified custom domain is configured
     const senderEmail = emailSettings.sender_email || "onboarding@resend.dev";
+    const adminRecipient = emailSettings.contact_form_notification_email || contactSettings.email || null;
+    let recipientEmail = to || "";
 
     // Check if this email type is enabled
     if (type === "order_confirmation" && emailSettings.order_confirmation_enabled === false) {
