@@ -25,6 +25,7 @@ import { useWallet } from "@/hooks/useAffiliate";
 import { usePersonalDiscounts } from "@/hooks/useUserCart";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useBulkDiscounts, calculateBulkDiscount } from "@/hooks/useBulkDiscounts";
+import { notifyOrderCreated } from "@/lib/notifications";
 
 type PaymentMethodType = "credit-card" | "bank-transfer" | "cash-on-delivery" | "shopier" | "shopinext" | "payizone" | "paytr";
 type DbPaymentMethod = Database["public"]["Enums"]["payment_method"];
