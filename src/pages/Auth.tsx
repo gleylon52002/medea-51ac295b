@@ -26,6 +26,7 @@ const Auth = () => {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
   });
@@ -77,7 +78,7 @@ const Auth = () => {
     setIsLoading(true);
 
     const fullName = `${registerData.firstName} ${registerData.lastName}`.trim();
-    const { error } = await signUp(registerData.email, registerData.password, fullName);
+    const { error } = await signUp(registerData.email, registerData.password, fullName, registerData.phone);
 
     if (error) {
       if (error.message.includes("already registered")) {
@@ -255,6 +256,20 @@ const Auth = () => {
                         required
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="register-phone">Telefon</Label>
+                    <Input
+                      id="register-phone"
+                      type="tel"
+                      placeholder="0532 123 45 67"
+                      value={registerData.phone}
+                      onChange={(e) =>
+                        setRegisterData({ ...registerData, phone: e.target.value })
+                      }
+                      required
+                    />
                   </div>
 
                   <div className="space-y-2">

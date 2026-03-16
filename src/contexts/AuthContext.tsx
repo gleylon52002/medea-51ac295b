@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyNewSignup } from "@/lib/notifications";
 
 interface AuthContextType {
   user: User | null;
@@ -116,15 +117,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       });
 
-      // Send welcome SMS if phone provided
-      if (!error && phone) {
-        supabase.functions.invoke("auto-sms", {
-          body: {
-            type: "welcome",
-            phone,
-            variables: { name: fullName },
-          },
-        }).catch((err: any) => console.error("Welcome SMS failed:", err));
+      if (!error) {
+        notifyNewSignup({
+          email,
+          fullName,
+          phone,
+        }).catch((err: unknown) => console.error("Signup notifications failed:", err));
       }
 
       return { error: error as Error | null };

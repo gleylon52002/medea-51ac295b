@@ -13,13 +13,16 @@ type EmailType =
   | "shipping_notification"
   | "contact_form"
   | "newsletter_welcome"
+  | "welcome_user"
+  | "admin_new_signup"
+  | "admin_new_order"
   | "low_stock_alert"
   | "newsletter_broadcast"
   | "test_email";
 
 interface EmailRequest {
   type: EmailType;
-  to: string;
+  to?: string;
   orderId?: string;
   data?: Record<string, unknown>;
 }
@@ -37,17 +40,19 @@ serve(async (req) => {
 
     const { type, to, orderId, data } = await req.json() as EmailRequest;
 
-    // Get email settings from site_settings
-    const { data: emailSettingsRow } = await supabase
+    const { data: settingsRows } = await supabase
       .from("site_settings")
-      .select("value")
-      .eq("key", "email")
-      .single();
+      .select("key, value")
+      .in("key", ["email", "contact"]);
 
-    const emailSettings = (emailSettingsRow?.value as Record<string, any>) || {};
+    const settingsMap = Object.fromEntries((settingsRows || []).map((row) => [row.key, row.value]));
+    const emailSettings = (settingsMap.email as Record<string, any>) || {};
+    const contactSettings = (settingsMap.contact as Record<string, any>) || {};
     const senderName = emailSettings.sender_name || "MEDEA";
     // Use Resend's default sender unless a verified custom domain is configured
     const senderEmail = emailSettings.sender_email || "onboarding@resend.dev";
+    const adminRecipient = emailSettings.contact_form_notification_email || contactSettings.email || null;
+    let recipientEmail = to || "";
 
     // Check if this email type is enabled
     if (type === "order_confirmation" && emailSettings.order_confirmation_enabled === false) {
@@ -270,6 +275,59 @@ serve(async (req) => {
         `;
         break;
 
+      case "welcome_user":
+        subject = `${senderName}'a Hoş Geldiniz`;
+        html = `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+            <div style="background: #8B7355; padding: 20px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0;">${senderName}</h1>
+            </div>
+            <div style="padding: 30px 20px;">
+              <h2>Aramıza hoş geldiniz!</h2>
+              <p>Merhaba ${data?.customerName || ""},</p>
+              <p>Üyeliğiniz başarıyla oluşturuldu. Artık hesabınız üzerinden siparişlerinizi takip edebilir ve kampanyalardan haberdar olabilirsiniz.</p>
+              <p>İhtiyacınız olursa bize her zaman ulaşabilirsiniz.</p>
+            </div>
+          </div>
+        `;
+        break;
+
+      case "admin_new_signup":
+        recipientEmail = adminRecipient || recipientEmail;
+        subject = `Yeni üyelik bildirimi${data?.customerName ? ` - ${data.customerName}` : ""}`;
+        html = `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+            <div style="background: #8B7355; padding: 20px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0;">${senderName} - Yeni Üyelik</h1>
+            </div>
+            <div style="padding: 30px 20px;">
+              <p><strong>Ad Soyad:</strong> ${data?.customerName || "-"}</p>
+              <p><strong>E-posta:</strong> ${data?.email || "-"}</p>
+              <p><strong>Telefon:</strong> ${data?.phone || "-"}</p>
+            </div>
+          </div>
+        `;
+        break;
+
+      case "admin_new_order":
+        recipientEmail = adminRecipient || recipientEmail;
+        subject = `Yeni sipariş bildirimi - ${order?.order_number || data?.orderNumber || "-"}`;
+        html = `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+            <div style="background: #8B7355; padding: 20px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0;">${senderName} - Yeni Sipariş</h1>
+            </div>
+            <div style="padding: 30px 20px;">
+              <p><strong>Sipariş No:</strong> ${order?.order_number || data?.orderNumber || "-"}</p>
+              <p><strong>Müşteri:</strong> ${shippingAddress?.full_name || data?.customerName || "-"}</p>
+              <p><strong>E-posta:</strong> ${data?.email || "-"}</p>
+              <p><strong>Telefon:</strong> ${shippingAddress?.phone || data?.phone || "-"}</p>
+              <p><strong>Tutar:</strong> ${order ? `${Number(order.total).toFixed(2)}₺` : `${data?.total || "-"}₺`}</p>
+            </div>
+          </div>
+        `;
+        break;
+
       case "low_stock_alert":
         subject = `⚠️ Düşük Stok Uyarısı - ${data?.productName || "Ürün"}`;
         html = `
@@ -326,15 +384,26 @@ serve(async (req) => {
         throw new Error(`Unknown email type: ${type}`);
     }
 
+    if (!recipientEmail) {
+      return new Response(
+        JSON.stringify({ success: false, message: "Alıcı e-posta adresi bulunamadı." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Log email attempt
-    await supabase.from("email_logs").insert({
-      email_type: type,
-      recipient_email: to,
-      subject,
-      status: RESEND_API_KEY ? "pending" : "skipped",
-      order_id: orderId || null,
-      user_id: order?.user_id || null,
-    });
+    const { data: insertedLog } = await supabase
+      .from("email_logs")
+      .insert({
+        email_type: type,
+        recipient_email: recipientEmail,
+        subject,
+        status: RESEND_API_KEY ? "pending" : "skipped",
+        order_id: orderId || null,
+        user_id: order?.user_id || null,
+      })
+      .select("id")
+      .single();
 
     if (!RESEND_API_KEY) {
       console.log("RESEND_API_KEY not configured, skipping email");
@@ -352,7 +421,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: `${senderName} <${senderEmail}>`,
-        to: [to],
+        to: [recipientEmail],
         subject,
         html,
       }),
@@ -362,28 +431,24 @@ serve(async (req) => {
       const errorData = await res.text();
       console.error("Resend API error:", errorData);
       
-      // Update email log
-      await supabase
-        .from("email_logs")
-        .update({ status: "failed", error_message: errorData })
-        .eq("recipient_email", to)
-        .eq("email_type", type)
-        .order("created_at", { ascending: false })
-        .limit(1);
+      if (insertedLog?.id) {
+        await supabase
+          .from("email_logs")
+          .update({ status: "failed", error_message: errorData })
+          .eq("id", insertedLog.id);
+      }
 
       throw new Error(`Failed to send email: ${errorData}`);
     }
 
     const responseData = await res.json();
 
-    // Update email log status
-    await supabase
-      .from("email_logs")
-      .update({ status: "sent", sent_at: new Date().toISOString() })
-      .eq("recipient_email", to)
-      .eq("email_type", type)
-      .order("created_at", { ascending: false })
-      .limit(1);
+    if (insertedLog?.id) {
+      await supabase
+        .from("email_logs")
+        .update({ status: "sent", sent_at: new Date().toISOString() })
+        .eq("id", insertedLog.id);
+    }
 
     return new Response(
       JSON.stringify({ success: true, id: responseData.id }),
