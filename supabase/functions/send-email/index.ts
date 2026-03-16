@@ -13,13 +13,16 @@ type EmailType =
   | "shipping_notification"
   | "contact_form"
   | "newsletter_welcome"
+  | "welcome_user"
+  | "admin_new_signup"
+  | "admin_new_order"
   | "low_stock_alert"
   | "newsletter_broadcast"
   | "test_email";
 
 interface EmailRequest {
   type: EmailType;
-  to: string;
+  to?: string;
   orderId?: string;
   data?: Record<string, unknown>;
 }
