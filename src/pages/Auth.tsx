@@ -259,6 +259,20 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="register-phone">Telefon</Label>
+                    <Input
+                      id="register-phone"
+                      type="tel"
+                      placeholder="0532 123 45 67"
+                      value={registerData.phone}
+                      onChange={(e) =>
+                        setRegisterData({ ...registerData, phone: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="register-password">Şifre</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

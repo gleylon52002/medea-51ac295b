@@ -389,37 +389,6 @@ const Checkout = () => {
         }
       }
 
-      // Send order confirmation email
-      try {
-        await supabase.functions.invoke("send-email", {
-          body: {
-            type: "order_confirmation",
-            to: formData.email,
-            orderId: result.order.id,
-          },
-        });
-      } catch (emailErr) {
-        console.error("Order confirmation email failed:", emailErr);
-      }
-
-      // Send order confirmation SMS (to user + admin automatically via auto-sms)
-      try {
-        if (formData.phone) {
-          supabase.functions.invoke("auto-sms", {
-            body: {
-              type: "order_confirmed",
-              phone: formData.phone,
-              variables: {
-                order_number: result.orderNumber,
-                total: finalTotal.toFixed(2),
-                name: `${formData.firstName} ${formData.lastName}`,
-              },
-            },
-          }).catch((err: any) => console.error("Order SMS failed:", err));
-        }
-      } catch (smsErr) {
-        console.error("Order SMS failed:", smsErr);
-      }
 
       // Auto-generate invoice
       try {

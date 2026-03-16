@@ -384,15 +384,26 @@ serve(async (req) => {
         throw new Error(`Unknown email type: ${type}`);
     }
 
+    if (!recipientEmail) {
+      return new Response(
+        JSON.stringify({ success: false, message: "Alıcı e-posta adresi bulunamadı." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Log email attempt
-    await supabase.from("email_logs").insert({
-      email_type: type,
-      recipient_email: to,
-      subject,
-      status: RESEND_API_KEY ? "pending" : "skipped",
-      order_id: orderId || null,
-      user_id: order?.user_id || null,
-    });
+    const { data: insertedLog } = await supabase
+      .from("email_logs")
+      .insert({
+        email_type: type,
+        recipient_email: recipientEmail,
+        subject,
+        status: RESEND_API_KEY ? "pending" : "skipped",
+        order_id: orderId || null,
+        user_id: order?.user_id || null,
+      })
+      .select("id")
+      .single();
 
     if (!RESEND_API_KEY) {
       console.log("RESEND_API_KEY not configured, skipping email");
@@ -410,7 +421,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: `${senderName} <${senderEmail}>`,
-        to: [to],
+        to: [recipientEmail],
         subject,
         html,
       }),
@@ -420,28 +431,24 @@ serve(async (req) => {
       const errorData = await res.text();
       console.error("Resend API error:", errorData);
       
-      // Update email log
-      await supabase
-        .from("email_logs")
-        .update({ status: "failed", error_message: errorData })
-        .eq("recipient_email", to)
-        .eq("email_type", type)
-        .order("created_at", { ascending: false })
-        .limit(1);
+      if (insertedLog?.id) {
+        await supabase
+          .from("email_logs")
+          .update({ status: "failed", error_message: errorData })
+          .eq("id", insertedLog.id);
+      }
 
       throw new Error(`Failed to send email: ${errorData}`);
     }
 
     const responseData = await res.json();
 
-    // Update email log status
-    await supabase
-      .from("email_logs")
-      .update({ status: "sent", sent_at: new Date().toISOString() })
-      .eq("recipient_email", to)
-      .eq("email_type", type)
-      .order("created_at", { ascending: false })
-      .limit(1);
+    if (insertedLog?.id) {
+      await supabase
+        .from("email_logs")
+        .update({ status: "sent", sent_at: new Date().toISOString() })
+        .eq("id", insertedLog.id);
+    }
 
     return new Response(
       JSON.stringify({ success: true, id: responseData.id }),
