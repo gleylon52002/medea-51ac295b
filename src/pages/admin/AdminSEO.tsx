@@ -145,7 +145,7 @@ const AdminSEO = () => {
   };
 
   const generateRobotsTxt = () => {
-    const baseUrl = window.location.origin;
+    const baseUrl = "https://medea.tr";
     return `User-agent: *
 Allow: /
 
