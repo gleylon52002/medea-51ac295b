@@ -221,12 +221,16 @@ export const trackCustomEvent = (eventName: string, params?: Record<string, any>
 
 // ─── Scroll Depth Auto-Tracker ───────────────────────────────────
 
-let scrollTrackerInitialized = false;
+let scrollHandlerRef: (() => void) | null = null;
 const scrollMilestones = new Set<number>();
 
 export const initScrollDepthTracker = () => {
-  if (scrollTrackerInitialized || typeof window === "undefined") return;
-  scrollTrackerInitialized = true;
+  if (typeof window === "undefined") return;
+
+  // Remove previous listener if exists
+  if (scrollHandlerRef) {
+    window.removeEventListener("scroll", scrollHandlerRef);
+  }
 
   const thresholds = [25, 50, 75, 90, 100];
 
@@ -243,6 +247,7 @@ export const initScrollDepthTracker = () => {
     }
   };
 
+  scrollHandlerRef = handleScroll;
   window.addEventListener("scroll", handleScroll, { passive: true });
 };
 
