@@ -85,7 +85,7 @@ const AdminSEO = () => {
   });
 
   const generateSitemap = () => {
-    const baseUrl = window.location.origin;
+    const baseUrl = "https://medea.tr";
     const today = new Date().toISOString().split('T')[0];
     
     let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
