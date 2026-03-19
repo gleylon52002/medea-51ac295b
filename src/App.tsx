@@ -125,7 +125,16 @@ const BirthdayReminders = lazy(() => import("./pages/BirthdayReminders"));
 const CustomProductOrder = lazy(() => import("./pages/CustomProductOrder"));
 const SharedWishlist = lazy(() => import("./pages/SharedWishlist"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[60vh]">

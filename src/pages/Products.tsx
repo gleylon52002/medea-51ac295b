@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { useAllProductTags } from "@/hooks/useProductTags";
+import SEOHead from "@/components/SEOHead";
 
 const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -229,6 +230,11 @@ const Products = () => {
 
   return (
     <Layout>
+      <SEOHead
+        title="Tüm Ürünler - MEDEA Kozmetik"
+        description="MEDEA Kozmetik doğal ve el yapımı güzellik ürünlerini keşfedin. Doğal sabunlar, yüz maskeleri, mumlar ve daha fazlası."
+        canonical="https://medea.tr/urunler"
+      />
       <div className="container-main py-8 lg:py-12">
         {/* Header */}
         <div className="mb-8">
