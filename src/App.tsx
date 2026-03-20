@@ -55,7 +55,7 @@ const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
 const AdminShipping = lazy(() => import("./pages/admin/AdminShipping"));
-const AdminPayment = lazy(() => import("./pages/admin/AdminPayment"));
+
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 const AdminMessages = lazy(() => import("./pages/admin/AdminMessages"));
