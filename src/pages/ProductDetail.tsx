@@ -426,16 +426,6 @@ const ProductDetail = () => {
       </div>
 
       {/* Sticky Add to Cart for Mobile */}
-      <StickyAddToCart
-        productName={product.name}
-        price={Number(product.price)}
-        salePrice={product.sale_price ? Number(product.sale_price) : undefined}
-        stock={product.stock}
-        quantity={quantity}
-        onQuantityChange={setQuantity}
-        onAddToCart={handleAddToCart}
-        triggerRef={addToCartRef}
-      />
     </Layout>
   );
 };
