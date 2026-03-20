@@ -24,7 +24,6 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const navigate = useNavigate();
-  const { cart, setIsCartOpen } = useCart();
   const { user, isAdmin, signOut } = useAuth();
   const { data: categories } = useCategories();
   const { data: generalSettings } = useGeneralSettings();
