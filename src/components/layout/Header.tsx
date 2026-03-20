@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { useCategories } from "@/hooks/useCategories";
 import { useCategories } from "@/hooks/useCategories";
 import { useGeneralSettings } from "@/hooks/useSiteSettings";
 import { useSellerStatus } from "@/hooks/useSeller";
