@@ -2079,6 +2079,7 @@ export type Database = {
           price: number
           sale_price: number | null
           seller_id: string | null
+          shopier_link: string | null
           short_description: string | null
           slug: string
           stock: number
@@ -2104,6 +2105,7 @@ export type Database = {
           price: number
           sale_price?: number | null
           seller_id?: string | null
+          shopier_link?: string | null
           short_description?: string | null
           slug: string
           stock?: number
@@ -2129,6 +2131,7 @@ export type Database = {
           price?: number
           sale_price?: number | null
           seller_id?: string | null
+          shopier_link?: string | null
           short_description?: string | null
           slug?: string
           stock?: number
