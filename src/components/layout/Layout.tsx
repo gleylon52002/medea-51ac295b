@@ -20,7 +20,6 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   useTheme();
-  useCartSync();
   useActivityLogger();
   useHeatmapTracking();
 
