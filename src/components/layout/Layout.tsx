@@ -8,7 +8,7 @@ import AppPromotionPopup from "@/components/home/AppPromotionPopup";
 import AIChatWidget from "@/components/chat/AIChatWidget";
 import SpinWheelTrigger from "@/components/gamification/SpinWheelTrigger";
 import { useTheme } from "@/hooks/useTheme";
-import { useCartSync } from "@/hooks/useUserCart";
+import { useTheme } from "@/hooks/useTheme";
 import { useActivityLogger } from "@/hooks/useActivityLog";
 import { useHeatmapTracking } from "@/hooks/useHeatmap";
 import { trackPageView, initScrollDepthTracker, resetScrollTracker } from "@/lib/analytics";
