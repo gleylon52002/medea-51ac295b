@@ -19,7 +19,6 @@ import NotFound from "./pages/NotFound";
 
 // Lazy loaded pages
 const Category = lazy(() => import("./pages/Category"));
-const Checkout = lazy(() => import("./pages/Checkout"));
 const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
 const Auth = lazy(() => import("./pages/Auth"));
 const About = lazy(() => import("./pages/About"));
