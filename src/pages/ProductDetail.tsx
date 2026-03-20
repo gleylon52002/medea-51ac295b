@@ -35,12 +35,12 @@ import SubscriptionButton from "@/components/products/SubscriptionButton";
 import SEOHead from "@/components/SEOHead";
 import { trackInteraction } from "@/hooks/useInteraction";
 import { ProductVariant } from "@/hooks/useProductVariants";
-import { ProductVariantInfo } from "@/types/product";
 import { useRelatedProducts } from "@/hooks/useRelatedProducts";
 import BarcodeScanner from "@/components/products/BarcodeScanner";
 import { useProductTranslation } from "@/hooks/useProductTranslation";
 import { Loader2 as TranslateLoader } from "lucide-react";
 import VideoPlayer, { isVideoUrl } from "@/components/products/VideoPlayer";
+import { toast } from "sonner";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
