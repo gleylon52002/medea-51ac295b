@@ -281,32 +281,16 @@ const ProductDetail = () => {
               )}
             </div>
 
-            {/* Quantity & Add to Cart */}
+            {/* Buy Button */}
             <div ref={addToCartRef} className="flex flex-col sm:flex-row gap-4">
-              <div className="flex items-center border border-border rounded-md">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="p-3 hover:bg-muted transition-colors"
-                  disabled={quantity <= 1}
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="w-12 text-center font-medium">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  className="p-3 hover:bg-muted transition-colors"
-                  disabled={quantity >= product.stock}
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
               <Button
                 size="lg"
-                className="flex-1"
-                onClick={handleAddToCart}
-                disabled={(selectedVariant?.stock ?? product.stock) === 0}
+                className="flex-1 gap-2"
+                onClick={handleBuyClick}
+                disabled={!shopierLink}
               >
-                Sepete Ekle
+                <ExternalLink className="h-5 w-5" />
+                Satın Al
               </Button>
               {user && (
                 <Button

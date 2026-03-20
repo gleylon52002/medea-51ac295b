@@ -149,20 +149,6 @@ const Header = () => {
                 </Link>
               </Button>
             )}
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative"
-              onClick={() => setIsCartOpen(true)}
-            >
-              <ShoppingBag className="h-5 w-5" />
-              {cart.itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center">
-                  {cart.itemCount}
-                </span>
-              )}
-            </Button>
           </div>
         </div>
       </div>

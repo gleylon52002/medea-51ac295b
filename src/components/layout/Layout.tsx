@@ -35,7 +35,6 @@ const Layout = ({ children }: LayoutProps) => {
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
-      <CartDrawer />
       <ComparisonFloat />
       <AppPromotionPopup />
       <AIChatWidget />

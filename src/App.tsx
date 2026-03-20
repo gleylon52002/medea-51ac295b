@@ -235,7 +235,7 @@ const App = () => (
                   <Route path="kargo" element={<AdminShipping />} />
                   <Route path="faturalar" element={<AdminInvoices />} />
                   <Route path="odemeler" element={<AdminPayouts />} />
-                  <Route path="odeme" element={<AdminPayment />} />
+                  
                   <Route path="hero" element={<AdminHero />} />
                   <Route path="tema" element={<AdminTheme />} />
                   <Route path="seo" element={<AdminSEO />} />
