@@ -163,6 +163,7 @@ const AdminProducts = () => {
         meta_title: product.meta_title || "",
         meta_description: product.meta_description || "",
         keywords: ((product as any).keywords || []).join(", "),
+        shopier_link: (product as any).shopier_link || "",
       });
     } else {
       setEditingProduct(null);
