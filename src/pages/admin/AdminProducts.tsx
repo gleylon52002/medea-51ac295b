@@ -235,6 +235,7 @@ const AdminProducts = () => {
       meta_description: formData.meta_description.trim() || null,
       images: productImages,
       keywords: keywordsArray,
+      shopier_link: formData.shopier_link.trim() || null,
     };
 
     saveMutation.mutate(product);
