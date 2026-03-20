@@ -50,7 +50,6 @@ const ProductDetail = () => {
   const [priceAdjustment, setPriceAdjustment] = useState(0);
   const [variantImages, setVariantImages] = useState<string[]>([]);
   const addToCartRef = useRef<HTMLDivElement>(null);
-  const { addToCart } = useCart();
   const { user } = useAuth();
 
   const { data: product, isLoading } = useProductBySlug(slug || "");
