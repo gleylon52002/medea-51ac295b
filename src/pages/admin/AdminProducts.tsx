@@ -429,10 +429,23 @@ const AdminProducts = () => {
                       id="video_url"
                       value={formData.video_url}
                       onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                      placeholder="https://www.youtube.com/watch?v=... veya https://example.com/video.mp4"
+                    placeholder="https://www.youtube.com/watch?v=... veya https://example.com/video.mp4"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       YouTube linki veya mp4/webm/ogg dosya linki ekleyebilirsiniz.
+                    </p>
+                  </div>
+
+                  <div className="col-span-2">
+                    <Label htmlFor="shopier_link">Shopier Satın Al Linki</Label>
+                    <Input
+                      id="shopier_link"
+                      value={formData.shopier_link}
+                      onChange={(e) => setFormData({ ...formData, shopier_link: e.target.value })}
+                      placeholder="https://www.shopier.com/ShowProductNew/..."
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Shopier'deki ürün satın alma linkini buraya yapıştırın. Kullanıcı "Satın Al" butonuna tıklayınca bu linke yönlendirilir.
                     </p>
                   </div>
 
