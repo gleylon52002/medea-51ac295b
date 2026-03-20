@@ -123,40 +123,14 @@ const ProductDetail = () => {
     ? Math.round((1 - Number(product.sale_price) / Number(product.price)) * 100)
     : 0;
 
-  const handleAddToCart = () => {
-    const cartProduct = {
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      description: product.description || "",
-      shortDescription: product.short_description || "",
-      price: Number(product.price),
-      salePrice: product.sale_price ? Number(product.sale_price) : undefined,
-      images: product.images || [],
-      category: product.categories?.name || "",
-      categorySlug: product.categories?.slug || "",
-      stock: selectedVariant?.stock ?? product.stock,
-      featured: product.is_featured,
-      ingredients: product.ingredients || undefined,
-      usage: product.usage_instructions || undefined,
-      rating: rating?.average || 0,
-      reviewCount: rating?.count || 0,
-      createdAt: product.created_at,
-      sellerId: product.seller_id,
-    };
+  const shopierLink = (product as any).shopier_link;
 
-    // Convert ProductVariant to ProductVariantInfo for cart
-    const variantInfo: ProductVariantInfo | null = selectedVariant ? {
-      id: selectedVariant.id,
-      name: selectedVariant.name,
-      variant_type: selectedVariant.variant_type,
-      color_code: selectedVariant.color_code || undefined,
-      price_adjustment: selectedVariant.price_adjustment || 0,
-      images: selectedVariant.images || [],
-      stock: selectedVariant.stock,
-    } : null;
-
-    addToCart(cartProduct, quantity, variantInfo, priceAdjustment);
+  const handleBuyClick = () => {
+    if (shopierLink) {
+      window.open(shopierLink, "_blank", "noopener,noreferrer");
+    } else {
+      toast.error("Bu ürün için satın alma linki henüz eklenmemiş");
+    }
   };
 
   return (
