@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight, Minus, Plus, Star, Heart, Loader2, Play } from "lucide-react";
+import { ChevronRight, Minus, Plus, Star, Heart, Loader2, Play, ExternalLink } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProductBySlug, useProductsByCategory, ProductWithCategory } from "@/hooks/useProducts";
 import { useProductRating } from "@/hooks/useReviews";
