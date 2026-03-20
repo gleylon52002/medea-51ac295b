@@ -44,7 +44,7 @@ const CookiePolicy = lazy(() => import("./pages/legal/CookiePolicy"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const SellerRules = lazy(() => import("./pages/legal/SellerRules"));
 const Compare = lazy(() => import("./pages/Compare"));
-const PayTRPayment = lazy(() => import("./pages/PayTRPayment"));
+
 
 const AdminGuard = lazy(() => import("./components/admin/AdminGuard"));
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
