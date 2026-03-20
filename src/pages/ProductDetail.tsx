@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight, Minus, Plus, Star, Heart, Loader2, Play } from "lucide-react";
+import { ChevronRight, Minus, Plus, Star, Heart, Loader2, Play, ExternalLink } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProductBySlug, useProductsByCategory, ProductWithCategory } from "@/hooks/useProducts";
 import { useProductRating } from "@/hooks/useReviews";
@@ -36,12 +35,12 @@ import SubscriptionButton from "@/components/products/SubscriptionButton";
 import SEOHead from "@/components/SEOHead";
 import { trackInteraction } from "@/hooks/useInteraction";
 import { ProductVariant } from "@/hooks/useProductVariants";
-import { ProductVariantInfo } from "@/types/product";
 import { useRelatedProducts } from "@/hooks/useRelatedProducts";
 import BarcodeScanner from "@/components/products/BarcodeScanner";
 import { useProductTranslation } from "@/hooks/useProductTranslation";
 import { Loader2 as TranslateLoader } from "lucide-react";
 import VideoPlayer, { isVideoUrl } from "@/components/products/VideoPlayer";
+import { toast } from "sonner";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -51,7 +50,6 @@ const ProductDetail = () => {
   const [priceAdjustment, setPriceAdjustment] = useState(0);
   const [variantImages, setVariantImages] = useState<string[]>([]);
   const addToCartRef = useRef<HTMLDivElement>(null);
-  const { addToCart } = useCart();
   const { user } = useAuth();
 
   const { data: product, isLoading } = useProductBySlug(slug || "");
@@ -125,40 +123,14 @@ const ProductDetail = () => {
     ? Math.round((1 - Number(product.sale_price) / Number(product.price)) * 100)
     : 0;
 
-  const handleAddToCart = () => {
-    const cartProduct = {
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      description: product.description || "",
-      shortDescription: product.short_description || "",
-      price: Number(product.price),
-      salePrice: product.sale_price ? Number(product.sale_price) : undefined,
-      images: product.images || [],
-      category: product.categories?.name || "",
-      categorySlug: product.categories?.slug || "",
-      stock: selectedVariant?.stock ?? product.stock,
-      featured: product.is_featured,
-      ingredients: product.ingredients || undefined,
-      usage: product.usage_instructions || undefined,
-      rating: rating?.average || 0,
-      reviewCount: rating?.count || 0,
-      createdAt: product.created_at,
-      sellerId: product.seller_id,
-    };
+  const shopierLink = (product as any).shopier_link;
 
-    // Convert ProductVariant to ProductVariantInfo for cart
-    const variantInfo: ProductVariantInfo | null = selectedVariant ? {
-      id: selectedVariant.id,
-      name: selectedVariant.name,
-      variant_type: selectedVariant.variant_type,
-      color_code: selectedVariant.color_code || undefined,
-      price_adjustment: selectedVariant.price_adjustment || 0,
-      images: selectedVariant.images || [],
-      stock: selectedVariant.stock,
-    } : null;
-
-    addToCart(cartProduct, quantity, variantInfo, priceAdjustment);
+  const handleBuyClick = () => {
+    if (shopierLink) {
+      window.open(shopierLink, "_blank", "noopener,noreferrer");
+    } else {
+      toast.error("Bu ürün için satın alma linki henüz eklenmemiş");
+    }
   };
 
   return (
@@ -309,32 +281,16 @@ const ProductDetail = () => {
               )}
             </div>
 
-            {/* Quantity & Add to Cart */}
+            {/* Buy Button */}
             <div ref={addToCartRef} className="flex flex-col sm:flex-row gap-4">
-              <div className="flex items-center border border-border rounded-md">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="p-3 hover:bg-muted transition-colors"
-                  disabled={quantity <= 1}
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="w-12 text-center font-medium">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  className="p-3 hover:bg-muted transition-colors"
-                  disabled={quantity >= product.stock}
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
               <Button
                 size="lg"
-                className="flex-1"
-                onClick={handleAddToCart}
-                disabled={(selectedVariant?.stock ?? product.stock) === 0}
+                className="flex-1 gap-2"
+                onClick={handleBuyClick}
+                disabled={!shopierLink}
               >
-                Sepete Ekle
+                <ExternalLink className="h-5 w-5" />
+                Satın Al
               </Button>
               {user && (
                 <Button
@@ -470,16 +426,6 @@ const ProductDetail = () => {
       </div>
 
       {/* Sticky Add to Cart for Mobile */}
-      <StickyAddToCart
-        productName={product.name}
-        price={Number(product.price)}
-        salePrice={product.sale_price ? Number(product.sale_price) : undefined}
-        stock={product.stock}
-        quantity={quantity}
-        onQuantityChange={setQuantity}
-        onAddToCart={handleAddToCart}
-        triggerRef={addToCartRef}
-      />
     </Layout>
   );
 };

@@ -19,7 +19,6 @@ import NotFound from "./pages/NotFound";
 
 // Lazy loaded pages
 const Category = lazy(() => import("./pages/Category"));
-const Checkout = lazy(() => import("./pages/Checkout"));
 const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
 const Auth = lazy(() => import("./pages/Auth"));
 const About = lazy(() => import("./pages/About"));
@@ -45,7 +44,7 @@ const CookiePolicy = lazy(() => import("./pages/legal/CookiePolicy"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const SellerRules = lazy(() => import("./pages/legal/SellerRules"));
 const Compare = lazy(() => import("./pages/Compare"));
-const PayTRPayment = lazy(() => import("./pages/PayTRPayment"));
+
 
 const AdminGuard = lazy(() => import("./components/admin/AdminGuard"));
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
@@ -56,7 +55,7 @@ const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
 const AdminShipping = lazy(() => import("./pages/admin/AdminShipping"));
-const AdminPayment = lazy(() => import("./pages/admin/AdminPayment"));
+
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 const AdminMessages = lazy(() => import("./pages/admin/AdminMessages"));
@@ -181,8 +180,6 @@ const App = () => (
                 <Route path="/urunler" element={<Products />} />
                 <Route path="/urun/:slug" element={<ProductDetail />} />
                 <Route path="/kategori/:slug" element={<Category />} />
-                <Route path="/odeme" element={<Checkout />} />
-                <Route path="/odeme/paytr" element={<PayTRPayment />} />
                 <Route path="/siparis-basarili" element={<OrderSuccess />} />
                 <Route path="/giris" element={<Auth />} />
                 <Route path="/hakkimizda" element={<About />} />
@@ -238,7 +235,7 @@ const App = () => (
                   <Route path="kargo" element={<AdminShipping />} />
                   <Route path="faturalar" element={<AdminInvoices />} />
                   <Route path="odemeler" element={<AdminPayouts />} />
-                  <Route path="odeme" element={<AdminPayment />} />
+                  
                   <Route path="hero" element={<AdminHero />} />
                   <Route path="tema" element={<AdminTheme />} />
                   <Route path="seo" element={<AdminSEO />} />

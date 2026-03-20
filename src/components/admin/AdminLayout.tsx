@@ -77,10 +77,9 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    title: "Sipariş & Ödeme",
+    title: "Sipariş Yönetimi",
     items: [
       { icon: ShoppingCart, label: "Siparişler", path: "/admin/siparisler" },
-      { icon: CreditCard, label: "Ödeme Yöntemleri", path: "/admin/odeme" },
       { icon: Truck, label: "Kargo", path: "/admin/kargo" },
       { icon: FileText, label: "Faturalar", path: "/admin/faturalar" },
     ],

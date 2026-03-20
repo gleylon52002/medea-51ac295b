@@ -61,6 +61,7 @@ const AdminProducts = () => {
     meta_title: "",
     meta_description: "",
     keywords: "",
+    shopier_link: "",
   });
   const queryClient = useQueryClient();
 
@@ -162,6 +163,7 @@ const AdminProducts = () => {
         meta_title: product.meta_title || "",
         meta_description: product.meta_description || "",
         keywords: ((product as any).keywords || []).join(", "),
+        shopier_link: (product as any).shopier_link || "",
       });
     } else {
       setEditingProduct(null);
@@ -182,6 +184,7 @@ const AdminProducts = () => {
         meta_title: "",
         meta_description: "",
         keywords: "",
+        shopier_link: "",
       });
     }
     setIsDialogOpen(true);
@@ -232,6 +235,7 @@ const AdminProducts = () => {
       meta_description: formData.meta_description.trim() || null,
       images: productImages,
       keywords: keywordsArray,
+      shopier_link: formData.shopier_link.trim() || null,
     };
 
     saveMutation.mutate(product);
@@ -425,10 +429,23 @@ const AdminProducts = () => {
                       id="video_url"
                       value={formData.video_url}
                       onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                      placeholder="https://www.youtube.com/watch?v=... veya https://example.com/video.mp4"
+                    placeholder="https://www.youtube.com/watch?v=... veya https://example.com/video.mp4"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       YouTube linki veya mp4/webm/ogg dosya linki ekleyebilirsiniz.
+                    </p>
+                  </div>
+
+                  <div className="col-span-2">
+                    <Label htmlFor="shopier_link">Shopier Satın Al Linki</Label>
+                    <Input
+                      id="shopier_link"
+                      value={formData.shopier_link}
+                      onChange={(e) => setFormData({ ...formData, shopier_link: e.target.value })}
+                      placeholder="https://www.shopier.com/ShowProductNew/..."
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Shopier'deki ürün satın alma linkini buraya yapıştırın. Kullanıcı "Satın Al" butonuna tıklayınca bu linke yönlendirilir.
                     </p>
                   </div>
 
