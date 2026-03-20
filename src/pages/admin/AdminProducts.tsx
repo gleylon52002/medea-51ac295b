@@ -61,6 +61,7 @@ const AdminProducts = () => {
     meta_title: "",
     meta_description: "",
     keywords: "",
+    shopier_link: "",
   });
   const queryClient = useQueryClient();
 
