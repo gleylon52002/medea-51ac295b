@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingBag, Menu, X, Search, User, LogOut, Settings, Store, BookOpen } from "lucide-react";
+import { ShoppingBag, Menu, X, Search, User, LogOut, Settings, Store } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import TranslatedText from "@/components/TranslatedText";
 import { Button } from "@/components/ui/button";
