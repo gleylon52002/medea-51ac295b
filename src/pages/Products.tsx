@@ -231,9 +231,10 @@ const Products = () => {
   return (
     <Layout>
       <SEOHead
-        title="Tüm Ürünler - MEDEA Kozmetik"
-        description="MEDEA Kozmetik doğal ve el yapımı güzellik ürünlerini keşfedin. Doğal sabunlar, yüz maskeleri, mumlar ve daha fazlası."
+        title="Doğal Sabun & Kozmetik Ürünleri – El Yapımı Katı Sabun | MEDEA Kozmetik"
+        description="MEDEA el yapımı doğal sabun, yüz maskesi ve mum çeşitleri. Kimyasal katkısız, vegan, cilde dost doğal kozmetik ürünleri. Hemen keşfedin!"
         canonical="https://medea.tr/urunler"
+        keywords={["doğal sabun", "el yapımı sabun", "katı sabun", "doğal kozmetik", "MEDEA"]}
       />
       <div className="container-main py-8 lg:py-12">
         {/* Header */}

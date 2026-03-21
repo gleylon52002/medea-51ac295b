@@ -59,7 +59,7 @@ const Hero = () => {
             </h1>
             
             <p className="text-lg text-muted-foreground max-w-lg leading-relaxed">
-              <TranslatedText textKey="hero.subtitle" originalText={hero.subtitle} as="span" />
+              MEDEA doğal sabunları, Ege'nin bereketli topraklarından özenle seçilen bitkisel yağlar ve doğal esanslarla, geleneksel soğuk presleme yöntemiyle el emeğiyle üretilir. Kimyasal katkı maddesi, paraben ve yapay koku içermeyen katı sabunlarımız cildinizi nazikçe temizlerken doğal nemini korur. Vegan ve cruelty-free.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
