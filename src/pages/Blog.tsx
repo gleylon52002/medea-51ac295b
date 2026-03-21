@@ -34,10 +34,14 @@ const Blog = () => {
 
   return (
     <Layout>
-      <SEOHead title="Blog - Medea" description="Doğal güzellik ve bakım hakkında bilgilendirici içerikler" />
+      <SEOHead
+        title="Doğal Güzellik & Cilt Bakımı Blogu | MEDEA Kozmetik Blog"
+        description="Doğal sabun yapımı, cilt bakım ipuçları, el yapımı kozmetik hakkında bilgilendirici içerikler. MEDEA Kozmetik blog yazıları."
+        canonical="https://medea.tr/blog"
+      />
       <div className="container-main py-8">
-        <h1 className="text-3xl font-serif font-bold mb-2">Blog</h1>
-        <p className="text-muted-foreground mb-6">Doğal güzellik ve bakım ipuçları</p>
+        <h1 className="text-3xl font-serif font-bold mb-2">MEDEA Kozmetik Blog</h1>
+        <p className="text-muted-foreground mb-6">Doğal güzellik, cilt bakımı ve el yapımı sabun ipuçları</p>
 
         {/* Tags filter */}
         {allTags.length > 0 && (

@@ -26,6 +26,10 @@ const ProductSchema = ({ product, rating, siteUrl = "https://medea.tr" }: Produc
       image: product.images?.[0] || "",
       url: `${siteUrl}/urun/${product.slug}`,
       category: product.categories?.name || "",
+      brand: {
+        "@type": "Brand",
+        name: "MEDEA Kozmetik",
+      },
       ...(product.keywords && product.keywords.length > 0 && {
         keywords: product.keywords.join(", "),
       }),
@@ -37,6 +41,10 @@ const ProductSchema = ({ product, rating, siteUrl = "https://medea.tr" }: Produc
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
         url: `${siteUrl}/urun/${product.slug}`,
+        seller: {
+          "@type": "Organization",
+          name: "MEDEA Kozmetik",
+        },
       },
       ...(rating && rating.count > 0 && {
         aggregateRating: {
