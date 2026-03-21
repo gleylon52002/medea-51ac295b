@@ -55,7 +55,7 @@ const Hero = () => {
             </div>
             
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-medium leading-tight text-foreground">
-              <TranslatedText textKey="hero.title" originalText={hero.title} as="span" />
+              Doğal & El Yapımı Sabunlar – MEDEA Kozmetik
             </h1>
             
             <p className="text-lg text-muted-foreground max-w-lg leading-relaxed">
