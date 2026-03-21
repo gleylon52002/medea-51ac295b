@@ -21,4 +21,3 @@ Disallow: /odeme
 
 # Sitemap
 Sitemap: https://medea.tr/sitemap.xml
-Sitemap: https://gxzlltmivdlpplunuusi.supabase.co/functions/v1/sitemap
