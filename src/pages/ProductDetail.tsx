@@ -167,7 +167,7 @@ const ProductDetail = () => {
               ) : (
                 <ImageZoom
                   src={displayMedia[selectedImage] || "/placeholder.svg"}
-                  alt={product.name}
+                  alt={`MEDEA ${product.name} – doğal el yapımı katı sabun`}
                   className="w-full h-full"
                 />
               )}
