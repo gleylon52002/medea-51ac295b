@@ -136,8 +136,8 @@ const ProductDetail = () => {
   return (
     <Layout>
       <SEOHead
-        title={product.meta_title || product.name}
-        description={product.meta_description || product.short_description || product.description?.slice(0, 160) || ""}
+        title={`${product.meta_title || product.name} – El Yapımı Doğal Katı Sabun | MEDEA Kozmetik`}
+        description={product.meta_description || `${product.name} – MEDEA doğal, el yapımı, kimyasal katkısız katı sabun. Cilde nazik formül. Hemen satın al – medea.tr`}
         canonical={`https://medea.tr/urun/${product.slug}`}
         ogImage={product.images?.[0]}
         ogType="product"
