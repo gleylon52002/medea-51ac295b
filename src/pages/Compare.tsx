@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Scale, X, ShoppingBag } from "lucide-react";
+import { Scale, X, ExternalLink } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,39 +7,22 @@ import {
   useRemoveFromComparison,
   useClearComparison,
 } from "@/hooks/useProductComparison";
-import { useCart } from "@/contexts/CartContext";
 import { formatPrice } from "@/lib/utils";
+import { toast } from "sonner";
 
 const Compare = () => {
   const { data: comparisons, isLoading } = useComparisonProducts();
   const removeFromComparison = useRemoveFromComparison();
   const clearComparison = useClearComparison();
-  const { addToCart } = useCart();
 
   const products = comparisons?.map((c) => c.product).filter(Boolean) || [];
 
-  const handleAddToCart = (product: any) => {
-    const cartProduct = {
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      description: product.description || "",
-      shortDescription: product.short_description || "",
-      price: Number(product.price),
-      salePrice: product.sale_price ? Number(product.sale_price) : undefined,
-      images: product.images || [],
-      category: product.categories?.name || "",
-      categorySlug: product.categories?.slug || "",
-      stock: product.stock,
-      featured: product.is_featured,
-      ingredients: product.ingredients || undefined,
-      usage: product.usage_instructions || undefined,
-      rating: 0,
-      reviewCount: 0,
-      createdAt: product.created_at,
-      sellerId: product.seller_id,
-    };
-    addToCart(cartProduct);
+  const handleBuy = (product: any) => {
+    if (product?.shopier_link) {
+      window.open(product.shopier_link, "_blank", "noopener,noreferrer");
+    } else {
+      toast.error("Bu ürün için satın alma linki henüz eklenmemiş");
+    }
   };
 
   if (isLoading) {
@@ -169,11 +152,11 @@ const Compare = () => {
                   <td key={product?.id} className="p-4 text-center border">
                     <Button
                       size="sm"
-                      onClick={() => handleAddToCart(product)}
-                      disabled={product?.stock === 0}
+                      onClick={() => handleBuy(product)}
+                      disabled={product?.stock === 0 || !product?.shopier_link}
                     >
-                      <ShoppingBag className="h-4 w-4 mr-2" />
-                      Sepete Ekle
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Satın Al
                     </Button>
                   </td>
                 ))}

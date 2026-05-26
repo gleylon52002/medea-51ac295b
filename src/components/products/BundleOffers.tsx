@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/utils";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/contexts/CartContext";
-import { Package, ShoppingCart } from "lucide-react";
+import { Package } from "lucide-react";
 
 interface BundleOffersProps {
   productId: string;
@@ -12,8 +12,6 @@ interface BundleOffersProps {
 }
 
 const BundleOffers = ({ productId, currentProductName, currentPrice }: BundleOffersProps) => {
-  const { addToCart } = useCart();
-
   // Find products frequently bought together (from order_items)
   const { data: bundleProducts } = useQuery({
     queryKey: ["bundle-offers", productId],
@@ -59,39 +57,6 @@ const BundleOffers = ({ productId, currentProductName, currentPrice }: BundleOff
   if (!bundleProducts || bundleProducts.length === 0) return null;
 
   const bundleTotal = currentPrice + bundleProducts.reduce((s, p) => s + p.price, 0);
-  const discountedTotal = bundleTotal * 0.9; // 10% bundle discount
-
-  const handleAddBundle = async () => {
-    // Fetch full product data for each bundle item
-    for (const bp of bundleProducts) {
-      const { data: product } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", bp.id)
-        .single();
-
-      if (product) {
-        addToCart({
-          id: product.id,
-          name: product.name,
-          slug: product.slug,
-          description: product.description || "",
-          shortDescription: product.short_description || "",
-          price: Number(product.price),
-          salePrice: product.sale_price ? Number(product.sale_price) : undefined,
-          images: product.images || [],
-          category: "",
-          categorySlug: "",
-          stock: product.stock,
-          featured: product.is_featured,
-          rating: 0,
-          reviewCount: 0,
-          createdAt: product.created_at,
-          sellerId: product.seller_id,
-        }, 1);
-      }
-    }
-  };
 
   return (
     <div className="border border-border rounded-xl p-5 bg-muted/20">
@@ -102,7 +67,7 @@ const BundleOffers = ({ productId, currentProductName, currentPrice }: BundleOff
 
       <div className="flex items-center gap-3 flex-wrap mb-4">
         {bundleProducts.map((bp, i) => (
-          <div key={bp.id} className="flex items-center gap-2">
+          <Link key={bp.id} to={`/urun/${bp.id}`} className="flex items-center gap-2 hover:opacity-80 transition">
             {i > 0 && <span className="text-muted-foreground text-lg font-bold">+</span>}
             <div className="flex items-center gap-2 bg-background rounded-lg p-2 border">
               {bp.image && (
@@ -113,20 +78,15 @@ const BundleOffers = ({ productId, currentProductName, currentPrice }: BundleOff
                 <p className="text-xs text-muted-foreground">{formatPrice(bp.price)}</p>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs text-muted-foreground line-through">{formatPrice(bundleTotal)}</p>
-          <p className="text-lg font-bold text-primary">{formatPrice(discountedTotal)}</p>
-          <p className="text-xs text-green-600 font-medium">%10 paket indirimi</p>
+          <p className="text-xs text-muted-foreground">Paket toplamı</p>
+          <p className="text-lg font-bold text-primary">{formatPrice(bundleTotal)}</p>
         </div>
-        <Button size="sm" onClick={handleAddBundle} className="gap-2">
-          <ShoppingCart className="h-4 w-4" />
-          Paketi Ekle
-        </Button>
       </div>
     </div>
   );
