@@ -10,19 +10,19 @@ import SEOHead from "@/components/SEOHead";
 
 const categoryMeta: Record<string, { title: string; description: string; h1: string; intro: string }> = {
   "dogal-sabunlar": {
-    title: "Doğal Sabunlar – El Yapımı Katı Sabun Çeşitleri | MEDEA Kozmetik",
+    title: "Doğal El Yapımı Sabunlar | MEDEA Kozmetik",
     description: "MEDEA el yapımı doğal sabun koleksiyonu. Limonlu, sütlü, karbonlu ve daha fazla doğal katı sabun çeşidi. Kimyasal katkısız, cilde nazik.",
     h1: "Doğal El Yapımı Sabunlar",
     intro: "MEDEA doğal sabun koleksiyonu, Ege'nin bereketli topraklarından özenle seçilmiş bitkisel yağlar ve doğal esanslarla, geleneksel soğuk presleme yöntemiyle el emeğiyle üretilir. Limon esanslı, inek sütlü, aktif karbonlu ve daha birçok çeşidiyle cildinize en doğal bakımı sunun. Tüm katı sabunlarımız kimyasal katkı maddesi, paraben ve SLS içermez. MEDEA doğal sabunlarıyla cildinizi nazikçe temizlerken doğal nemini koruyun.",
   },
   "yuz-maskeleri": {
-    title: "Doğal Yüz Maskeleri – Bitkisel Cilt Bakımı | MEDEA Kozmetik",
+    title: "Doğal Yüz Maskeleri | MEDEA Kozmetik",
     description: "MEDEA doğal yüz maskeleri. Bitkisel içerikli, kimyasal katkısız yüz maskesi çeşitleri ile cildinizi doğal yollarla besleyin.",
     h1: "Doğal Yüz Maskeleri",
     intro: "MEDEA doğal yüz maskeleri, bitkisel içerikler ve doğal kil çeşitleriyle cildinizi derinlemesine temizler, besler ve yeniler. Kimyasal katkısız formüllerimiz hassas ciltler dahil tüm cilt tipleri için uygundur. Düzenli kullanımla cildinizin doğal parlaklığını ve canlılığını yeniden kazanın.",
   },
   "mumlar": {
-    title: "El Yapımı Doğal Mumlar – Aromalı Mum Çeşitleri | MEDEA Kozmetik",
+    title: "Doğal Aromalı Mumlar | MEDEA Kozmetik",
     description: "MEDEA el yapımı aromalı doğal mumlar. Ortamınıza huzur katan, doğal içerikli mum çeşitleri. Hediye ve dekorasyon için ideal.",
     h1: "El Yapımı Doğal Mumlar",
     intro: "MEDEA el yapımı doğal mumlar, soya mumu bazlı, doğal esanslarla zenginleştirilmiş özel formülleriyle evinize huzur ve doğallık katar. Aromaterapi etkili mumlarımız ortamınızı güzelleştirirken ruhunuzu da dinlendirir. Hediye paketi seçeneğiyle sevdiklerinize de doğal güzellik sunabilirsiniz.",
