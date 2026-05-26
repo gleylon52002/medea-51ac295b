@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingBag, Heart, Scale, Eye, Star } from "lucide-react";
+import { ShoppingBag, Heart, Scale, Eye, Star, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToggleFavorite, useIsFavorite } from "@/hooks/useFavorites";
 import { useComparisonProducts, useAddToComparison, useRemoveFromComparison } from "@/hooks/useProductComparison";
@@ -25,7 +24,6 @@ interface ProductCardProps {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
-  const { addToCart } = useCart();
   const { user } = useAuth();
   const { data: isFavorite } = useIsFavorite(product.id);
   const toggleFavorite = useToggleFavorite();
@@ -47,6 +45,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
     : 0;
   
   const isNew = new Date(product.created_at) > new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+  const shopierLink = (product as any).shopier_link as string | null | undefined;
 
   // Queue translations for product name and category
   if (!isSourceLang) {
@@ -59,28 +58,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const translatedName = t(productKey(product.id, "name"), product.name);
   const translatedCategory = product.categories ? t(categoryKey(product.categories.id || "", "name"), product.categories.name) : "";
 
-  const handleAddToCart = () => {
-    const cartProduct = {
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      description: product.description || "",
-      shortDescription: product.short_description || "",
-      price: Number(product.price),
-      salePrice: product.sale_price ? Number(product.sale_price) : undefined,
-      images: product.images || [],
-      category: product.categories?.name || "",
-      categorySlug: product.categories?.slug || "",
-      stock: product.stock,
-      featured: product.is_featured,
-      ingredients: product.ingredients || undefined,
-      usage: product.usage_instructions || undefined,
-      rating: 0,
-      reviewCount: 0,
-      createdAt: product.created_at,
-      sellerId: product.seller_id,
-    };
-    addToCart(cartProduct);
+  const handleBuyClick = () => {
+    if (shopierLink) {
+      window.open(shopierLink, "_blank", "noopener,noreferrer");
+    } else {
+      toast.error("Bu ürün için satın alma linki henüz eklenmemiş");
+    }
   };
 
   const handleCompareClick = () => {
@@ -200,13 +183,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <Button
             size="sm"
             variant="outline"
-            onClick={handleAddToCart}
-            disabled={product.stock === 0}
+            onClick={handleBuyClick}
+            disabled={product.stock === 0 || !shopierLink}
             className="gap-1.5"
           >
-            <ShoppingBag className="h-4 w-4" />
+            <ExternalLink className="h-4 w-4" />
             <span className="hidden sm:inline">
-              <TranslatedText textKey="product.add" originalText="Ekle" />
+              <TranslatedText textKey="product.buy" originalText="Satın Al" />
             </span>
           </Button>
         </div>

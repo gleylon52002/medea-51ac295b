@@ -17,7 +17,6 @@ Allow: /
 Disallow: /admin/
 Disallow: /hesabim/
 Disallow: /giris
-Disallow: /odeme
 
 # Sitemap
 Sitemap: https://medea.tr/sitemap.xml
