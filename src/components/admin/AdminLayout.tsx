@@ -79,9 +79,7 @@ const menuGroups: MenuGroup[] = [
   {
     title: "Sipariş Yönetimi",
     items: [
-      { icon: ShoppingCart, label: "Siparişler", path: "/admin/siparisler" },
       { icon: Truck, label: "Kargo", path: "/admin/kargo" },
-      { icon: FileText, label: "Faturalar", path: "/admin/faturalar" },
     ],
   },
   {
@@ -105,7 +103,6 @@ const menuGroups: MenuGroup[] = [
       { icon: Store, label: "Satıcı Başvuruları", path: "/admin/satici-basvurulari" },
       { icon: UserCheck, label: "Satıcılar", path: "/admin/saticilar" },
       { icon: Sliders, label: "Satıcı Ayarları", path: "/admin/satici-ayarlari" },
-      { icon: CreditCard, label: "Satıcı Ödemeleri", path: "/admin/odemeler" },
       { icon: Award, label: "Sertifikalar", path: "/admin/sertifikalar" },
     ],
   },
@@ -113,7 +110,6 @@ const menuGroups: MenuGroup[] = [
     title: "Kullanıcılar",
     items: [
       { icon: Users, label: "Kullanıcılar", path: "/admin/kullanicilar" },
-      { icon: ShoppingBasket, label: "Kullanıcı Sepetleri", path: "/admin/sepetler" },
       { icon: MessageSquare, label: "Mesajlar", path: "/admin/mesajlar" },
       { icon: Mail, label: "İletişim Mesajları", path: "/admin/iletisim-mesajlari" },
     ],
@@ -133,7 +129,6 @@ const menuGroups: MenuGroup[] = [
     items: [
       { icon: BarChart3, label: "Analitik Dashboard", path: "/admin/analitik" },
       { icon: Activity, label: "Aktivite Logları", path: "/admin/aktivite" },
-      { icon: TrendingDown, label: "Dönüşüm Hunisi", path: "/admin/donusum-hunisi" },
       { icon: BarChart3, label: "Cohort Analizi", path: "/admin/cohort" },
     ],
   },

@@ -21,6 +21,8 @@ MEDEA Kozmetik, Ege'nin bereketli topraklarından özenle seçilmiş bitkisel ya
 
 ## Optional
 
-- [Gizlilik Politikası](/gizlilik): KVKK ve kişisel veri koruma bilgileri.
-- [İade ve İptal](/iade-politikasi): İade süreçleri ve koşulları.
-- [Mesafeli Satış Sözleşmesi](/mesafeli-satis): Yasal satış sözleşmesi.
+- [Gizlilik Politikası](/gizlilik-politikasi): KVKK ve kişisel veri koruma bilgileri.
+- [KVKK Aydınlatma Metni](/kvkk): Kişisel verilerin korunması hakkında bilgilendirme.
+- [İade ve İptal](/iade-ve-iptal): İade süreçleri ve koşulları.
+- [Mesafeli Satış Sözleşmesi](/mesafeli-satis-sozlesmesi): Yasal satış sözleşmesi.
+- [Çerez Politikası](/cerez-politikasi): Site çerezleri hakkında bilgi.
