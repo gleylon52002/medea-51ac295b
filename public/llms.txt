@@ -1,0 +1,26 @@
+# MEDEA Kozmetik
+
+> El yapımı ve doğal içerikli premium katı sabun, yüz maskesi ve mum üreten Türk kozmetik markası. Kimyasal katkısız, vegan ve sürdürülebilir güzellik ürünleri.
+
+MEDEA Kozmetik, Ege'nin bereketli topraklarından özenle seçilmiş bitkisel yağlar ve doğal esanslarla, geleneksel yöntemlerle üretilen el yapımı kozmetik ürünleri sunar. Tüm ürünlerimiz paraben, SLS ve kimyasal katkı maddesi içermez.
+
+## Pages
+
+- [Ana Sayfa](/): MEDEA Kozmetik ana sayfası, öne çıkan ürünler ve koleksiyonlar.
+- [Tüm Ürünler](/urunler): Doğal sabun, yüz maskesi ve mum çeşitlerinin tamamı.
+- [Hakkımızda](/hakkimizda): MEDEA'nın hikayesi, değerleri ve üretim felsefesi.
+- [İletişim](/iletisim): Adres, telefon, e-posta ve iletişim formu.
+- [Sıkça Sorulan Sorular](/sss): Ürünler, kargo ve iade hakkında sık sorulan sorular.
+- [Blog](/blog): Doğal cilt bakımı, sabun kullanımı ve sürdürülebilir yaşam yazıları.
+
+## Categories
+
+- [Doğal Sabunlar](/kategori/dogal-sabunlar): El yapımı katı sabun çeşitleri.
+- [Yüz Maskeleri](/kategori/yuz-maskeleri): Bitkisel içerikli doğal yüz maskeleri.
+- [Mumlar](/kategori/mumlar): El yapımı aromalı doğal mumlar.
+
+## Optional
+
+- [Gizlilik Politikası](/gizlilik): KVKK ve kişisel veri koruma bilgileri.
+- [İade ve İptal](/iade-politikasi): İade süreçleri ve koşulları.
+- [Mesafeli Satış Sözleşmesi](/mesafeli-satis): Yasal satış sözleşmesi.

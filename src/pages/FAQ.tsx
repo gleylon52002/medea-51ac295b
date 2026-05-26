@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 import { ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout/Layout";
+import SEOHead from "@/components/SEOHead";
 import {
   Accordion,
   AccordionContent,
@@ -31,8 +33,32 @@ const FAQ = () => {
     },
   });
 
+  useEffect(() => {
+    if (!faqs || faqs.length === 0) return;
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqs.map((f) => ({
+        "@type": "Question",
+        name: f.question,
+        acceptedAnswer: { "@type": "Answer", text: f.answer },
+      })),
+    };
+    const s = document.createElement("script");
+    s.type = "application/ld+json";
+    s.id = "faq-page-schema";
+    s.textContent = JSON.stringify(schema);
+    document.head.appendChild(s);
+    return () => { document.getElementById("faq-page-schema")?.remove(); };
+  }, [faqs]);
+
   return (
     <Layout>
+      <SEOHead
+        title="Sıkça Sorulan Sorular | MEDEA Kozmetik"
+        description="MEDEA Kozmetik hakkında sıkça sorulan sorular: doğal sabun kullanımı, kargo, iade ve ürün içerikleri hakkında merak ettiğiniz her şey."
+        canonical="https://medea.tr/sss"
+      />
       <div className="container-main py-8 lg:py-12">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
