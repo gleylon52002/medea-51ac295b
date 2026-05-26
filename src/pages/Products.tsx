@@ -231,7 +231,7 @@ const Products = () => {
   return (
     <Layout>
       <SEOHead
-        title="Doğal Sabun & Kozmetik Ürünleri – El Yapımı Katı Sabun | MEDEA Kozmetik"
+        title="Doğal Sabun & Kozmetik Ürünleri | MEDEA Kozmetik"
         description="MEDEA el yapımı doğal sabun, yüz maskesi ve mum çeşitleri. Kimyasal katkısız, vegan, cilde dost doğal kozmetik ürünleri. Hemen keşfedin!"
         canonical="https://medea.tr/urunler"
         keywords={["doğal sabun", "el yapımı sabun", "katı sabun", "doğal kozmetik", "MEDEA"]}

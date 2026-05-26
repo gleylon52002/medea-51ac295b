@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight, Mail, Phone, MapPin, Clock, Send, Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
+import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +14,36 @@ import { useSendContactMessage } from "@/hooks/useContactMessages";
 const Contact = () => {
   const { toast } = useToast();
   const sendMessage = useSendContactMessage();
+
+  useEffect(() => {
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      name: "MEDEA Kozmetik",
+      url: "https://medea.tr/iletisim",
+      telephone: "+90 212 123 45 67",
+      email: "info@medea.com.tr",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Caferağa Mah. Moda Cad. No: 123",
+        addressLocality: "Kadıköy",
+        addressRegion: "İstanbul",
+        postalCode: "34710",
+        addressCountry: "TR",
+      },
+      openingHoursSpecification: [
+        { "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday","Tuesday","Wednesday","Thursday","Friday"], opens: "09:00", closes: "18:00" },
+        { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "10:00", closes: "14:00" },
+      ],
+    };
+    const s = document.createElement("script");
+    s.type = "application/ld+json";
+    s.id = "contact-localbusiness-schema";
+    s.textContent = JSON.stringify(schema);
+    document.head.appendChild(s);
+    return () => { document.getElementById("contact-localbusiness-schema")?.remove(); };
+  }, []);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -40,6 +72,11 @@ const Contact = () => {
 
   return (
     <Layout>
+      <SEOHead
+        title="İletişim | MEDEA Kozmetik – Doğal & El Yapımı"
+        description="MEDEA Kozmetik ile iletişime geçin. Adres, telefon, e-posta ve çalışma saatleri. Sorularınız, önerileriniz ve işbirliği talepleriniz için bize ulaşın."
+        canonical="https://medea.tr/iletisim"
+      />
       <div className="container-main py-8 lg:py-12">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-8">

@@ -3,6 +3,7 @@ import { ChevronRight, Leaf, Heart, Shield, Sparkles, Star, Zap } from "lucide-r
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout/Layout";
+import SEOHead from "@/components/SEOHead";
 
 const iconMap: Record<string, React.ElementType> = {
   leaf: Leaf, heart: Heart, shield: Shield, sparkles: Sparkles, star: Star, zap: Zap,
@@ -65,6 +66,11 @@ const About = () => {
 
   return (
     <Layout>
+      <SEOHead
+        title="Hakkımızda | MEDEA Kozmetik – Doğal & El Yapımı"
+        description="MEDEA Kozmetik'in hikayesi: Ege'nin bereketli topraklarından gelen doğal içeriklerle el yapımı, vegan ve kimyasal katkısız kozmetik üretiyoruz."
+        canonical="https://medea.tr/hakkimizda"
+      />
       <div className="container-main py-8 lg:py-12">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
